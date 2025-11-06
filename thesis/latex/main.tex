@@ -1,0 +1,107 @@
+% !TeX program = pdflatex
+% !TeX encoding = UTF-8
+\documentclass[12pt,a4paper,oneside]{scrbook}
+
+% Sprache & Kodierung
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman,english]{babel}
+\usepackage{csquotes}
+
+% Typografie & Layout
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage[a4paper,margin=2.8cm]{geometry}
+\usepackage{titlesec}
+\usepackage{tocloft}
+
+% Grafiken, Tabellen, Listings
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes,decorations.pathmorphing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{siunitx}
+\usepackage{pdflscape}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+  pdfauthor={Platzhalter},
+  pdftitle={Aufbau des Hardware-Modells einer E/E-Architektur und Transformation in ein Simulationsmodell}
+}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single}
+
+% Mathematik
+\usepackage{amsmath,amssymb}
+
+% Bibliographie
+\usepackage[backend=biber,style=ieee,sorting=nyt,maxbibnames=6]{biblatex}
+\addbibresource{references.bib}
+
+% Verzeichnisse
+\usepackage[nameinlink]{cleveref}
+
+% Abkürzungen (einfache Liste)
+\newcommand{\abk}[2]{\textbf{#1} \quad #2\\}
+
+% Metadaten
+\title{Aufbau des Hardware-Modells einer E/E-Architektur und dessen Transformation in ein Simulationsmodell}
+\author{(Platzhalter)}
+\date{(in Bearbeitung)}
+
+\begin{document}
+\selectlanguage{ngerman}
+
+\frontmatter
+\maketitle
+
+% Frontmatter
+\input{tex/abstract_de}
+\input{tex/abstract_en}
+\input{tex/acknowledgements}
+\input{tex/abbreviations}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+% Kapitel 0–13
+\input{tex/00_einleitung}
+\input{tex/01_zielbild_scope}
+\input{tex/02_taxonomie_metamodell}
+\input{tex/03_preevision_modellierung}
+\input{tex/04_synthese_metrik}
+\input{tex/05_transformation_konzept}
+\input{tex/06_technische_realisation}
+\input{tex/07_szenarien_usecases}
+\input{tex/08_simulation_auswertung}
+\input{tex/09_validierung_iteration}
+\input{tex/10_dokumentation_deliverables}
+\input{tex/11_zeitplanung}
+\input{tex/12_risiken}
+\input{tex/13_minimalstart}
+
+% Schluss
+\input{tex/99_schluss_ausblick}
+
+% Anhang
+\appendix
+\input{tex/A_anhang}
+
+% Literatur
+\printbibliography
+
+\end{document}
+
+

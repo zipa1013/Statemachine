@@ -1,0 +1,11 @@
+\chapter{Transformationskonzept zum Simulationsmodell}\label{chap:transformation}
+\section{Zielplattformen}
+OMNeT++/INET, NS-3, Simulink/Truetime, Modelica, ROS~2/DDS, FMI-Co-Simulation.
+
+\section{Mapping-Regeln}
+ECU $\rightarrow$ Rechenknoten mit Ressourcen- und Schedulerparametern; Netzwerk $\rightarrow$ Kanal mit Bandbreite, Latenz, Jitter, Priorisierung; Messages/Signals $\rightarrow$ Traffic-Flows; SWC/Chain $\rightarrow$ Tasks/Pipelines; Redundanzgruppen $\rightarrow$ parallele Pfade.
+
+\section{Artefakte und Exporte}
+Export aus PREEvision (REST/CSV/AUTOSAR-XML/XMI); Intermediate Model (IM) als stabile Zwischenschicht.
+
+
