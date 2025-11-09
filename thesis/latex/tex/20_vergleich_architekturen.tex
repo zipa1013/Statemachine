@@ -1,0 +1,142 @@
+\chapter{Vergleich verschiedener Architektur-Paradigmen}\label{chap:vergleich_architekturen}
+
+\noindent
+Dieses Kapitel vergleicht verschiedene Architektur-Paradigmen für E/E-Architekturen und analysiert deren Vor- und Nachteile im Kontext der Simulation.
+
+\section{Architektur-Paradigmen}
+
+Verschiedene Architektur-Paradigmen werden in modernen Fahrzeugen verwendet:
+
+\subsection{Distributed Architecture}
+
+Traditionelle verteilte Architektur mit vielen ECUs:
+
+\begin{itemize}
+  \item \textbf{Struktur}: Viele spezialisierte ECUs, jeweils für spezifische Funktionen
+  \item \textbf{Kommunikation}: CAN, LIN, FlexRay
+  \item \textbf{Vorteile}: Bewährt, einfach, kostengünstig
+  \item \textbf{Nachteile}: Hohe Komplexität, viele Kabel, schwierige Software-Updates
+\end{itemize}
+
+\subsection{Zonale Architecture}
+
+Moderne zonale Architektur mit zentralen Rechenknoten:
+
+\begin{itemize}
+  \item \textbf{Struktur}: Wenige zentrale Rechenknoten, Zonen-Controller als Gateways
+  \item \textbf{Kommunikation}: TSN-Ethernet-Backbone, CAN/LIN in Zonen
+  \item \textbf{Vorteile}: Skalierbar, software-definiert, einfache Updates
+  \item \textbf{Nachteile}: Komplexere Software, höhere Anforderungen an Rechenleistung
+\end{itemize}
+
+\subsection{Hybrid Architecture}
+
+Kombination aus distributiver und zonaler Architektur:
+
+\begin{itemize}
+  \item \textbf{Struktur}: Zentrale Rechenknoten für neue Funktionen, Legacy-ECUs für bestehende Funktionen
+  \item \textbf{Kommunikation}: TSN-Ethernet für neue Funktionen, CAN/LIN für Legacy
+  \item \textbf{Vorteile}: Migration von Legacy-Systemen, schrittweise Modernisierung
+  \item \textbf{Nachteile}: Komplexität durch zwei Architektur-Paradigmen
+\end{itemize}
+
+\section{Vergleichsanalyse}
+
+Verschiedene Kriterien werden für den Vergleich verwendet:
+
+\subsection{Komplexität}
+
+\begin{table}[h]
+  \centering
+  \caption{Vergleich: Komplexität}
+  \begin{tabular}{llll}
+    \toprule
+    Kriterium & Distributed & Zonal & Hybrid \\
+    \midrule
+    Anzahl ECUs & Hoch & Niedrig & Mittel \\
+    Kabel-Komplexität & Hoch & Niedrig & Mittel \\
+    Software-Komplexität & Niedrig & Hoch & Mittel \\
+    Netzwerk-Komplexität & Niedrig & Hoch & Mittel \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:komplexitaet_vergleich}
+\end{table}
+
+\subsection{Kosten}
+
+\begin{table}[h]
+  \centering
+  \caption{Vergleich: Kosten}
+  \begin{tabular}{llll}
+    \toprule
+    Kriterium & Distributed & Zonal & Hybrid \\
+    \midrule
+    Hardware-Kosten & Mittel & Niedrig & Mittel \\
+    Software-Kosten & Niedrig & Hoch & Mittel \\
+    Wartungskosten & Hoch & Niedrig & Mittel \\
+    Entwicklungskosten & Niedrig & Hoch & Mittel \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:kosten_vergleich}
+\end{table}
+
+\subsection{Performance}
+
+\begin{table}[h]
+  \centering
+  \caption{Vergleich: Performance}
+  \begin{tabular}{llll}
+    \toprule
+    Kriterium & Distributed & Zonal & Hybrid \\
+    \midrule
+    E2E-Latenz & Mittel & Niedrig & Mittel \\
+    Skalierbarkeit & Niedrig & Hoch & Mittel \\
+    Energieeffizienz & Niedrig & Hoch & Mittel \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:performance_vergleich}
+\end{table}
+
+\section{Erweiterte Vergleichs-Analysen}
+
+Dieser Abschnitt präsentiert erweiterte Analysen für verschiedene Aspekte.
+
+\subsection{Energieeffizienz-Vergleich}
+
+\begin{table}[h]
+  \centering
+  \caption{Vergleich: Energieeffizienz}
+  \begin{tabular}{llll}
+    \toprule
+    Architektur-Typ & Energieverbrauch & Optimierungs-Potenzial & Anmerkung \\
+    \midrule
+    Distributed & Hoch & Niedrig & Viele ECUs, hoher Overhead \\
+    Zonal & Niedrig & Hoch & Zentrale Optimierung möglich \\
+    Hybrid & Mittel & Mittel & Abhängig von Legacy-Anteil \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:energieeffizienz_vergleich}
+\end{table}
+
+\subsection{Wartbarkeits-Vergleich}
+
+\begin{table}[h]
+  \centering
+  \caption{Vergleich: Wartbarkeit}
+  \begin{tabular}{llll}
+    \toprule
+    Architektur-Typ & Software-Updates & Hardware-Updates & Diagnose \\
+    \midrule
+    Distributed & Schwierig & Einfach & Komplex \\
+    Zonal & Einfach & Schwierig & Einfach \\
+    Hybrid & Mittel & Mittel & Mittel \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:wartbarkeit_vergleich}
+\end{table}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat verschiedene Architektur-Paradigmen verglichen. Die zonale Architektur bietet Vorteile in Bezug auf Skalierbarkeit, Software-Updates und Energieeffizienz, während die distributed Architektur bewährt und kostengünstig ist. Die Hybrid-Architektur ermöglicht eine schrittweise Migration.
+
+
