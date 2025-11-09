@@ -1,0 +1,144 @@
+\chapter{Standards und Compliance}\label{chap:standards}
+
+\noindent
+Dieses Kapitel beschreibt die relevanten Standards und Compliance-Anforderungen für E/E-Architekturen und wie diese in der Modellierung und Simulation berücksichtigt werden.
+
+\section{ISO 26262 - Funktionale Sicherheit}
+
+ISO 26262 ist der Standard für funktionale Sicherheit in Kraftfahrzeugen und definiert Anforderungen für die Entwicklung sicherheitskritischer Systeme.
+
+\subsection{ASIL-Level}
+
+ASIL (Automotive Safety Integrity Level) definiert vier Sicherheitsstufen:
+
+\begin{itemize}
+  \item \textbf{ASIL A}: Niedrigste Sicherheitsstufe, geringe Anforderungen
+  \item \textbf{ASIL B}: Mittlere Sicherheitsstufe, moderate Anforderungen
+  \item \textbf{ASIL C}: Hohe Sicherheitsstufe, hohe Anforderungen
+  \item \textbf{ASIL D}: Höchste Sicherheitsstufe, höchste Anforderungen
+\end{itemize}
+
+\subsection{Modellierung in PREEvision}
+
+ASIL-Level werden in PREEvision wie folgt modelliert:
+
+\begin{itemize}
+  \item \textbf{ECU-ASIL}: ASIL-Level für ECUs
+  \item \textbf{SWC-ASIL}: ASIL-Level für Software-Komponenten
+  \item \textbf{Signal-ASIL}: ASIL-Level für Signale
+  \item \textbf{Partitionierung}: ASIL-Isolation durch Partitionierung
+\end{itemize}
+
+\subsection{Simulation}
+
+Die Simulation berücksichtigt ASIL-Anforderungen:
+
+\begin{itemize}
+  \item \textbf{Verfügbarkeit}: ASIL-spezifische Verfügbarkeitsanforderungen
+  \item \textbf{Redundanz}: ASIL-spezifische Redundanzanforderungen
+  \item \textbf{Fehlerbehandlung}: ASIL-spezifische Fehlerbehandlung
+\end{itemize}
+
+\section{AUTOSAR}
+
+AUTOSAR (AUTomotive Open System ARchitecture) ist ein Standard für Automotive-Software-Architekturen.
+
+\subsection{AUTOSAR Classic}
+
+AUTOSAR Classic für eingebettete Systeme:
+
+\begin{itemize}
+  \item \textbf{SWCs}: Software Components mit Ports und Interfaces
+  \item \textbf{RTE}: Runtime Environment für Kommunikation
+  \item \textbf{BSW}: Basic Software Layer
+  \item \textbf{ECU Configuration}: ECU-spezifische Konfiguration
+\end{itemize}
+
+\subsection{AUTOSAR Adaptive}
+
+AUTOSAR Adaptive für hochperformante Systeme:
+
+\begin{itemize}
+  \item \textbf{Adaptive Applications}: C++-basierte Anwendungen
+  \item \textbf{ARA}: Adaptive AUTOSAR Runtime
+  \item \textbf{Service-Orientation}: SOME/IP, DDS
+  \item \textbf{Execution Management}: Lifecycle-Management
+\end{itemize}
+
+\section{TSN-Standards}
+
+Time-Sensitive Networking (TSN) Standards für deterministische Kommunikation:
+
+\subsection{IEEE 802.1 Standards}
+
+\begin{itemize}
+  \item \textbf{IEEE 802.1AS}: gPTP (generalized Precision Time Protocol)
+  \item \textbf{IEEE 802.1Qbv}: Time-Aware Shaping
+  \item \textbf{IEEE 802.1Qbu}: Frame Preemption
+  \item \textbf{IEEE 802.1Qcc}: TSN Configuration
+\end{itemize}
+
+\subsection{Modellierung}
+
+TSN-Standards werden in PREEvision modelliert:
+
+\begin{itemize}
+  \item \textbf{Gate-Schedules}: Konfiguration von Gate-Schedules
+  \item \textbf{Time-Synchronisation}: gPTP-Konfiguration
+  \item \textbf{Traffic-Shaping}: Traffic-Shaping-Parameter
+  \item \textbf{Frame-Preemption}: Preemption-Konfiguration
+\end{itemize}
+
+\section{UN R155 - Cybersecurity}
+
+UN Regulation 155 definiert Anforderungen für Cybersecurity in Fahrzeugen:
+
+\begin{itemize}
+  \item \textbf{CSMS}: Cybersecurity Management System
+  \item \textbf{Threat-Analysis}: Bedrohungsanalyse
+  \item \textbf{Risk-Assessment}: Risikobewertung
+  \item \textbf{Security-by-Design}: Sicherheit durch Design
+\end{itemize}
+
+\section{Erweiterte Standards-Details}
+
+Dieser Abschnitt beschreibt erweiterte Details zu relevanten Standards.
+
+\subsection{ISO 21434 - Cybersecurity}
+
+ISO 21434 definiert Anforderungen für Cybersecurity in Fahrzeugen:
+
+\begin{itemize}
+  \item \textbf{CSMS}: Cybersecurity Management System
+  \item \textbf{Threat-Analysis}: Systematische Bedrohungsanalyse
+  \item \textbf{Risk-Assessment}: Risikobewertung und -behandlung
+  \item \textbf{Security-by-Design}: Sicherheit durch Design
+  \item \textbf{Incident-Response}: Reaktion auf Sicherheitsvorfälle
+\end{itemize}
+
+\subsection{UN R156 - Software-Updates}
+
+UN Regulation 156 definiert Anforderungen für Software-Updates:
+
+\begin{itemize}
+  \item \textbf{SUMS}: Software Update Management System
+  \item \textbf{Update-Verifizierung}: Verifizierung von Updates
+  \item \textbf{Rollback-Mechanismen}: Mechanismen zum Zurücksetzen
+  \item \textbf{Update-Dokumentation}: Dokumentation von Updates
+\end{itemize}
+
+\subsection{ISO 14229 - UDS}
+
+ISO 14229 definiert Unified Diagnostic Services (UDS):
+
+\begin{itemize}
+  \item \textbf{Diagnostic-Services}: Verschiedene Diagnose-Services
+  \item \textbf{Session-Control}: Kontrolle von Diagnose-Sessions
+  \item \textbf{Data-Transfer}: Übertragung von Diagnose-Daten
+  \item \textbf{Security-Access}: Zugriffskontrolle für Diagnose
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat relevante Standards und Compliance-Anforderungen beschrieben, die bei der Entwicklung von E/E-Architekturen berücksichtigt werden müssen. Die Modellierung und Simulation müssen diese Anforderungen unterstützen, um sicherzustellen, dass die Architektur konform ist.
+
