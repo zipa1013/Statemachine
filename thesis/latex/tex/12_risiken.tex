@@ -1,0 +1,330 @@
+\chapter{Risiken und Gegenmaßnahmen}\label{chap:risiken}
+
+\noindent
+Dieses Kapitel beschreibt die identifizierten Risiken des Projekts und die geplanten Gegenmaßnahmen. Die Risiken umfassen technische Herausforderungen, Datenverfügbarkeit, Komplexität und Reproduzierbarkeit.
+
+\section{Technische Risiken}
+
+\subsection{Toolkopplung und Exportformate}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: PREEvision-Exportformate könnten sich ändern oder unvollständig sein
+  \item \textbf{Wahrscheinlichkeit}: Mittel
+  \item \textbf{Auswirkung}: Hoch (kann Projekt verzögern)
+  \item \textbf{Erkennung}: Frühe Tests der Export-Funktionalität
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{IM-Schicht}: Intermediate Model als Abstraktionsebene, unabhängig von Export-Format
+  \item \textbf{Adapter-Pattern}: Flexible Parser für verschiedene Formate
+  \item \textbf{Frühe Validierung}: Tests der Export-Funktionalität in Phase 2
+  \item \textbf{Alternative Exporte}: Nutzung mehrerer Exportformate (REST, CSV, XML)
+  \item \textbf{Kontakt zu PREEvision-Support}: Regelmäßiger Kontakt für Format-Fragen
+\end{itemize}
+
+\subsection{Simulationsplattform-Kompatibilität}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Zielplattform könnte nicht alle erforderlichen Features unterstützen
+  \item \textbf{Wahrscheinlichkeit}: Mittel
+  \item \textbf{Auswirkung}: Mittel (kann Anpassungen erfordern)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Frühe Evaluation}: Evaluation der Plattform in Phase 1
+  \item \textbf{Multi-Plattform-Ansatz}: Unterstützung mehrerer Plattformen
+  \item \textbf{Feature-Mapping}: Detaillierte Analyse der Feature-Kompatibilität
+  \item \textbf{Workarounds}: Entwicklung von Workarounds für fehlende Features
+\end{itemize}
+
+\section{Datenverfügbarkeit}
+
+\subsection{Fehlende oder unvollständige Daten}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: WCET, Datenraten oder andere Parameter könnten fehlen
+  \item \textbf{Wahrscheinlichkeit}: Hoch
+  \item \textbf{Auswirkung}: Mittel (kann Genauigkeit beeinträchtigen)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Default-Werte}: Definition von realistischen Default-Werten
+  \item \textbf{Schätzungen}: Entwicklung von Schätzungs-Methoden basierend auf ähnlichen Komponenten
+  \item \textbf{Benchmarks}: Nutzung von Benchmark-Daten für typische Komponenten
+  \item \textbf{Dokumentation}: Klare Dokumentation fehlender Daten
+  \item \textbf{Sensitivitäts-Analyse}: Analyse der Auswirkung fehlender Daten
+\end{itemize}
+
+\subsection{Datenqualität}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Exportierte Daten könnten inkonsistent oder fehlerhaft sein
+  \item \textbf{Wahrscheinlichkeit}: Mittel
+  \item \textbf{Auswirkung}: Mittel (kann zu falschen Ergebnissen führen)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Validierung}: Umfassende Validierung der Eingabedaten
+  \item \textbf{Konsistenz-Checks}: Automatische Prüfung auf Konsistenz
+  \item \textbf{Fehlerbehandlung}: Robuste Fehlerbehandlung und -meldungen
+  \item \textbf{Manuelle Prüfung}: Manuelle Prüfung kritischer Daten
+\end{itemize}
+
+\section{Komplexität}
+
+\subsection{Architektur-Komplexität}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Reale Architekturen könnten zu komplex für die Transformation sein
+  \item \textbf{Wahrscheinlichkeit}: Mittel
+  \item \textbf{Auswirkung}: Hoch (kann Transformation unmöglich machen)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Inkrementelle Schritte}: Schrittweise Erhöhung der Komplexität
+  \item \textbf{Abstraktion}: Abstraktion komplexer Aspekte im IM
+  \item \textbf{Modularität}: Modulare Transformation für verschiedene Aspekte
+  \item \textbf{Beispiel-Architekturen}: Beginn mit einfachen Beispielen
+  \item \textbf{Skalierbarkeit}: Design für Skalierbarkeit von Anfang an
+\end{itemize}
+
+\subsection{Metrik-Komplexität}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Synthese-Metriken könnten zu komplex oder ungenau sein
+  \item \textbf{Wahrscheinlichkeit}: Mittel
+  \item \textbf{Auswirkung}: Mittel (kann Genauigkeit beeinträchtigen)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Validierung}: Kontinuierliche Validierung gegen analytische Modelle
+  \item \textbf{Benchmarks}: Vergleich mit bekannten Benchmarks
+  \item \textbf{Iterative Verbesserung}: Kontinuierliche Verbesserung der Metriken
+  \item \textbf{Dokumentation}: Detaillierte Dokumentation der Annahmen
+\end{itemize}
+
+\section{Reproduzierbarkeit}
+
+\subsection{Simulations-Reproduzierbarkeit}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Simulationen könnten nicht reproduzierbar sein
+  \item \textbf{Wahrscheinlichkeit}: Niedrig
+  \item \textbf{Auswirkung}: Mittel (kann Validierung erschweren)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Seed-Management}: Fixierung von Zufalls-Seeds
+  \item \textbf{Deterministische Generierung}: Deterministische Code-Generierung
+  \item \textbf{Versionierung}: Versionierung aller Konfigurationen
+  \item \textbf{CI}: Automatisierte Tests in CI-Pipelines
+  \item \textbf{Dokumentation}: Dokumentation der Umgebung und Konfiguration
+\end{itemize}
+
+\subsection{Umgebungs-Abhängigkeit}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Ergebnisse könnten von der Umgebung abhängen
+  \item \textbf{Wahrscheinlichkeit}: Niedrig
+  \item \textbf{Auswirkung}: Niedrig
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Containerisierung}: Nutzung von Containern für Reproduzierbarkeit
+  \item \textbf{Dependency-Pinning}: Fixierung aller Abhängigkeiten
+  \item \textbf{Environment-Dokumentation}: Vollständige Dokumentation der Umgebung
+\end{itemize}
+
+\section{Zeitplan-Risiken}
+
+\subsection{Verzögerungen}
+
+\subsubsection{Risiko}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Unvorhergesehene Probleme könnten zu Verzögerungen führen
+  \item \textbf{Wahrscheinlichkeit}: Mittel
+  \item \textbf{Auswirkung}: Mittel (kann Meilensteine gefährden)
+\end{itemize}
+
+\subsubsection{Gegenmaßnahmen}
+
+\begin{itemize}
+  \item \textbf{Pufferzeiten}: Eingebaute Pufferzeiten im Zeitplan
+  \item \textbf{Priorisierung}: Fokus auf kritische Funktionen
+  \item \textbf{Agile Methoden}: Flexible Anpassung des Plans
+  \item \textbf{Frühe Risiko-Erkennung}: Regelmäßige Risiko-Reviews
+\end{itemize}
+
+\section{Erweiterte Risiko-Analyse}
+
+\subsection{Quantitative Risiko-Bewertung}
+
+Neben der qualitativen Risiko-Bewertung können Risiken auch quantitativ bewertet werden, um eine fundiertere Entscheidungsgrundlage zu schaffen.
+
+\subsubsection{Risiko-Score}
+
+Der Risiko-Score wird berechnet als:
+
+\begin{equation}
+R = P \times I
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $P$: Wahrscheinlichkeit des Eintretens (0-1)
+  \item $I$: Auswirkung (1-5 Skala)
+  \item $R$: Risiko-Score (0-5)
+\end{itemize}
+
+Risiken mit $R > 3$ werden als hoch eingestuft und erfordern sofortige Gegenmaßnahmen.
+
+\subsubsection{Beispiel: Risiko-Bewertung für Toolkopplung}
+
+\begin{itemize}
+  \item \textbf{Wahrscheinlichkeit}: $P = 0.6$ (Mittel - Exportformate können sich ändern)
+  \item \textbf{Auswirkung}: $I = 4$ (Hoch - kann Projekt verzögern)
+  \item \textbf{Risiko-Score}: $R = 0.6 \times 4 = 2.4$ (Mittel-Hoch)
+  \item \textbf{Bewertung}: Erfordert proaktive Gegenmaßnahmen
+\end{itemize}
+
+\subsection{Risiko-Monitoring}
+
+Risiken müssen kontinuierlich überwacht werden, um frühzeitig auf Änderungen reagieren zu können.
+
+\subsubsection{Risiko-Reviews}
+
+Regelmäßige Risiko-Reviews (z.\,B. wöchentlich) umfassen:
+
+\begin{itemize}
+  \item \textbf{Status-Check}: Überprüfung des aktuellen Status jedes Risikos
+  \item \textbf{Wahrscheinlichkeits-Update}: Aktualisierung der Wahrscheinlichkeit basierend auf neuen Informationen
+  \item \textbf{Auswirkungs-Update}: Aktualisierung der Auswirkung basierend auf Projektfortschritt
+  \item \textbf{Gegenmaßnahmen-Review}: Überprüfung der Wirksamkeit der Gegenmaßnahmen
+  \item \textbf{Neue Risiken}: Identifikation neuer Risiken
+\end{itemize}
+
+\subsubsection{Risiko-Dashboard}
+
+Ein Risiko-Dashboard visualisiert den aktuellen Risiko-Status:
+
+\begin{itemize}
+  \item \textbf{Risiko-Matrix}: Visualisierung aller Risiken nach Wahrscheinlichkeit und Auswirkung
+  \item \textbf{Trend-Analyse}: Entwicklung der Risiken über Zeit
+  \item \textbf{Top-Risiken}: Liste der kritischsten Risiken
+  \item \textbf{Gegenmaßnahmen-Status}: Status der geplanten Gegenmaßnahmen
+\end{itemize}
+
+\section{Erweiterte Risiko-Analyse-Methoden}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Risiko-Analyse.
+
+\subsection{Monte-Carlo-Simulation}
+
+Monte-Carlo-Simulation ermöglicht eine probabilistische Risiko-Analyse:
+
+\begin{itemize}
+  \item \textbf{Parameter-Variation}: Variation von Parametern mit Wahrscheinlichkeitsverteilungen
+  \item \textbf{Simulation}: Mehrere tausend Simulationsläufe
+  \item \textbf{Statistische Analyse}: Analyse der Ergebnisse (Mittelwert, Standardabweichung, Perzentile)
+  \item \textbf{Risiko-Quantifizierung}: Quantifizierung von Risiken basierend auf Ergebnissen
+\end{itemize}
+
+\subsection{Fault-Tree-Analysis}
+
+Fault-Tree-Analysis ermöglicht eine systematische Analyse von Fehlerursachen:
+
+\begin{itemize}
+  \item \textbf{Fault-Tree}: Hierarchische Darstellung von Fehlerursachen
+  \item \textbf{Minimal-Cut-Sets}: Minimale Kombinationen von Fehlern, die zu einem Systemausfall führen
+  \item \textbf{Wahrscheinlichkeits-Berechnung}: Berechnung der Wahrscheinlichkeit von Systemausfällen
+  \item \textbf{Optimierung}: Identifikation kritischer Pfade für Optimierung
+\end{itemize}
+
+\section{Risiko-Matrix}
+
+\subsection{Bewertung}
+
+\begin{table}[h]
+  \centering
+  \caption{Risiko-Matrix}
+  \begin{tabular}{llll}
+    \toprule
+    Risiko & Wahrscheinlichkeit & Auswirkung & Priorität \\
+    \midrule
+    Toolkopplung & Mittel & Hoch & Hoch \\
+    Fehlende Daten & Hoch & Mittel & Hoch \\
+    Architektur-Komplexität & Mittel & Hoch & Hoch \\
+    Simulationsplattform & Mittel & Mittel & Mittel \\
+    Datenqualität & Mittel & Mittel & Mittel \\
+    Metrik-Komplexität & Mittel & Mittel & Mittel \\
+    Reproduzierbarkeit & Niedrig & Mittel & Niedrig \\
+    Verzögerungen & Mittel & Mittel & Mittel \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:risiko_matrix}
+\end{table}
+
+\section{Risiko-Monitoring}
+
+\subsection{Regelmäßige Reviews}
+
+\begin{itemize}
+  \item \textbf{Wöchentliche Reviews}: Wöchentliche Überprüfung der Risiken
+  \item \textbf{Meilenstein-Reviews}: Detaillierte Reviews an Meilensteinen
+  \item \textbf{Risiko-Register}: Dokumentation aller Risiken und Maßnahmen
+\end{itemize}
+
+\subsection{Eskalations-Prozess}
+
+\begin{itemize}
+  \item \textbf{Level 1}: Projektintern lösen
+  \item \textbf{Level 2}: Mit Stakeholdern besprechen
+  \item \textbf{Level 3}: Externe Unterstützung einholen
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Risiken und Gegenmaßnahmen beschrieben:
+
+\begin{itemize}
+  \item \textbf{Technische Risiken}: Toolkopplung, Simulationsplattform
+  \item \textbf{Datenrisiken}: Fehlende/unvollständige Daten, Datenqualität
+  \item \textbf{Komplexitäts-Risiken}: Architektur- und Metrik-Komplexität
+  \item \textbf{Reproduzierbarkeits-Risiken}: Simulations- und Umgebungs-Abhängigkeit
+  \item \textbf{Zeitplan-Risiken}: Verzögerungen
+\end{itemize}
+
+Die geplanten Gegenmaßnahmen (IM-Schicht, Benchmarks, inkrementelle Schritte, CI) helfen, diese Risiken zu minimieren und das Projekt erfolgreich abzuschließen.
