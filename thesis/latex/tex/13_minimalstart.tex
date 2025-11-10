@@ -1,4 +1,543 @@
 \chapter{Konkreter Minimalstart}\label{chap:minimalstart}
-Kleinste End-to-End-Kette: Kamera $\rightarrow$ AD-ECU $\rightarrow$ Lenkaktor über Ethernet/CAN; Attributierung, Mapping-Regeln, erstes Simulationssetup; KPI-Messungen und eine Stressvariante (Framegröße $+20\%$).
 
+\noindent
+Dieses Kapitel beschreibt einen konkreten Minimalstart für das Projekt. Der Minimalstart umfasst die kleinste End-to-End-Kette von der Architekturmodellierung bis zur Simulation, um die Machbarkeit frühzeitig zu demonstrieren. Der Minimalstart dient als Proof-of-Concept und ermöglicht es, die grundlegende Funktionalität des Transformations-Frameworks zu validieren, bevor komplexere Architekturen transformiert werden \cite{model_based_development, simulation_automotive}.
 
+Der Minimalstart folgt dem Prinzip des inkrementellen Vorgehens: Zuerst wird eine einfache, aber vollständige Architektur transformiert und simuliert, um die grundlegende Funktionalität zu demonstrieren. Anschließend kann die Komplexität schrittweise erhöht werden, um die Skalierbarkeit und Robustheit des Frameworks zu validieren.
+
+\section{Minimal-Architektur}
+
+Die Minimal-Architektur wurde so gewählt, dass sie alle wesentlichen Aspekte einer E/E-Architektur abdeckt, aber gleichzeitig einfach genug ist, um schnell implementiert und validiert werden zu können. Sie umfasst einen Sensor, einen Rechenknoten und einen Aktor, die über verschiedene Kommunikationsprotokolle verbunden sind.
+
+\subsection{Komponenten}
+
+\subsubsection{Hardware-Komponenten}
+
+Die minimale Architektur besteht aus drei Hauptkomponenten, die eine vollständige Funktionskette von der Sensorik über die Verarbeitung bis zur Aktorik bilden:
+
+\begin{itemize}
+  \item \textbf{Kamera (Front) - Bosch 8MP Multifunktionskamera}:
+    \begin{itemize}
+      \item \textbf{Typ}: Bosch 8MP Multifunktionskamera (neueste Generation)
+      \item \textbf{Auflösung}: 3840x2160 (8 Megapixel, 4K) - hohe Auflösung für präzise Objekterkennung
+      \item \textbf{Horizontales Sichtfeld}: 120 Grad - breites Sichtfeld für umfassende Umfelderfassung
+      \item \textbf{Erkennungsreichweite}: Bis zu 300 Meter - lange Reichweite für frühzeitige Erkennung
+      \item \textbf{Framerate}: 30 fps (33.3 ms Periodizität) - Standard für Fahrerassistenzfunktionen
+      \item \textbf{Interface}: Ethernet 2.5 Gbps - hochgeschwindigkeits-Schnittstelle für 4K-Daten
+      \item \textbf{ASIL}: ASIL-B (für ADAS-Funktionen), ASIL-D möglich für sicherheitskritische Funktionen
+      \item \textbf{Position}: Frontscheibe, hinter dem Rückspiegel (typische Position für Front-Kameras)
+      \item \textbf{Funktionen}: 
+        \begin{itemize}
+          \item Adaptive Geschwindigkeits- und Abstandsregelung
+          \item Notbremsungen innerhalb der eigenen Spur
+          \item Spurhalten in städtischen Gebieten
+          \item Erkennung und Anhalten an roten Ampeln
+        \end{itemize}
+      \item \textbf{Datenrate}: 3840 × 2160 × 3 Bytes × 30 fps = 746.5 MB/s (roh), komprimiert auf ~50 MB/s über Ethernet 2.5G
+      \item \textbf{Power}: 8 W typisch, 12 W maximal
+      \item \textbf{Serienproduktion}: Geplant für 2026, aktuell in Entwicklung
+    \end{itemize}
+  
+  \item \textbf{AD-ECU (Central Compute) - NVIDIA DRIVE Thor}:
+    \begin{itemize}
+      \item \textbf{Plattform}: NVIDIA DRIVE Thor (neueste Generation)
+      \item \textbf{GPU}: NVIDIA DRIVE Thor GPU
+        \begin{itemize}
+          \item Rechenleistung: 2000 TOPS (Tera Operations Per Second) für KI-Inferenz
+          \item Spezialisiert für KI/ML-Workloads (CNNs, Transformers, etc.)
+          \item Unterstützung für Tensor-Operationen mit hoher Effizienz
+          \item Hardware-Beschleunigung für gängige KI-Operationen
+        \end{itemize}
+      \item \textbf{CPU}: NVIDIA Grace CPU mit ARM-Architektur
+        \begin{itemize}
+          \item 12 Kerne @ 3.0 GHz (ARM Neoverse V2)
+          \item Scheduling: Fixed-Priority Preemptive Scheduling, EDF optional
+          \item Cache: L1: 64 KB I/D, L2: 1 MB pro Core, L3: 36 MB shared
+          \item Hohe Performance für allgemeine Verarbeitungsaufgaben
+        \end{itemize}
+      \item \textbf{RAM}: 512 GB LPDDR5X - ausreichend für große KI-Modelle und Bildpuffer
+        \begin{itemize}
+          \item Hohe Bandbreite für GPU-Zugriff
+          \item Unified Memory Architecture für effiziente CPU-GPU-Zusammenarbeit
+        \end{itemize}
+      \item \textbf{Storage}: 1 TB NVMe SSD für KI-Modelle, Konfiguration und Logging
+      \item \textbf{Interface}: 
+        \begin{itemize}
+          \item Ethernet 2.5 Gbps (für Sensor-Daten von Bosch 8MP Kamera)
+          \item Ethernet 10 Gbps (für LiDAR, optional)
+          \item CAN-FD 2 Mbps (für Aktor-Kommandos)
+          \item Multiple Ethernet-Ports für Sensor-Integration
+        \end{itemize}
+      \item \textbf{ASIL}: ASIL-D zertifiziert - sicherheitskritisch für autonomes Fahren
+      \item \textbf{Multi-Domain}: Unterstützung für mehrere Domänen (AD, Infotainment, Body)
+      \item \textbf{Software}: NVIDIA DRIVE OS mit vollständigem Software-Stack
+      \item \textbf{Power}: 80 W typisch, 150 W maximal (bei voller Last)
+      \item \textbf{Thermal}: Aktive Kühlung erforderlich, thermisches Management integriert
+      \item \textbf{Sensor-Integration}: Unterstützung für bis zu 12 Kameras, 9 Radare, 12 Ultraschall, 1 LiDAR
+    \end{itemize}
+  
+  \item \textbf{Lenkaktor (EPS)}:
+    \begin{itemize}
+      \item \textbf{Typ}: Elektrische Servolenkung (Electric Power Steering)
+      \item \textbf{Interface}: CAN-FD 500 kbps
+        \begin{itemize}
+          \item CAN-ID: 0x123 (hohe Priorität)
+          \item Frame-Größe: 8 Byte (Lenkwinkel-Kommando)
+          \item Periodizität: 10 ms (100 Hz)
+        \end{itemize}
+      \item \textbf{ASIL}: D - sicherheitskritisch, da direkt die Fahrzeugführung beeinflusst
+      \item \textbf{Reaktionszeit}: < 50 ms vom Kommando bis zur Ausführung
+      \item \textbf{Genauigkeit}: $\pm 0.1°$ Lenkwinkel
+      \item \textbf{Power}: 500 W typisch, 1000 W maximal (bei starker Lenkung)
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    node distance=2cm and 3cm,
+    sensor/.style={rectangle, draw, fill=blue!30, minimum width=2.5cm, minimum height=1.5cm, text centered, font=\small, rounded corners},
+    ecu/.style={rectangle, draw, fill=red!30, minimum width=3.5cm, minimum height=2cm, text centered, font=\small, rounded corners},
+    actuator/.style={rectangle, draw, fill=orange!30, minimum width=2.5cm, minimum height=1.5cm, text centered, font=\small, rounded corners},
+    link/.style={thick, -stealth, blue},
+    canlink/.style={thick, -stealth, green},
+    task/.style={rectangle, draw, fill=gray!20, minimum width=2cm, minimum height=0.7cm, text centered, font=\tiny}
+  ]
+    % Components
+    \node[sensor] (camera) {Bosch 8MP\\3840x2160\\30 fps, 120° FOV\\Ethernet 2.5G};
+    \node[ecu, right=of camera] (ad_ecu) {NVIDIA DRIVE Thor\\2000 TOPS GPU\\12 ARM Cores, 512GB RAM\\Ethernet 2.5G + CAN-FD};
+    \node[actuator, right=of ad_ecu] (eps) {EPS\\Lenkaktor\\CAN-FD\\ASIL D};
+    
+    % Tasks in ECU
+    \node[task, above=0.3cm of ad_ecu] (capture) {Image\\Capture};
+    \node[task, right=0.3cm of capture] (detect) {YOLOv8\\Detection};
+    \node[task, below=0.3cm of ad_ecu] (control) {Steering\\Control};
+    
+    % Links
+    \draw[link] (camera) -- node[above, font=\tiny, align=center] {Ethernet 2.5G\\~50MB/s, 30fps\\TSN P6} (ad_ecu);
+    \draw[canlink] (ad_ecu) -- node[above, font=\tiny, align=center] {CAN-FD 500k\\8B, 10ms\\ID: 0x123} (eps);
+    
+    % Data flow
+    \draw[->, dashed, red] (capture) -- (detect);
+    \draw[->, dashed, red] (detect) -- (control);
+    
+    % Timing
+    \node[below=0.8cm of camera, font=\tiny, align=center] {Period: 33.3ms\\WCET: 2ms};
+    \node[below=0.8cm of ad_ecu, font=\tiny, align=center] {E2E Deadline:\\100ms};
+    \node[below=0.8cm of eps, font=\tiny, align=center] {Reaktionszeit:\\< 50ms};
+  \end{tikzpicture}
+  \caption{Minimal-Architektur: Hardware-Komponenten und Datenfluss}
+  \label{fig:minimal_architecture}
+\end{figure}
+
+\subsubsection{Software-Komponenten}
+
+\begin{itemize}
+  \item \textbf{Image Capture}: Bildaufnahme von der Kamera
+  \item \textbf{Object Detection}: Objekterkennung (vereinfacht)
+  \item \textbf{Steering Control}: Lenkungssteuerung
+\end{itemize}
+
+\subsection{Kommunikation}
+
+\subsubsection{Netzwerk-Topologie}
+
+\begin{itemize}
+  \item \textbf{Kamera $\rightarrow$ AD-ECU}: Ethernet (1G), direkte Verbindung
+  \item \textbf{AD-ECU $\rightarrow$ Lenkaktor}: CAN-FD, direkte Verbindung
+\end{itemize}
+
+\subsubsection{Frames}
+
+\begin{itemize}
+  \item \textbf{CameraStream}:
+    \begin{itemize}
+      \item Quelle: Kamera
+      \item Ziel: AD-ECU
+      \item Größe: 1500 Byte
+      \item Periodizität: 33.3 ms (30 fps)
+      \item Protokoll: Ethernet
+      \item Priorität: 6 (TSN)
+    \end{itemize}
+  \item \textbf{SteeringCommand}:
+    \begin{itemize}
+      \item Quelle: AD-ECU
+      \item Ziel: Lenkaktor
+      \item Größe: 8 Byte
+      \item Periodizität: 10 ms
+      \item Protokoll: CAN-FD
+      \item CAN-ID: 0x123
+    \end{itemize}
+\end{itemize}
+
+\section{Modellierung in PREEvision}
+
+\subsection{Topologie-Modell}
+
+\subsubsection{Knoten}
+
+\begin{enumerate}
+  \item \textbf{Kamera-Knoten}:
+    \begin{itemize}
+      \item ID: \texttt{Camera\_Front}
+      \item Typ: Sensor
+      \item Attribute: Auflösung, Framerate, Interface
+    \end{itemize}
+  \item \textbf{AD-ECU-Knoten}:
+    \begin{itemize}
+      \item ID: \texttt{AD\_ECU}
+      \item Typ: ECU
+      \item Attribute: CPU-Kerne, Frequenz, RAM, ASIL
+    \end{itemize}
+  \item \textbf{Lenkaktor-Knoten}:
+    \begin{itemize}
+      \item ID: \texttt{EPS\_Steering}
+      \item Typ: Aktor
+      \item Attribute: Interface, ASIL
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Verbindungen}
+
+\begin{itemize}
+  \item \textbf{Link 1}: Camera\_Front $\leftrightarrow$ AD\_ECU (Ethernet 1G)
+  \item \textbf{Link 2}: AD\_ECU $\leftrightarrow$ EPS\_Steering (CAN-FD)
+\end{itemize}
+
+\subsection{Kommunikations-Modell}
+
+\subsubsection{Frames}
+
+\begin{itemize}
+  \item \textbf{CameraStream}: Vollständig spezifiziert mit allen Attributen
+  \item \textbf{SteeringCommand}: Vollständig spezifiziert mit allen Attributen
+\end{itemize}
+
+\subsection{Software-Modell}
+
+\subsubsection{Tasks}
+
+\begin{table}[h]
+  \centering
+  \caption{Task-Konfiguration für Minimal-Architektur}
+  \begin{tabular}{lllll}
+    \toprule
+    Task & Period (ms) & WCET (ms) & Deadline (ms) & Priority \\
+    \midrule
+    Image\_Capture & 33.3 & 2.0 & 33.3 & 10 \\
+    Object\_Detection & 33.3 & 15.0 & 30.0 & 9 \\
+    Steering\_Control & 10.0 & 1.0 & 10.0 & 8 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:minimal_tasks}
+\end{table}
+
+\section{Attributierung}
+
+\subsection{Erforderliche Attribute}
+
+Alle Komponenten müssen vollständig attributiert sein:
+
+\begin{itemize}
+  \item \textbf{Kamera}: Auflösung, Framerate, Datenrate, Interface-Parameter
+  \item \textbf{AD-ECU}: CPU-Spezifikation, RAM, Scheduling-Parameter, ASIL
+  \item \textbf{Lenkaktor}: CAN-Parameter, Latenz-Anforderungen, ASIL
+  \item \textbf{Links}: Bandbreite, Latenz, Protokoll-Parameter
+  \item \textbf{Frames}: Größe, Periodizität, Priorität, Route
+  \item \textbf{Tasks}: WCET, BCET, Periodizität, Deadline, Priorität
+\end{itemize}
+
+\section{Mapping-Regeln}
+
+\subsection{ECU $\rightarrow$ Node}
+
+\begin{itemize}
+  \item AD\_ECU $\rightarrow$ OMNeT++ Node mit CPU-Scheduler
+  \item CPU-Kerne, Frequenz, RAM werden gemappt
+  \item Scheduling-Policy: Fixed Priority
+\end{itemize}
+
+\subsection{Link $\rightarrow$ Channel}
+
+\begin{itemize}
+  \item Ethernet-Link $\rightarrow$ OMNeT++ Ethernet-Channel (1G)
+  \item CAN-Link $\rightarrow$ OMNeT++ CAN-Channel
+  \item Bandbreite, Latenz werden gemappt
+\end{itemize}
+
+\subsection{Frame $\rightarrow$ Traffic Flow}
+
+\begin{itemize}
+  \item CameraStream $\rightarrow$ Periodischer Traffic Flow
+  \item SteeringCommand $\rightarrow$ Periodischer Traffic Flow
+  \item Größe, Periodizität, Priorität werden gemappt
+\end{itemize}
+
+\subsection{Task $\rightarrow$ Scheduled Task}
+
+\begin{itemize}
+  \item Tasks $\rightarrow$ OMNeT++ Scheduled Tasks
+  \item WCET, Periodizität, Deadline, Priorität werden gemappt
+\end{itemize}
+
+\section{Erstes Simulationssetup}
+
+\subsection{OMNeT++ Konfiguration}
+
+\subsubsection{Network-Definition}
+
+\begin{verbatim}
+network MinimalArchitecture {
+    submodules:
+        camera: Camera;
+        adEcu: ADECU;
+        steering: SteeringActuator;
+    connections:
+        camera.ethOut --> <--> 1Gbps <--> adEcu.ethIn;
+        adEcu.canOut --> <--> 500kbps <--> steering.canIn;
+}
+\end{verbatim}
+
+\subsubsection{Simulation-Konfiguration}
+
+\begin{verbatim}
+[General]
+network = MinimalArchitecture
+sim-time-limit = 10s
+
+**.camera.framePeriod = 33.3ms
+**.camera.frameSize = 1500B
+
+**.adEcu.task[0].period = 33.3ms
+**.adEcu.task[0].wcet = 2.0ms
+**.adEcu.task[1].period = 33.3ms
+**.adEcu.task[1].wcet = 15.0ms
+**.adEcu.task[2].period = 10ms
+**.adEcu.task[2].wcet = 1.0ms
+\end{verbatim}
+
+\section{KPI-Messungen}
+
+\subsection{Timing-Metriken}
+
+\subsubsection{E2E-Latenz}
+
+\begin{itemize}
+  \item \textbf{Chain}: Camera $\rightarrow$ AD-ECU $\rightarrow$ Steering
+  \item \textbf{Ziel}: E2E-Latenz < 100 ms
+  \item \textbf{Messung}: Zeitstempel am Sensor vs. Aktor
+\end{itemize}
+
+\subsubsection{Jitter}
+
+\begin{itemize}
+  \item \textbf{Ziel}: Jitter < 10 ms
+  \item \textbf{Messung}: Standardabweichung der E2E-Latenz
+\end{itemize}
+
+\subsubsection{Deadline-Misses}
+
+\begin{itemize}
+  \item \textbf{Ziel}: 0 Deadline-Misses
+  \item \textbf{Messung}: Anzahl verpasster Task-Deadlines
+\end{itemize}
+
+\subsection{Kommunikations-Metriken}
+
+\subsubsection{Busauslastung}
+
+\begin{itemize}
+  \item \textbf{Ethernet-Link}: Ziel < 50\%
+  \item \textbf{CAN-Bus}: Ziel < 30\%
+  \item \textbf{Messung}: Bandbreiten-Nutzung über Zeit
+\end{itemize}
+
+\subsubsection{Paketverluste}
+
+\begin{itemize}
+  \item \textbf{Ziel}: 0 Paketverluste
+  \item \textbf{Messung}: Anzahl verlorener/verworfener Pakete
+\end{itemize}
+
+\subsection{Ressourcen-Metriken}
+
+\subsubsection{CPU-Last}
+
+\begin{itemize}
+  \item \textbf{Ziel}: CPU-Last < 80\%
+  \item \textbf{Messung}: CPU-Auslastung über Zeit
+\end{itemize}
+
+\section{Stress-Variante}
+
+\subsection{Framegröße +20\%}
+
+\subsubsection{Änderung}
+
+\begin{itemize}
+  \item \textbf{Original}: CameraStream = 1500 Byte
+  \item \textbf{Variante}: CameraStream = 1800 Byte (+20\%)
+  \item \textbf{Ziel}: Prüfung der Robustheit gegen Laständerungen
+\end{itemize}
+
+\subsubsection{Erwartete Auswirkungen}
+
+\begin{itemize}
+  \item \textbf{Netzwerk}: Erhöhte Busauslastung
+  \item \textbf{CPU}: Erhöhte Verarbeitungszeit (falls komprimiert)
+  \item \textbf{Latenz}: Mögliche Latenz-Erhöhung
+\end{itemize}
+
+\subsubsection{Messungen}
+
+\begin{itemize}
+  \item Vergleich der Metriken zwischen Original und Variante
+  \item Identifikation von Bottlenecks
+  \item Prüfung, ob Deadlines weiterhin eingehalten werden
+\end{itemize}
+
+\section{Erfolgs-Kriterien}
+
+\subsection{Technische Kriterien}
+
+\begin{itemize}
+  \item \textbf{Transformation erfolgreich}: Alle Komponenten werden korrekt transformiert
+  \item \textbf{Simulation läuft}: Simulation läuft ohne Fehler
+  \item \textbf{Metriken messbar}: Alle KPIs können gemessen werden
+  \item \textbf{Deadlines eingehalten}: Alle Deadlines werden im Nominal-Szenario eingehalten
+\end{itemize}
+
+\subsection{Qualitäts-Kriterien}
+
+\begin{itemize}
+  \item \textbf{Reproduzierbarkeit}: Ergebnisse sind reproduzierbar
+  \item \textbf{Dokumentation}: Vollständige Dokumentation des Minimalstarts
+  \item \textbf{Erweiterbarkeit}: Architektur kann einfach erweitert werden
+\end{itemize}
+
+\section{Erweiterte Minimalstart-Beispiele}
+
+Dieser Abschnitt präsentiert erweiterte Beispiele für den Minimalstart, die zeigen, wie das Framework schrittweise erweitert werden kann.
+
+\subsection{Beispiel: Erweiterte Minimal-Architektur}
+
+Nach erfolgreichem Minimalstart kann die Architektur schrittweise erweitert werden.
+
+\subsubsection{Erweiterung 1: Zusätzlicher Sensor}
+
+Die erste Erweiterung fügt einen zusätzlichen Sensor hinzu:
+
+\begin{itemize}
+  \item \textbf{Neuer Sensor}: Radar (77 GHz, 20 Hz)
+  \item \textbf{Integration}: Radar-Daten werden in die Objekterkennung integriert
+  \item \textbf{Sensorfusion}: Einfache Sensorfusion (Kamera + Radar)
+  \item \textbf{Ergebnis}: Verbesserte Objekterkennung, insbesondere bei schlechtem Wetter
+\end{itemize}
+
+\subsubsection{Erweiterung 2: Zusätzlicher Aktor}
+
+Die zweite Erweiterung fügt einen zusätzlichen Aktor hinzu:
+
+\begin{itemize}
+  \item \textbf{Neuer Aktor}: Bremse (EHB - Electro-Hydraulic Brake)
+  \item \textbf{Integration}: Notbrems-Funktion wird hinzugefügt
+  \item \textbf{Kommunikation}: Zusätzlicher CAN-FD-Bus für Bremse
+  \item \textbf{Ergebnis}: Vollständige Notbrems-Funktion
+\end{itemize}
+
+\subsubsection{Erweiterung 3: Zonen-Controller}
+
+Die dritte Erweiterung fügt einen Zonen-Controller hinzu:
+
+\begin{itemize}
+  \item \textbf{Neuer ZC}: Front-Zonen-Controller
+  \item \textbf{Funktion}: Gateway zwischen Sensoren und Central Compute
+  \item \textbf{Kommunikation}: Ethernet-Backbone wird eingeführt
+  \item \textbf{Ergebnis}: Skalierbare Architektur für weitere Sensoren/Aktoren
+\end{itemize}
+
+\subsection{Beispiel: Validierung des Minimalstarts}
+
+Die Validierung des Minimalstarts umfasst mehrere Schritte.
+
+\subsubsection{Funktionale Validierung}
+
+Die funktionale Validierung prüft, ob die Transformation korrekt funktioniert:
+
+\begin{itemize}
+  \item \textbf{Transformation}: PREEvision-Modell wird erfolgreich transformiert
+  \item \textbf{Simulation}: Simulation läuft ohne Fehler
+  \item \textbf{Ergebnisse}: Ergebnisse werden korrekt generiert
+  \item \textbf{Vergleich}: Ergebnisse entsprechen erwarteten Werten
+\end{itemize}
+
+\subsubsection{Performance-Validierung}
+
+Die Performance-Validierung prüft die Performance der Transformation:
+
+\begin{itemize}
+  \item \textbf{Transformationszeit}: Transformation dauert < 1 Minute
+  \item \textbf{Simulationszeit}: Simulation läuft in akzeptabler Zeit (< 5 Minuten)
+  \item \textbf{Speicherverbrauch}: Speicherverbrauch ist akzeptabel (< 2 GB)
+  \item \textbf{Skalierbarkeit}: Framework skaliert für größere Modelle
+\end{itemize}
+
+\subsubsection{Korrektheits-Validierung}
+
+Die Korrektheits-Validierung prüft die Korrektheit der Ergebnisse:
+
+\begin{itemize}
+  \item \textbf{Analytische Modelle}: Vergleich mit analytischen Modellen
+  \item \textbf{Benchmarks}: Vergleich mit bekannten Benchmarks
+  \item \textbf{Sensitivitäts-Analyse}: Analyse der Sensitivität gegenüber Parametern
+  \item \textbf{Reproduzierbarkeit}: Ergebnisse sind reproduzierbar
+\end{itemize}
+
+\section{Erweiterte Minimalstart-Varianten}
+
+Dieser Abschnitt beschreibt erweiterte Varianten des Minimalstarts für verschiedene Anwendungsfälle.
+
+\subsection{Variante 1: Fokus auf Kommunikation}
+
+Diese Variante fokussiert auf die Kommunikation:
+
+\begin{itemize}
+  \item \textbf{Architektur}: 2x ECUs, 1x Switch, TSN-Netzwerk
+  \item \textbf{Fokus}: TSN-Konfiguration, Gate-Schedules, Latenz
+  \item \textbf{Ziel}: Validierung der TSN-Transformation
+\end{itemize}
+
+\subsection{Variante 2: Fokus auf Scheduling}
+
+Diese Variante fokussiert auf CPU-Scheduling:
+
+\begin{itemize}
+  \item \textbf{Architektur}: 1x ECU mit Multi-Core, 10+ Tasks
+  \item \textbf{Fokus}: Task-Scheduling, WCRT, Deadline-Misses
+  \item \textbf{Ziel}: Validierung der Scheduling-Transformation
+\end{itemize}
+
+\subsection{Variante 3: Fokus auf Redundanz}
+
+Diese Variante fokussiert auf Redundanz:
+
+\begin{itemize}
+  \item \textbf{Architektur}: Redundante ECUs, Redundante Links
+  \item \textbf{Fokus}: Redundanz-Mechanismen, Switchover, Verfügbarkeit
+  \item \textbf{Ziel}: Validierung der Redundanz-Transformation
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat den konkreten Minimalstart beschrieben:
+
+\begin{itemize}
+  \item \textbf{Minimal-Architektur}: Kamera, AD-ECU, Lenkaktor
+  \item \textbf{Modellierung}: Vollständige Modellierung in PREEvision
+  \item \textbf{Transformation}: Mapping-Regeln und Code-Generierung
+  \item \textbf{Simulation}: OMNeT++ Simulationssetup
+  \item \textbf{KPI-Messungen}: Timing, Kommunikation, Ressourcen
+  \item \textbf{Stress-Variante}: Framegröße +20\%
+\end{itemize}
+
+Der Minimalstart demonstriert die Machbarkeit des Ansatzes und bildet die Grundlage für die Erweiterung auf komplexere Architekturen.

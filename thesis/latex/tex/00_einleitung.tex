@@ -1,11 +1,105 @@
 \chapter{Einleitung und Motivation}
-Autonomes Fahren führt zu einer rapiden Zunahme der funktionalen, zeitlichen und infrastrukturellen Komplexität in Fahrzeug-E/E-Architekturen. Diese Arbeit adressiert die frühzeitige Evaluierung des Zusammenspiels verteilter Funktionen über eine in die Architekturentwicklungsumgebung integrierte Simulation. Ziel ist ein erweiterbares Hardware-Modell, eine belastbare Synthese-Metrik und eine deterministische Transformation in ein ausführbares Simulationsmodell, das an realitätsnahen Szenarien überprüft wird.
 
-Zentrale Beiträge sind: (i) eine domänenspezifische Komponententaxonomie und ein erweiterbares Metamodell, (ii) eine methodische Erweiterung der Synthese-Metrik zur quantitativen Ableitung von Ressourcen-, Timing- und Verfügbarkeitsparametern, (iii) ein regelbasiertes Transformationsframework in ein Simulationsziel (z.\,B. OMNeT++/INET, NS-3, FMI-Co-Sim) sowie (iv) eine systematische Evaluation entlang repräsentativer Use-Cases inklusive Fehlerszenarien.
+Die Entwicklung moderner Fahrzeuge ist durch eine zunehmende Komplexität der Elektrik/Elektronik-Architekturen (E/E-Architekturen) gekennzeichnet. Autonomes Fahren führt zu einer rapiden Zunahme der funktionalen, zeitlichen und infrastrukturellen Komplexität in Fahrzeug-E/E-Architekturen \cite{automated_driving_systems, reif_ee_architektur}. Moderne Fahrzeuge integrieren hunderte von elektronischen Steuergeräten (ECUs), komplexe Sensornetzwerke, leistungsfähige Rechenplattformen und hochentwickelte Kommunikationsnetzwerke \cite{braess_seiffen_handbuch, embedded_systems_automotive}.
 
-Forschungsfragen: Welche Modellattribute sind erforderlich, um E2E-Latenzen, Jitter, Auslastungen und Verfügbarkeit früh belastbar abzuschätzen? Wie müssen Architektur- und Kommunikationsdetails abgebildet werden, um die Simulation als Designentscheidungswerkzeug nutzbar zu machen? Wie überführt man heterogene Architekturdaten konsistent in Simulationskonfigurationen?
+Diese Arbeit adressiert die frühzeitige Evaluierung des Zusammenspiels verteilter Funktionen über eine in die Architekturentwicklungsumgebung integrierte Simulation. Ziel ist ein erweiterbares Hardware-Modell, eine belastbare Synthese-Metrik und eine deterministische Transformation in ein ausführbares Simulationsmodell, das an realitätsnahen Szenarien überprüft wird. Die Notwendigkeit für solche Ansätze wird durch die wachsende Komplexität moderner E/E-Architekturen und die Anforderungen an funktionale Sicherheit nach ISO 26262 \cite{iso26262} deutlich \cite{iso26262_practice}.
+
+Zentrale Beiträge sind: (i) eine domänenspezifische Komponententaxonomie und ein erweiterbares Metamodell, (ii) eine methodische Erweiterung der Synthese-Metrik zur quantitativen Ableitung von Ressourcen-, Timing- und Verfügbarkeitsparametern, (iii) ein regelbasiertes Transformationsframework in ein Simulationsziel (z.\,B. OMNeT++/INET, NS-3, FMI-Co-Sim) sowie (iv) eine systematische Evaluation entlang repräsentativer Use-Cases inklusive Fehlerszenarien. Diese Arbeit baut auf etablierten Methoden der modellbasierten Entwicklung \cite{model_based_development, autosar_practice} und modernen Ansätzen zur Netzwerksimulation \cite{network_simulation} auf.
+
+Forschungsfragen: Welche Modellattribute sind erforderlich, um E2E-Latenzen, Jitter, Auslastungen und Verfügbarkeit früh belastbar abzuschätzen? Wie müssen Architektur- und Kommunikationsdetails abgebildet werden, um die Simulation als Designentscheidungswerkzeug nutzbar zu machen? Wie überführt man heterogene Architekturdaten konsistent in Simulationskonfigurationen? Diese Fragen werden vor dem Hintergrund aktueller Entwicklungen in der Fahrzeugtechnik \cite{vehicle_networking, automotive_electronics} und moderner Simulationsmethoden \cite{simulation_automotive} adressiert.
 
 \section{Aufbau der Arbeit}
-Die Arbeit folgt einer 13-teiligen Gliederung: Zielbild und Anforderungen (\cref{chap:zielbild}), Taxonomie und Metamodell (\cref{chap:metamodell}), PREEvision-Modellierung (\cref{chap:preevision}), Synthese-Metrik (\cref{chap:metrik}), Transformation (\cref{chap:transformation}), technische Realisierung (\cref{chap:realisation}), Szenarien (\cref{chap:szenarien}), Simulation und Auswertung (\cref{chap:simulation}), Validierung (\cref{chap:validierung}), Deliverables (\cref{chap:deliverables}), Zeitplanung (\cref{chap:zeitplanung}), Risiken (\cref{chap:risiken}) und Minimalstart (\cref{chap:minimalstart}).
+
+Die Arbeit folgt einer systematischen Gliederung, die einen umfassenden Ansatz von der Konzeption bis zur Implementierung und Evaluierung verfolgt:
+
+\begin{enumerate}
+  \item \textbf{Zielbild und Anforderungen} (Kapitel~\ref{chap:zielbild}): Definition des Zielbilds, Scope, Anforderungen und Abnahmekriterien. Dieses Kapitel legt die Grundlage für die gesamte Arbeit und definiert, was erreicht werden soll.
+  
+  \item \textbf{Komponententaxonomie und Metamodell} (Kapitel~\ref{chap:metamodell}): Entwicklung einer erweiterbaren Taxonomie und eines präzisen Metamodells für moderne E/E-Architekturen. Dieses Kapitel definiert die strukturelle Basis für die Modellierung.
+  
+  \item \textbf{PREEvision-Modellierung} (Kapitel~\ref{chap:preevision}): Detaillierte Beschreibung der Modellierung in PREEvision, einschließlich Topologie, Kommunikation, Software-Deployment und Datenqualität. Dieses Kapitel zeigt, wie Architekturen in PREEvision modelliert werden.
+  
+  \item \textbf{Synthese-Metrik} (Kapitel~\ref{chap:metrik}): Konzeption und Erweiterung von Synthese-Metriken zur Ableitung simulativer Parameter aus Architekturmerkmalen. Dieses Kapitel beschreibt, wie aus statischen Modellen dynamische Simulationsparameter abgeleitet werden.
+  
+  \item \textbf{Transformationskonzept} (Kapitel~\ref{chap:transformation}): Konzept für die Transformation von PREEvision-Modellen in Simulationsmodelle, einschließlich Zielplattformen, Mapping-Regeln und Intermediate Model. Dieses Kapitel beschreibt die Transformationsstrategie.
+  
+  \item \textbf{Technische Realisierung} (Kapitel~\ref{chap:realisation}): Implementierung der Transformation, einschließlich Datenaufnahme, Normalisierung, Regel-Engine und Code-Generierung. Dieses Kapitel beschreibt die technische Umsetzung.
+  
+  \item \textbf{Szenarien und Use-Cases} (Kapitel~\ref{chap:szenarien}): Definition von Szenarien für die Simulation, einschließlich nominaler, Stress- und Fehlerszenarien. Dieses Kapitel beschreibt, welche Szenarien simuliert werden.
+  
+  \item \textbf{Simulation und Auswertung} (Kapitel~\ref{chap:simulation}): Durchführung von Simulationen und Auswertung der Ergebnisse, einschließlich Metriken, Akzeptanzkriterien und Ergebnisaufbereitung. Dieses Kapitel beschreibt die Simulation und Analyse.
+  
+  \item \textbf{Validierung und Iteration} (Kapitel~\ref{chap:validierung}): Validierung der Simulationsergebnisse und iterativer Prozess zur Verbesserung der Architektur. Dieses Kapitel beschreibt, wie die Ergebnisse validiert werden.
+  
+  \item \textbf{Dokumentation und Deliverables} (Kapitel~\ref{chap:deliverables}): Dokumentation und zu liefernde Artefakte, einschließlich Metamodell-Spezifikation, Transformationsregeln und Beispiel-Architekturen. Dieses Kapitel beschreibt die Dokumentation.
+  
+  \item \textbf{Zeitplanung} (Kapitel~\ref{chap:zeitplanung}): Grobe Zeitplanung für das Projekt mit verschiedenen Phasen und Meilensteinen. Dieses Kapitel beschreibt die Projektplanung.
+  
+  \item \textbf{Risiken und Gegenmaßnahmen} (Kapitel~\ref{chap:risiken}): Identifizierte Risiken und geplante Gegenmaßnahmen. Dieses Kapitel beschreibt das Risikomanagement.
+  
+          \item \textbf{Konkreter Minimalstart} (Kapitel~\ref{chap:minimalstart}): Konkreter Minimalstart mit kleinster End-to-End-Kette. Dieses Kapitel beschreibt den Proof-of-Concept.
+          
+          \item \textbf{Fallstudien und Benchmarking} (Kapitel~\ref{chap:fallstudien}): Erweiterte Fallstudien und Benchmarking-Ergebnisse. Dieses Kapitel demonstriert die Anwendung der Methodik anhand realer Architekturen.
+          
+          \item \textbf{Vergleichsstudien} (Kapitel~\ref{chap:vergleichsstudien}): Vergleich mit anderen Ansätzen und Tools. Dieses Kapitel bewertet die Methodik im Vergleich zu existierenden Lösungen.
+          
+          \item \textbf{KI-Integration} (Kapitel~\ref{chap:ki_integration}): Integration von KI-Modellen in E/E-Architekturen. Dieses Kapitel beschreibt die Modellierung und Simulation von KI-Modellen.
+          
+          \item \textbf{Cybersecurity} (Kapitel~\ref{chap:cybersecurity}): Cybersecurity in E/E-Architekturen. Dieses Kapitel behandelt Sicherheitsaspekte und deren Modellierung.
+          
+          \item \textbf{Energiemanagement} (Kapitel~\ref{chap:energiemanagement}): Energiemanagement in E/E-Architekturen. Dieses Kapitel beschreibt die Optimierung des Energieverbrauchs.
+          
+          \item \textbf{Standards und Compliance} (Kapitel~\ref{chap:standards}): Standards und Compliance in E/E-Architekturen. Dieses Kapitel behandelt relevante Standards und deren Einhaltung.
+          
+          \item \textbf{Vergleich von Architekturen} (Kapitel~\ref{chap:vergleich_architekturen}): Vergleich verschiedener E/E-Architekturen. Dieses Kapitel analysiert verschiedene Architekturansätze.
+          
+          \item \textbf{Bosch-Sensorik und NVIDIA DRIVE Thor Integration} (Kapitel~\ref{chap:bosch_nvidia}): Integration von neuester Bosch-Sensorik und NVIDIA DRIVE Thor. Dieses Kapitel beschreibt die Integration modernster Hardware-Komponenten.
+          
+          \item \textbf{VAN.APPVERSE – Die offene Mobilitäts-Microservice-Ökonomie} (Kapitel~\ref{chap:appstore}): Konzept für eine offene Mobilitäts-Plattform mit App Store und Microservices. Dieses Kapitel beschreibt die Vision einer offenen Ökonomie für Mobilitätsdienste.
+          
+          \item \textbf{Vollständiges E/E-Architektur-Regelwerk für MB Vans} (Kapitel~\ref{chap:regelwerk}): Umfassendes Regelwerk für die Entwicklung neuer E/E-Architekturen für MB Vans. Dieses Kapitel systematisiert alle Aspekte von der Konzeption bis zum Betrieb und bietet eine vollständige Referenz für Architekten, Entwickler und Projektmanager.
+        \end{enumerate}
+
+Jedes Kapitel baut auf den vorherigen auf und trägt zur Gesamtlösung bei. Die Arbeit folgt einem inkrementellen Ansatz, bei dem zunächst ein Minimalstart realisiert wird, der dann schrittweise erweitert wird.
+
+\section{Methodik und Vorgehensweise}
+
+Diese Arbeit folgt einer systematischen Methodik zur Entwicklung und Validierung des Transformations-Frameworks.
+
+\subsection{Entwicklungsmethodik}
+
+Die Entwicklung erfolgt nach einem modellbasierten Ansatz:
+
+\begin{enumerate}
+  \item \textbf{Anforderungsanalyse}: Detaillierte Analyse der Anforderungen an das Framework
+  \item \textbf{Metamodell-Entwicklung}: Entwicklung eines erweiterbaren Metamodells
+  \item \textbf{Transformations-Regel-Entwicklung}: Entwicklung von Mapping-Regeln
+  \item \textbf{Implementierung}: Implementierung des Transformations-Frameworks
+  \item \textbf{Validierung}: Validierung gegen analytische Modelle und reale Architekturen
+  \item \textbf{Evaluation}: Umfassende Evaluation mit Fallstudien
+\end{enumerate}
+
+\subsection{Validierungsmethodik}
+
+Die Validierung erfolgt auf mehreren Ebenen:
+
+\begin{itemize}
+  \item \textbf{Unit-Tests}: Tests für einzelne Komponenten
+  \item \textbf{Integration-Tests}: Tests für die Integration von Komponenten
+  \item \textbf{System-Tests}: Tests für das gesamte Framework
+  \item \textbf{Analytische Validierung}: Vergleich mit analytischen Modellen
+  \item \textbf{Empirische Validierung}: Vergleich mit realen Messungen
+\end{itemize}
+
+\subsection{Evaluationsmethodik}
+
+Die Evaluation erfolgt durch:
+
+\begin{itemize}
+  \item \textbf{Fallstudien}: Anwendung auf reale Architekturen
+  \item \textbf{Benchmarking}: Vergleich mit anderen Ansätzen
+  \item \textbf{Performance-Analyse}: Analyse der Performance
+  \item \textbf{Qualitäts-Analyse}: Analyse der Qualität der Ergebnisse
+\end{itemize}
 
 

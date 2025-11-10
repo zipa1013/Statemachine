@@ -1,4 +1,575 @@
 \chapter{Grobe Zeitplanung}\label{chap:zeitplanung}
-12--16 Wochen, mit Phasen für Anforderungen, Modellierung, Metrik, Transformation, Evaluation, Validierung und Dokumentation. Die Iterationen folgen einer inkrementellen End-to-End-Strategie.
 
+\noindent
+Dieses Kapitel beschreibt die grobe Zeitplanung für das Projekt. Die Planung umfasst 12--16 Wochen mit verschiedenen Phasen für Anforderungen, Modellierung, Metrik, Transformation, Evaluation, Validierung und Dokumentation. Eine realistische und detaillierte Zeitplanung ist essentiell für den Projekterfolg, da sie hilft, Ressourcen zu planen, Meilensteine zu setzen und Risiken frühzeitig zu identifizieren. Die Zeitplanung folgt einer inkrementellen End-to-End-Strategie, bei der in jeder Phase funktionsfähige Artefakte erstellt werden, um frühzeitig Feedback zu erhalten und Risiken zu minimieren.
 
+\section{Projektphasen}
+
+Das Projekt ist in sieben Hauptphasen unterteilt, die sequenziell und teilweise parallel abgearbeitet werden. Jede Phase hat klar definierte Ziele, Deliverables und Erfolgskriterien. Die Phasen bauen aufeinander auf, wobei einige Phasen parallel laufen können, um die Gesamtdauer zu optimieren.
+
+\subsection{Phase 1: Anforderungen und Konzeption (Woche 1--2)}
+
+Die erste Phase legt die Grundlage für das gesamte Projekt. In dieser Phase werden die Anforderungen analysiert, das Konzept entwickelt und die Zielplattform ausgewählt. Eine gründliche Anforderungsanalyse ist kritisch, da unklare oder fehlende Anforderungen zu Verzögerungen und Problemen in späteren Phasen führen können.
+
+\subsubsection{Ziele}
+
+Die Ziele dieser Phase umfassen:
+
+\begin{itemize}
+  \item \textbf{Anforderungsanalyse}: Detaillierte Analyse der Anforderungen aus verschiedenen Quellen (Stakeholder-Interviews, Literatur, bestehende Systeme). Die Anforderungen werden kategorisiert in funktionale Anforderungen (Was soll das System tun?), nichtfunktionale Anforderungen (Wie gut soll es funktionieren?) und Randbedingungen (Welche Einschränkungen gibt es?).
+  
+  \item \textbf{Zielplattform-Auswahl}: Auswahl der Simulationsplattform(en) basierend auf Anforderungen, Verfügbarkeit, Kosten und Kompatibilität. Kriterien für die Auswahl umfassen: Unterstützung für E/E-Architekturen, TSN-Funktionalität, Performance, Lizenzkosten, Community-Support, Dokumentationsqualität.
+  
+  \item \textbf{Konzept-Entwicklung}: Entwicklung des Transformationskonzepts, das beschreibt, wie PREEvision-Modelle in Simulationsmodelle transformiert werden. Das Konzept umfasst die Architektur des Transformations-Frameworks, die Rolle des Intermediate Models, die Transformationsregeln und die Validierungsstrategie.
+  
+  \item \textbf{Metamodell-Design}: Erster Entwurf des Intermediate Models (IM), der die Struktur und Semantik des Abstraktionsmodells definiert. Das IM-Design berücksichtigt die Anforderungen aus PREEvision-Exporten und die Anforderungen der Zielplattformen.
+\end{itemize}
+
+\subsubsection{Aktivitäten und Aufwand}
+
+Die Aktivitäten in dieser Phase umfassen:
+
+\begin{table}[h]
+  \centering
+  \caption{Phase 1: Detaillierte Aktivitäten und Aufwand}
+  \begin{tabular}{lll}
+    \toprule
+    Aktivität & Aufwand (Personentage) & Beschreibung \\
+    \midrule
+    Stakeholder-Interviews & 2 & Interviews mit Domänenexperten \\
+    Literatur-Recherche & 3 & Analyse bestehender Ansätze \\
+    Anforderungsdokument & 2 & Strukturierung und Dokumentation \\
+    Plattform-Evaluation & 3 & Vergleich verschiedener Plattformen \\
+    Konzept-Entwicklung & 4 & Design des Transformationskonzepts \\
+    IM-Erstentwurf & 2 & Erster Entwurf des Metamodells \\
+    Review und Anpassung & 2 & Review mit Stakeholdern \\
+    \midrule
+    \textbf{Gesamt} & \textbf{18} & \textbf{ca. 2 Wochen (1 Person)} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:phase1_activities}
+\end{table}
+
+\subsubsection{Deliverables}
+
+Die Deliverables dieser Phase umfassen:
+
+\begin{itemize}
+  \item \textbf{Anforderungsdokument}: Strukturiertes Dokument mit funktionalen und nichtfunktionalen Anforderungen, Randbedingungen, Stakeholder-Anforderungen und Use-Cases. Das Dokument dient als Referenz für alle nachfolgenden Phasen.
+  
+  \item \textbf{Konzept-Dokument}: Detailliertes Konzept-Dokument, das die Architektur des Transformations-Frameworks beschreibt, die Transformationsstrategie erläutert und Design-Entscheidungen dokumentiert. Das Dokument enthält auch Diagramme (z.\,B. Architektur-Diagramme, Datenfluss-Diagramme).
+  
+  \item \textbf{Erster IM-Entwurf}: Erster Entwurf des Intermediate Models mit Klassen-Diagramm, Attribut-Definitionen und ersten Beispielen. Dieser Entwurf wird in Phase 2 verfeinert und finalisiert.
+  
+  \item \textbf{Plattform-Evaluationsbericht}: Vergleich verschiedener Simulationsplattformen mit Empfehlung für die Auswahl.
+\end{itemize}
+
+\subsubsection{Erfolgskriterien}
+
+Die Phase ist erfolgreich abgeschlossen, wenn:
+\begin{itemize}
+  \item Alle Anforderungen dokumentiert und priorisiert sind
+  \item Eine Zielplattform ausgewählt und begründet ist
+  \item Ein konsistentes Konzept vorliegt, das von Stakeholdern akzeptiert wurde
+  \item Ein erster IM-Entwurf existiert, der die Hauptanforderungen abdeckt
+\end{itemize}
+
+\subsection{Phase 2: Modellierung und Metamodell (Woche 3--5)}
+
+\subsubsection{Ziele}
+
+\begin{itemize}
+  \item \textbf{PREEvision-Analyse}: Detaillierte Analyse der PREEvision-Exporte
+  \item \textbf{IM-Spezifikation}: Vollständige Spezifikation des Intermediate Models
+  \item \textbf{Schema-Definition}: JSON/XML Schema für das IM
+  \item \textbf{Beispiel-Modelle}: Erstellung von Beispiel-Architekturen in PREEvision
+\end{itemize}
+
+\subsubsection{Deliverables}
+
+\begin{itemize}
+  \item IM-Spezifikation (final)
+  \item Schema-Definition
+  \item Beispiel-Architekturen
+\end{itemize}
+
+\subsection{Phase 3: Synthese-Metrik (Woche 4--6)}
+
+\subsubsection{Ziele}
+
+\begin{itemize}
+  \item \textbf{Metrik-Konzeption}: Entwicklung der Synthese-Metriken
+  \item \textbf{Flow-Aggregation}: Implementierung der Chain-Identifikation
+  \item \textbf{Lastabschätzung}: Implementierung der Lastberechnungen
+  \item \textbf{Validierung}: Validierung gegen analytische Modelle
+\end{itemize}
+
+\subsubsection{Deliverables}
+
+\begin{itemize}
+  \item Metrik-Spezifikation
+  \item Implementierung der Metrik-Berechnung
+  \item Validierungs-Ergebnisse
+\end{itemize}
+
+\subsection{Phase 4: Transformation (Woche 6--9)}
+
+\subsubsection{Ziele}
+
+\begin{itemize}
+  \item \textbf{Parser-Implementierung}: Implementierung der Export-Parser
+  \item \textbf{IM-Generierung}: Implementierung der IM-Generierung
+  \item \textbf{Mapping-Regeln}: Definition der Mapping-Regeln
+  \item \textbf{Code-Generator}: Implementierung des Code-Generators
+\end{itemize}
+
+\subsubsection{Deliverables}
+
+\begin{itemize}
+  \item Parser-Implementierung
+  \item IM-Generator
+  \item Mapping-Regel-Katalog
+  \item Code-Generator (erste Version)
+\end{itemize}
+
+\subsection{Phase 5: Evaluation und Validierung (Woche 9--12)}
+
+\subsubsection{Ziele}
+
+\begin{itemize}
+  \item \textbf{Beispiel-Simulationen}: Durchführung von Beispiel-Simulationen
+  \item \textbf{Ergebnis-Auswertung}: Auswertung der Simulations-Ergebnisse
+  \item \textbf{Validierung}: Validierung gegen analytische Modelle
+  \item \textbf{Sensitivitäts-Analyse}: Durchführung von Sensitivitäts-Analysen
+\end{itemize}
+
+\subsubsection{Deliverables}
+
+\begin{itemize}
+  \item Simulations-Ergebnisse
+  \item Auswertungs-Dashboards
+  \item Validierungs-Bericht
+\end{itemize}
+
+\subsection{Phase 6: Iteration und Optimierung (Woche 12--14)}
+
+\subsubsection{Ziele}
+
+\begin{itemize}
+  \item \textbf{Bottleneck-Identifikation}: Identifikation von Problemen
+  \item \textbf{Optimierung}: Optimierung der Architektur und Transformation
+  \item \textbf{Verbesserungen}: Verbesserung der Generatoren und Metriken
+  \item \textbf{Weitere Szenarien}: Durchführung zusätzlicher Szenarien
+\end{itemize}
+
+\subsubsection{Deliverables}
+
+\begin{itemize}
+  \item Optimierte Architekturen
+  \item Verbesserte Generatoren
+  \item Zusätzliche Simulations-Ergebnisse
+\end{itemize}
+
+\subsection{Phase 7: Dokumentation (Woche 14--16)}
+
+\subsubsection{Ziele}
+
+\begin{itemize}
+  \item \textbf{Dokumentation}: Vollständige Dokumentation aller Artefakte
+  \item \textbf{Evaluationsbericht}: Erstellung des Evaluationsberichts
+  \item \textbf{Beispiele}: Erstellung von Beispielen und Tutorials
+  \item \textbf{Abschluss}: Finalisierung aller Deliverables
+\end{itemize}
+
+\subsubsection{Deliverables}
+
+\begin{itemize}
+  \item Vollständige Dokumentation
+  \item Evaluationsbericht
+  \item Beispiel-Sammlung
+  \item Alle finalen Deliverables
+\end{itemize}
+
+\section{Zeitplan-Visualisierung}
+
+\subsection{Gantt-Diagramm}
+
+\begin{table}[h]
+  \centering
+  \caption{Grobe Zeitplanung (12--16 Wochen)}
+  \begin{tabular}{llll}
+    \toprule
+    Phase & Wochen & Dauer & Abhängigkeiten \\
+    \midrule
+    Anforderungen & 1--2 & 2 Wochen & -- \\
+    Modellierung & 3--5 & 3 Wochen & Anforderungen \\
+    Synthese-Metrik & 4--6 & 3 Wochen & Modellierung (parallel) \\
+    Transformation & 6--9 & 4 Wochen & Modellierung, Metrik \\
+    Evaluation & 9--12 & 4 Wochen & Transformation \\
+    Iteration & 12--14 & 3 Wochen & Evaluation \\
+    Dokumentation & 14--16 & 3 Wochen & Alle Phasen \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:zeitplan}
+\end{table}
+
+\section{Meilensteine}
+
+Meilensteine sind wichtige Zwischenziele im Projekt, die den Fortschritt markieren und als Entscheidungspunkte für die Fortsetzung oder Anpassung des Projekts dienen. Jeder Meilenstein hat definierte Erfolgskriterien, die erfüllt sein müssen, bevor das Projekt zur nächsten Phase übergeht.
+
+\subsection{M1: Konzept (Ende Woche 2)}
+
+Der erste Meilenstein markiert den Abschluss der Konzeptionsphase und die Freigabe für die Implementierung. Die Erfolgskriterien umfassen:
+
+\begin{itemize}
+  \item \textbf{Anforderungen definiert}: Alle funktionalen und nichtfunktionalen Anforderungen sind dokumentiert, priorisiert und von Stakeholdern akzeptiert. Unklare oder widersprüchliche Anforderungen wurden geklärt.
+  
+  \item \textbf{Konzept erstellt}: Ein vollständiges und konsistentes Konzept liegt vor, das die Architektur, die Transformationsstrategie und die Validierungsansätze beschreibt. Das Konzept wurde von Experten reviewt und für umsetzbar befunden.
+  
+  \item \textbf{Zielplattform ausgewählt}: Eine Simulationsplattform wurde ausgewählt und begründet. Die Plattform erfüllt die Anforderungen und ist verfügbar (Lizenzen, Support, etc.).
+  
+  \item \textbf{IM-Erstentwurf}: Ein erster Entwurf des Intermediate Models existiert und deckt die Hauptanforderungen ab.
+\end{itemize}
+
+\subsection{M2: Metamodell (Ende Woche 5)}
+
+Dieser Meilenstein markiert die Finalisierung des Metamodells und den Beginn der Implementierung. Die Erfolgskriterien umfassen:
+
+\begin{itemize}
+  \item \textbf{IM-Spezifikation final}: Die IM-Spezifikation ist vollständig und final. Alle Klassen, Attribute, Beziehungen und Constraints sind definiert. Die Spezifikation wurde reviewt und validiert.
+  
+  \item \textbf{Schema definiert}: Ein formales Schema (JSON Schema oder XML Schema) für das IM ist definiert und validiert. Das Schema kann für automatische Validierung verwendet werden.
+  
+  \item \textbf{Beispiel-Modelle erstellt}: Mindestens drei Beispiel-Architekturen in PREEvision wurden erstellt (Minimal-, Typische-, Maximale-Architektur) und erfolgreich in das IM transformiert.
+  
+  \item \textbf{Metrik-Konzept}: Das Konzept für die Synthese-Metrik ist definiert und dokumentiert.
+\end{itemize}
+
+\subsection{M3: Transformation (Ende Woche 9)}
+
+Dieser Meilenstein markiert die Funktionsfähigkeit des Transformations-Frameworks. Die Erfolgskriterien umfassen:
+
+\begin{itemize}
+  \item \textbf{Parser implementiert}: Der Parser für PREEvision-Exporte ist implementiert und kann alle relevanten Exportformate (REST API, CSV, XML) verarbeiten. Der Parser wurde mit Beispiel-Exporten getestet.
+  
+  \item \textbf{Code-Generator funktionsfähig}: Der Code-Generator kann Simulationscode für die Zielplattform generieren. Die generierten Modelle sind syntaktisch korrekt und können kompiliert/ausgeführt werden.
+  
+  \item \textbf{Erste Simulationen durchgeführt}: Mindestens eine Beispiel-Architektur wurde erfolgreich transformiert und simuliert. Die Simulation läuft ohne Fehler und produziert Ergebnisse.
+  
+  \item \textbf{Mapping-Regeln dokumentiert}: Alle Mapping-Regeln sind dokumentiert und in YAML-Dateien verfügbar.
+\end{itemize}
+
+\subsection{M4: Evaluation (Ende Woche 12)}
+
+Dieser Meilenstein markiert den Abschluss der Evaluierungsphase. Die Erfolgskriterien umfassen:
+
+\begin{itemize}
+  \item \textbf{Alle Beispiel-Szenarien durchgeführt}: Alle definierten Szenarien (Nominal, Stress, Fehler, Varianten) wurden für mindestens eine Referenz-Architektur durchgeführt.
+  
+  \item \textbf{Ergebnisse ausgewertet}: Alle Simulationsergebnisse wurden ausgewertet und in Dashboards visualisiert. KPIs wurden berechnet und dokumentiert.
+  
+  \item \textbf{Validierung abgeschlossen}: Die Simulationsergebnisse wurden gegen analytische Modelle validiert. Die Validierungskriterien (Abweichung < 10\%, $R^2 > 0.9$) wurden erfüllt oder Abweichungen wurden dokumentiert und erklärt.
+  
+  \item \textbf{Sensitivitäts-Analyse}: Sensitivitätsanalysen wurden für kritische Parameter durchgeführt und dokumentiert.
+\end{itemize}
+
+\subsection{M5: Abschluss (Ende Woche 16)}
+
+Dieser Meilenstein markiert den erfolgreichen Abschluss des Projekts. Die Erfolgskriterien umfassen:
+
+\begin{itemize}
+  \item \textbf{Alle Deliverables fertiggestellt}: Alle geplanten Deliverables (IM-Spezifikation, Transformationsregeln, Generator, Beispiel-Architekturen, Szenarienkatalog, KPI-Definitionen) sind vollständig und qualitätsgeprüft.
+  
+  \item \textbf{Dokumentation vollständig}: Die vollständige Dokumentation liegt vor, einschließlich Benutzerhandbuch, Entwicklerhandbuch, API-Dokumentation und Architektur-Dokumentation. Die Dokumentation wurde reviewt und ist konsistent.
+  
+  \item \textbf{Evaluationsbericht erstellt}: Ein umfassender Evaluationsbericht liegt vor, der die Methodik, Ergebnisse, Erkenntnisse und Ausblick beschreibt. Der Bericht wurde reviewt und freigegeben.
+  
+  \item \textbf{Code und Artefakte versioniert}: Alle Code-Artefakte, Dokumentation und Beispiele sind in einem Versionskontrollsystem gespeichert und getaggt. Ein Release-Paket wurde erstellt.
+\end{itemize}
+
+\section{Ressourcen}
+
+Die Ressourcenplanung umfasst sowohl personelle als auch technische Ressourcen. Eine realistische Ressourcenplanung ist essentiell, um sicherzustellen, dass das Projekt erfolgreich abgeschlossen werden kann.
+
+\subsection{Personelle Ressourcen}
+
+Die personellen Ressourcen umfassen verschiedene Rollen mit unterschiedlichen Verantwortlichkeiten und Zeitanteilen:
+
+\begin{table}[h]
+  \centering
+  \caption{Personelle Ressourcen-Planung}
+  \begin{tabular}{llll}
+    \toprule
+    Rolle & Anzahl & Zeitanteil & Hauptverantwortlichkeiten \\
+    \midrule
+    Projektleiter & 1 & 100\% & Projektmanagement, Koordination, Reviews \\
+    Entwickler & 1--2 & 100\% & Implementierung, Tests, Dokumentation \\
+    Experte (PREEvision) & 0.5 & 20\% & Beratung zu PREEvision, Modellierung \\
+    Experte (Simulation) & 0.5 & 20\% & Beratung zu Simulation, Validierung \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:personnel_resources}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{Projektleiter}: 1 Person, 100\% über gesamte Dauer (12--16 Wochen). Verantwortlichkeiten umfassen: Projektplanung und -steuerung, Koordination zwischen Phasen, Stakeholder-Management, Qualitätssicherung, Risikomanagement, Review-Organisation.
+  
+  \item \textbf{Entwickler}: 1--2 Personen, 100\% für Entwicklung. Verantwortlichkeiten umfassen: Implementierung des Parsers, IM-Generators, Code-Generators, Tests, Dokumentation. Bei 2 Entwicklern können Aufgaben parallelisiert werden (z.\,B. einer für Parser/IM, einer für Code-Generator).
+  
+  \item \textbf{Experte (PREEvision)}: 0.5 Person (ca. 20\% Zeitanteil), für Beratung. Unterstützt bei: PREEvision-Modellierung, Export-Formaten, Best Practices, Problemlösung bei Exporten. Wird hauptsächlich in Phase 2 und 4 benötigt.
+  
+  \item \textbf{Experte (Simulation)}: 0.5 Person (ca. 20\% Zeitanteil), für Beratung. Unterstützt bei: Simulationsplattform-Auswahl, Simulations-Setup, Validierung, Performance-Optimierung. Wird hauptsächlich in Phase 1, 4 und 5 benötigt.
+\end{itemize}
+
+\subsection{Technische Ressourcen}
+
+Die technischen Ressourcen umfassen Software-Lizenzen, Entwicklungstools und Hardware:
+
+\begin{table}[h]
+  \centering
+  \caption{Technische Ressourcen-Übersicht}
+  \begin{tabular}{lll}
+    \toprule
+    Ressource & Typ & Beschreibung \\
+    \midrule
+    PREEvision-Lizenz & Software & Für Modellierung und Export (Phase 2, 4) \\
+    OMNeT++/Simulink & Software & Simulationsplattform (kostenlos/kostenpflichtig) \\
+    Entwicklungsumgebung & Software & IDE (z.\,B. PyCharm, IntelliJ), Git, CI/CD \\
+    Rechner-Ressourcen & Hardware & Für Simulationen (CPU, RAM, Storage) \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:technical_resources}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{PREEvision-Lizenz}: Für Modellierung und Export. Wird hauptsächlich in Phase 2 (Beispiel-Modelle) und Phase 4 (Testing der Transformation) benötigt. Die Lizenz muss für die gesamte Projektlaufzeit verfügbar sein.
+  
+  \item \textbf{Simulations-Tools}: OMNeT++ (kostenlos, Open Source), Simulink (kostenpflichtig, falls verwendet), oder andere Simulationsplattformen. Die Auswahl hängt von der Plattform-Evaluation in Phase 1 ab. Für OMNeT++ sind keine Lizenzkosten erforderlich, für Simulink können erhebliche Kosten anfallen.
+  
+  \item \textbf{Entwicklungsumgebung}: 
+    \begin{itemize}
+      \item IDE: PyCharm/IntelliJ (für Python/Java), Visual Studio Code
+      \item Versionskontrolle: Git mit Repository (z.\,B. GitHub, GitLab)
+      \item CI/CD: GitHub Actions, GitLab CI, oder Jenkins für automatische Tests
+      \item Dokumentation: Sphinx (Python), Javadoc (Java), Markdown-Tools
+    \end{itemize}
+  
+  \item \textbf{Rechner-Ressourcen}: Für Simulationen werden leistungsfähige Rechner benötigt:
+    \begin{itemize}
+      \item CPU: Multi-Core-Prozessor (8+ Kerne empfohlen für parallele Simulationen)
+      \item RAM: Mindestens 16 GB, besser 32 GB für große Modelle
+      \item Storage: SSD mit ausreichend Platz für Simulations-Ergebnisse (100+ GB)
+      \item Optional: GPU für beschleunigte Simulationen (falls unterstützt)
+    \end{itemize}
+\end{itemize}
+
+\section{Risikomanagement}
+
+Das Risikomanagement identifiziert potenzielle Risiken, bewertet ihre Auswirkungen und definiert Gegenmaßnahmen. Ein proaktives Risikomanagement hilft, Verzögerungen zu vermeiden und das Projekt erfolgreich abzuschließen.
+
+\subsection{Pufferzeiten}
+
+Pufferzeiten werden strategisch in kritischen Phasen eingebaut, um unvorhergesehene Probleme abzufedern:
+
+\begin{table}[h]
+  \centering
+  \caption{Pufferzeiten-Planung}
+  \begin{tabular}{llll}
+    \toprule
+    Puffer & Phase & Dauer & Begründung \\
+    \midrule
+    Technische Risiken & 4--5 & 2 Wochen & Komplexe Implementierung, mögliche Probleme \\
+    Datenverfügbarkeit & 2 & 1 Woche & PREEvision-Exporte könnten unvollständig sein \\
+    Unvorhergesehene Probleme & Gesamt & 2 Wochen & Allgemeiner Puffer für alle Phasen \\
+    \midrule
+    \textbf{Gesamt-Puffer} & -- & \textbf{5 Wochen} & \textbf{ca. 31\% der Gesamtdauer} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:buffer_times}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{Technische Risiken}: 2 Wochen Puffer in Phase 4--5 (Transformation und Evaluation). Diese Phasen sind technisch anspruchsvoll und können unerwartete Probleme aufwerfen (z.\,B. Kompatibilitätsprobleme, Performance-Probleme, Bugs in der Transformation).
+  
+  \item \textbf{Datenverfügbarkeit}: 1 Woche Puffer in Phase 2 (Modellierung). PREEvision-Exporte könnten unvollständig sein oder fehlende Attribute enthalten, was zusätzliche Zeit für Datenbeschaffung oder Schätzungen erfordert.
+  
+  \item \textbf{Unvorhergesehene Probleme}: 2 Wochen Gesamt-Puffer, verteilt über das gesamte Projekt. Dieser Puffer deckt unvorhergesehene Probleme ab, die nicht spezifisch einer Phase zugeordnet werden können (z.\,B. Krankheit, unerwartete Anforderungsänderungen, externe Abhängigkeiten).
+\end{itemize}
+
+Die Gesamt-Projektdauer beträgt damit 12 Wochen (Basis) + 5 Wochen (Puffer) = 17 Wochen, wobei die Pufferzeiten flexibel eingesetzt werden können.
+
+\subsection{Alternativ-Pläne}
+
+Alternativ-Pläne definieren Strategien für den Fall, dass das Projekt in Verzug gerät oder Ressourcen knapp werden:
+
+\begin{itemize}
+  \item \textbf{Reduzierter Scope}: Falls Zeit knapp wird, Fokus auf Kern-Funktionalität:
+    \begin{itemize}
+      \item Priorisierung: Nur eine Zielplattform statt mehrerer
+      \item Vereinfachung: Reduzierte Anzahl von Beispiel-Architekturen
+      \item Minimal-Version: Fokus auf Minimal- und Typische-Architektur, Maximale-Architektur optional
+      \item Dokumentation: Kern-Dokumentation statt vollständiger Dokumentation
+    \end{itemize}
+  
+  \item \textbf{Parallelisierung}: Parallele Arbeit an verschiedenen Komponenten, um Zeit zu sparen:
+    \begin{itemize}
+      \item Parser und Code-Generator können parallel entwickelt werden (nach IM-Spezifikation)
+      \item Dokumentation kann parallel zur Implementierung geschrieben werden
+      \item Beispiel-Architekturen können parallel zur Generator-Entwicklung erstellt werden
+    \end{itemize}
+  
+  \item \textbf{Externe Unterstützung}: Bei Bedarf externe Unterstützung einholen:
+    \begin{itemize}
+      \item Externe Entwickler für spezifische Aufgaben (z.\,B. Template-Entwicklung)
+      \item Beratung von Experten bei komplexen Problemen
+      \item Nutzung von Open-Source-Komponenten, wo möglich
+    \end{itemize}
+  
+  \item \textbf{Phasen-Verschiebung}: Falls notwendig, können nicht-kritische Phasen verschoben werden:
+    \begin{itemize}
+      \item Dokumentation kann teilweise in eine Nachprojektphase verschoben werden
+      \item Zusätzliche Szenarien können optional gemacht werden
+      \item Erweiterte Validierung kann reduziert werden
+    \end{itemize}
+\end{itemize}
+
+\subsection{Risiko-Monitoring}
+
+Das Risiko-Monitoring erfolgt kontinuierlich während des Projekts:
+
+\begin{itemize}
+  \item \textbf{Wöchentliche Reviews}: Wöchentliche Überprüfung des Projektfortschritts und Identifikation neuer Risiken
+  \item \textbf{Meilenstein-Reviews}: Detaillierte Risiko-Bewertung an jedem Meilenstein
+  \item \textbf{Risiko-Register}: Dokumentation aller identifizierten Risiken, ihrer Wahrscheinlichkeit, Auswirkung und Gegenmaßnahmen
+  \item \textbf{Eskalations-Prozess}: Klarer Prozess für die Eskalation kritischer Risiken an Stakeholder
+\end{itemize}
+
+\section{Erweiterte Planungs-Aspekte}
+
+Dieser Abschnitt beschreibt erweiterte Aspekte der Projektplanung, die für den Projekterfolg wichtig sind.
+
+\subsection{Agile Methoden}
+
+Agile Methoden ermöglichen eine flexible Anpassung des Projekts an sich ändernde Anforderungen.
+
+\subsubsection{Sprints}
+
+Das Projekt kann in Sprints unterteilt werden:
+
+\begin{itemize}
+  \item \textbf{Sprint-Dauer}: 2 Wochen pro Sprint
+  \item \textbf{Sprint-Planning}: Zu Beginn jedes Sprints werden Ziele und Aufgaben definiert
+  \item \textbf{Daily Standups}: Tägliche kurze Meetings zur Synchronisation
+  \item \textbf{Sprint-Review}: Am Ende jedes Sprints werden Ergebnisse präsentiert
+  \item \textbf{Retrospective}: Reflexion über den Sprint und Verbesserungen
+\end{itemize}
+
+\subsubsection{Backlog-Management}
+
+Ein Product Backlog enthält alle geplanten Features und Aufgaben:
+
+\begin{itemize}
+  \item \textbf{Priorisierung}: Features werden nach Wichtigkeit priorisiert
+  \item \textbf{Schätzung}: Aufwand wird geschätzt (z.\,B. Story Points)
+  \item \textbf{Refinement}: Backlog wird regelmäßig verfeinert und aktualisiert
+  \item \textbf{Sprint-Backlog}: Ausgewählte Items für den aktuellen Sprint
+\end{itemize}
+
+\subsection{Qualitätssicherung}
+
+Qualitätssicherung ist ein kontinuierlicher Prozess während des gesamten Projekts.
+
+\subsubsection{Code-Reviews}
+
+Code-Reviews verbessern die Code-Qualität:
+
+\begin{itemize}
+  \item \textbf{Peer Reviews}: Entwickler reviewen Code von Kollegen
+  \item \textbf{Checkliste}: Strukturierte Checkliste für Reviews
+  \item \textbf{Automatisierung}: Automatische Checks (Linting, Formatting)
+  \item \textbf{Feedback-Kultur}: Konstruktives Feedback fördern
+\end{itemize}
+
+\subsubsection{Testing-Strategie}
+
+Eine umfassende Testing-Strategie umfasst:
+
+\begin{itemize}
+  \item \textbf{Unit-Tests}: Tests für einzelne Funktionen/Methoden
+  \item \textbf{Integration-Tests}: Tests für Komponenten-Integration
+  \item \textbf{System-Tests}: Tests für das gesamte System
+  \item \textbf{Regression-Tests}: Tests zur Verhinderung von Regressionen
+  \item \textbf{Performance-Tests}: Tests für Performance und Skalierbarkeit
+\end{itemize}
+
+\subsection{Kommunikation und Koordination}
+
+Effektive Kommunikation ist entscheidend für den Projekterfolg.
+
+\subsubsection{Stakeholder-Kommunikation}
+
+Regelmäßige Kommunikation mit Stakeholdern:
+
+\begin{itemize}
+  \item \textbf{Wöchentliche Updates}: Status-Updates per E-Mail oder Meeting
+  \item \textbf{Monatliche Reviews}: Detaillierte Reviews mit Präsentationen
+  \item \textbf{Ad-hoc-Kommunikation}: Bei kritischen Problemen
+  \item \textbf{Feedback-Sammlung}: Regelmäßige Sammlung von Feedback
+\end{itemize}
+
+\subsubsection{Team-Kommunikation}
+
+Effektive Team-Kommunikation:
+
+\begin{itemize}
+  \item \textbf{Team-Meetings}: Regelmäßige Team-Meetings (z.\,B. wöchentlich)
+  \item \textbf{Technische Diskussionen}: Detaillierte technische Diskussionen
+  \item \textbf{Dokumentation}: Wichtige Entscheidungen werden dokumentiert
+  \item \textbf{Kollaborations-Tools}: Nutzung von Tools wie Slack, Teams, etc.
+\end{itemize}
+
+\section{Erweiterte Projektmanagement-Aspekte}
+
+Dieser Abschnitt beschreibt erweiterte Aspekte des Projektmanagements für ein solches Projekt.
+
+\subsection{Ressourcen-Management}
+
+Effektives Ressourcen-Management ist entscheidend für den Projekterfolg:
+
+\begin{itemize}
+  \item \textbf{Personal-Ressourcen}: Planung von Personal-Ressourcen mit verschiedenen Fähigkeiten
+  \item \textbf{Technische Ressourcen}: Planung von Hardware, Software, Tools
+  \item \textbf{Externe Ressourcen}: Planung von externen Dienstleistern, Beratern
+  \item \textbf{Ressourcen-Optimierung}: Optimierung der Ressourcen-Nutzung
+\end{itemize}
+
+\subsection{Qualitätsmanagement}
+
+Qualitätsmanagement sichert die Qualität der Ergebnisse:
+
+\begin{itemize}
+  \item \textbf{Qualitätsplanung}: Definition von Qualitätszielen und -kriterien
+  \item \textbf{Qualitätssicherung}: Kontinuierliche Qualitätssicherung während der Entwicklung
+  \item \textbf{Qualitätskontrolle}: Prüfung der Ergebnisse gegen Qualitätskriterien
+  \item \textbf{Qualitätsverbesserung}: Kontinuierliche Verbesserung basierend auf Feedback
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die grobe Zeitplanung für das Projekt beschrieben. Eine realistische und detaillierte Zeitplanung ist essentiell für den Projekterfolg, da sie hilft, Ressourcen zu planen, Meilensteine zu setzen und Risiken frühzeitig zu identifizieren.
+
+Die wichtigsten Aspekte dieses Kapitels sind:
+
+\begin{itemize}
+  \item \textbf{7 Phasen}: Das Projekt ist in sieben Hauptphasen unterteilt (Anforderungen, Modellierung, Synthese-Metrik, Transformation, Evaluation, Iteration, Dokumentation), die sequenziell und teilweise parallel abgearbeitet werden. Jede Phase hat klar definierte Ziele, Deliverables und Erfolgskriterien.
+  
+  \item \textbf{12--17 Wochen}: Die Gesamtdauer beträgt 12 Wochen (Basis) plus 5 Wochen Puffer, was eine realistische Planung ermöglicht. Die Pufferzeiten werden strategisch in kritischen Phasen eingebaut, um unvorhergesehene Probleme abzufedern.
+  
+  \item \textbf{5 Meilensteine}: Fünf wichtige Meilensteine markieren den Fortschritt und dienen als Entscheidungspunkte (Konzept, Metamodell, Transformation, Evaluation, Abschluss). Jeder Meilenstein hat definierte Erfolgskriterien.
+  
+  \item \textbf{Ressourcen}: Die Ressourcenplanung umfasst personelle Ressourcen (Projektleiter, Entwickler, Experten) und technische Ressourcen (Software-Lizenzen, Entwicklungstools, Hardware). Eine realistische Ressourcenplanung ist essentiell für den Projekterfolg.
+  
+  \item \textbf{Risikomanagement}: Das Risikomanagement umfasst Pufferzeiten (5 Wochen Gesamt-Puffer), Alternativ-Pläne (reduzierter Scope, Parallelisierung, externe Unterstützung) und kontinuierliches Risiko-Monitoring. Ein proaktives Risikomanagement hilft, Verzögerungen zu vermeiden.
+\end{itemize}
+
+Die Zeitplanung folgt einer inkrementellen End-to-End-Strategie, bei der in jeder Phase funktionsfähige Artefakte erstellt werden. Dieser Ansatz ermöglicht es, frühzeitig Feedback zu erhalten, Risiken zu minimieren und den Fortschritt kontinuierlich zu überwachen. Die flexible Planung mit Pufferzeiten und Alternativ-Plänen ermöglicht es, auf unvorhergesehene Probleme zu reagieren, ohne das Projektziel zu gefährden.

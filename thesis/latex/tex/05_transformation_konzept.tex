@@ -1,11 +1,850 @@
 \chapter{Transformationskonzept zum Simulationsmodell}\label{chap:transformation}
+
+\noindent
+Dieses Kapitel beschreibt das Konzept für die Transformation eines Architekturmodells aus PREEvision in ein Simulationsmodell. Die Transformation muss alle relevanten Aspekte der Architektur (Topologie, Kommunikation, Software, Timing) korrekt in die Semantik der Zielplattform überführen, sodass eine realistische Performance-Analyse möglich ist. Die Transformation basiert auf etablierten Methoden der modellbasierten Entwicklung \cite{model_based_development, autosar_practice} und modernen Ansätzen zur Netzwerksimulation \cite{network_simulation}.
+
+Die Transformation muss insbesondere die neuesten Sensoren (Bosch 8MP Multifunktionskamera, Bosch Radar, Bosch LiDAR) und Rechenplattformen (NVIDIA DRIVE Thor) korrekt abbilden, um realistische Simulationsergebnisse zu erzielen. Diese Komponenten stellen neue Anforderungen an die Transformationsregeln und erfordern spezielle Mapping-Strategien.
+
+Die Auswahl geeigneter Simulationsplattformen ist entscheidend für die Qualität der Ergebnisse. Verschiedene Plattformen bieten unterschiedliche Stärken für die Modellierung von E/E-Architekturen \cite{simulation_automotive}, wobei moderne Cloud-basierte Ansätze \cite{cyber_physical_systems} zunehmend an Bedeutung gewinnen.
+
 \section{Zielplattformen}
-OMNeT++/INET, NS-3, Simulink/Truetime, Modelica, ROS~2/DDS, FMI-Co-Simulation.
+
+\subsection{Übersicht}
+
+Verschiedene Simulationsplattformen bieten unterschiedliche Stärken für die Modellierung von E/E-Architekturen. Die Auswahl hängt von den spezifischen Anforderungen ab:
+
+\subsubsection{OMNeT++/INET}
+
+OMNeT++ ist ein diskretes Ereignis-Simulationsframework mit spezialisierten Erweiterungen für Netzwerksimulation:
+
+\begin{itemize}
+  \item \textbf{Stärken}:
+    \begin{itemize}
+      \item Detaillierte Netzwerksimulation (Ethernet, TSN, CAN)
+      \item Modulares Komponentenmodell
+      \item Gute Performance für große Netze
+      \item Umfangreiche Analyse-Tools
+    \end{itemize}
+  \item \textbf{Schwächen}:
+    \begin{itemize}
+      \item Begrenzte CPU-Scheduling-Modellierung
+      \item Komplexere Einarbeitung
+    \end{itemize}
+  \item \textbf{Einsatz}: Primär für Kommunikationsanalyse, TSN-Simulation
+\end{itemize}
+
+\subsubsection{NS-3}
+
+NS-3 ist ein Open-Source-Netzwerksimulator:
+
+\begin{itemize}
+  \item \textbf{Stärken}:
+    \begin{itemize}
+      \item Realistische Netzwerkprotokolle
+      \item Gute TSN-Unterstützung
+      \item Aktive Community
+    \end{itemize}
+  \item \textbf{Schwächen}:
+    \begin{itemize}
+      \item Begrenzte CPU-Modellierung
+      \item Komplexere Konfiguration
+    \end{itemize}
+  \item \textbf{Einsatz}: Alternative zu OMNeT++ für Netzwerksimulation
+\end{itemize}
+
+\subsubsection{Simulink/TrueTime}
+
+Simulink mit TrueTime-Toolbox bietet co-simulative Modellierung:
+
+\begin{itemize}
+  \item \textbf{Stärken}:
+    \begin{itemize}
+      \item Integrierte CPU-Scheduling-Simulation
+      \item Kontinuierliche und diskrete Simulation
+      \item Gute Integration mit Control-Design-Tools
+    \end{itemize}
+  \item \textbf{Schwächen}:
+    \begin{itemize}
+      \item Begrenzte Netzwerkdetaillierung
+      \item Proprietär (MathWorks)
+    \end{itemize}
+  \item \textbf{Einsatz}: Für CPU-Scheduling-Analyse, Control-Loops
+\end{itemize}
+
+\subsubsection{Modelica}
+
+Modelica ist eine objektorientierte Modellierungssprache für physikalische Systeme:
+
+\begin{itemize}
+  \item \textbf{Stärken}:
+    \begin{itemize}
+      \item Multi-Domain-Modellierung (Elektrik, Mechanik, Thermodynamik)
+      \item Akausale Modellierung
+      \item Gute Energie-Modellierung
+    \end{itemize}
+  \item \textbf{Schwächen}:
+    \begin{itemize}
+      \item Begrenzte Echtzeit-Scheduling-Modellierung
+      \item Komplexere Netzwerkmodellierung
+    \end{itemize}
+  \item \textbf{Einsatz}: Für Energie-Analyse, Multi-Domain-Simulation
+\end{itemize}
+
+\subsubsection{ROS~2/DDS}
+
+ROS~2 mit DDS-Middleware bietet verteilte Systemsimulation:
+
+\begin{itemize}
+  \item \textbf{Stärken}:
+    \begin{itemize}
+      \item Realistische Middleware-Simulation
+      \item Gute Integration mit Robotik-Tools
+      \item Service-orientierte Kommunikation
+      \item Moderne DDS-Implementierungen (FastDDS, CycloneDDS, RTI Connext)
+      \item Unterstützung für deterministische Kommunikation
+    \end{itemize}
+  \item \textbf{Schwächen}:
+    \begin{itemize}
+      \item Begrenzte Timing-Genauigkeit
+      \item Komplexere Einrichtung
+    \end{itemize}
+  \item \textbf{Einsatz}: Für Software-Architektur-Validierung
+\end{itemize}
+
+\subsubsection{Cloud-basierte Simulationsplattformen}
+
+Moderne Cloud-basierte Simulationsplattformen bieten Skalierung und Flexibilität:
+
+\begin{itemize}
+  \item \textbf{AWS RoboMaker / AWS IoT Device Simulator}:
+    \begin{itemize}
+      \item Skalierbare Cloud-Simulationen für E/E-Architekturen
+      \item Integration mit AWS-Services (S3, Lambda, CloudWatch)
+      \item Pay-per-use Modell für kosteneffiziente Simulationen
+      \item Unterstützung für ROS 2 und Gazebo
+    \end{itemize}
+  
+  \item \textbf{Microsoft Azure Digital Twins}:
+    \begin{itemize}
+      \item Digitale Zwillinge für E/E-Architekturen
+      \item Integration mit Azure IoT Hub und Edge
+      \item Real-time Analytics mit Azure Stream Analytics
+      \item Graph-basierte Modellierung mit Digital Twins Definition Language (DTDL)
+    \end{itemize}
+  
+  \item \textbf{Google Cloud Simulation Platform}:
+    \begin{itemize}
+      \item Kubernetes-basierte Skalierung für parallele Simulationen
+      \item Integration mit TensorFlow für ML-basierte Simulationen
+      \item BigQuery für große Ergebnis-Datensätze
+      \item Vertex AI für AI/ML-Workloads
+    \end{itemize}
+  
+  \item \textbf{Edge-Cloud-Hybrid}:
+    \begin{itemize}
+      \item Edge Computing für Echtzeit-Simulationen (NVIDIA Jetson, Intel Edge)
+      \item Cloud für komplexe Analysen und Batch-Processing
+      \item Federated Learning für verteilte ML-Modelle
+      \item 5G-Integration für Low-Latency-Kommunikation
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{FMI-Co-Simulation}
+
+Functional Mock-up Interface (FMI) ermöglicht Co-Simulation verschiedener Tools und ist ein Standard für die Integration heterogener Simulationsmodelle. FMI ist besonders wertvoll für E/E-Architekturen, da verschiedene Aspekte (Netzwerk, CPU, Energie, Physik) oft in verschiedenen Tools modelliert werden.
+
+\paragraph{FMI 2.0 und 3.0}
+
+FMI 2.0 bietet:
+\begin{itemize}
+  \item \textbf{FMU (Functional Mock-up Unit)}: Standardisierte Einheit für Simulationsmodelle
+  \item \textbf{Co-Simulation}: Koordinierte Ausführung mehrerer FMUs
+  \item \textbf{Model Exchange}: Austausch von Modellen zwischen Tools
+  \item \textbf{Unabhängigkeit}: FMUs sind unabhängig vom Erstellungs-Tool
+\end{itemize}
+
+FMI 3.0 erweitert dies um:
+\begin{itemize}
+  \item \textbf{Clocked Co-Simulation}: Synchronisierte Co-Simulation mit Takt-Signalen
+  \item \textbf{Scheduled Execution}: Geplante Ausführung für deterministische Simulationen
+  \item \textbf{Structured I/O}: Strukturierte Ein- und Ausgaben für komplexe Daten
+  \item \textbf{Binary Distribution}: Effiziente binäre Verteilung von FMUs
+\end{itemize}
+
+\paragraph{Anwendung in E/E-Architekturen}
+
+FMI-Co-Simulation ermöglicht die Integration verschiedener Simulationsmodelle:
+
+\begin{itemize}
+  \item \textbf{Netzwerk-Simulation} (OMNeT++): Modelliert Ethernet/TSN-Kommunikation
+  \item \textbf{CPU-Simulation} (Simulink/TrueTime): Modelliert Task-Scheduling und Verarbeitung
+  \item \textbf{Energie-Simulation} (Modelica): Modelliert Energieverbrauch und Wärmeentwicklung
+  \item \textbf{Physik-Simulation} (CarSim, IPG CarMaker): Modelliert Fahrzeugdynamik
+\end{itemize}
+
+Die Co-Simulation koordiniert die Ausführung dieser Modelle und ermöglicht eine realistische Simulation des gesamten Systems.
+
+\paragraph{Beispiel: FMI-Co-Simulation Setup}
+
+Ein typisches Setup für eine E/E-Architektur-Simulation:
+
+\begin{verbatim}
+# FMI Co-Simulation Konfiguration
+fmus:
+  - name: network_sim
+    type: co-simulation
+    path: models/network.fmu
+    step_size: 0.001  # 1 ms
+    
+  - name: cpu_sim
+    type: co-simulation
+    path: models/cpu.fmu
+    step_size: 0.0001  # 0.1 ms
+    
+  - name: energy_sim
+    type: co-simulation
+    path: models/energy.fmu
+    step_size: 0.01  # 10 ms
+
+connections:
+  - from: network_sim.frame_latency
+    to: cpu_sim.network_delay
+    
+  - from: cpu_sim.cpu_load
+    to: energy_sim.compute_power
+\end{verbatim}
+
+Dieses Setup ermöglicht die simultane Simulation von Netzwerk, CPU und Energie, wobei die Modelle über definierte Schnittstellen kommunizieren.
+
+Functional Mock-up Interface (FMI) 2.0/3.0 ermöglicht Co-Simulation verschiedener Tools:
+
+\begin{itemize}
+  \item \textbf{Stärken}:
+    \begin{itemize}
+      \item Tool-übergreifende Simulation (FMI 2.0 für Co-Simulation, FMI 3.0 für Model Exchange)
+      \item Standardisiertes Interface (FMI Standard)
+      \item Wiederverwendbare Komponenten (FMUs - Functional Mock-up Units)
+      \item Unterstützung für verschiedene Solver
+      \item Moderne Implementierungen (FMPy, PyFMI, FMI++ Library)
+    \end{itemize}
+  \item \textbf{Schwächen}:
+    \begin{itemize}
+      \item Synchronisations-Overhead zwischen Tools
+      \item Komplexere Koordination bei vielen FMUs
+      \item Performance-Overhead durch Tool-Grenzen
+    \end{itemize}
+  \item \textbf{Einsatz}: Für Multi-Tool-Co-Simulation, Multi-Domain-Simulation
+\end{itemize}
+
+\subsubsection{Moderne Simulationsframeworks}
+
+Neue Simulationsframeworks bieten erweiterte Funktionalität:
+
+\begin{itemize}
+  \item \textbf{CARLA}: Open-Source-Simulator für autonomes Fahren mit realistischer Sensorik
+  \item \textbf{SUMO}: Verkehrssimulation für V2X-Szenarien
+  \item \textbf{Apache Airflow}: Workflow-Management für komplexe Simulations-Pipelines
+  \item \textbf{Prefect}: Moderne Alternative zu Airflow mit Python-First-Ansatz
+  \item \textbf{Dagster}: Data Orchestration Platform für Simulations-Pipelines
+\end{itemize}
+
+\subsection{Auswahlkriterien}
+
+Die Auswahl einer Zielplattform hängt von folgenden Kriterien ab:
+
+\begin{table}[h]
+  \centering
+  \caption{Auswahlkriterien für Simulationsplattformen}
+  \begin{tabular}{llll}
+    \toprule
+    Kriterium & OMNeT++ & Simulink & Modelica \\
+    \midrule
+    Netzwerk-Detaillierung & +++ & + & + \\
+    CPU-Scheduling & + & +++ & + \\
+    TSN-Support & +++ & + & - \\
+    Energie-Modellierung & + & + & +++ \\
+    Performance & +++ & ++ & + \\
+    Tool-Kosten & Open & Proprietär & Proprietär \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:platform_vergleich}
+\end{table}
 
 \section{Mapping-Regeln}
-ECU $\rightarrow$ Rechenknoten mit Ressourcen- und Schedulerparametern; Netzwerk $\rightarrow$ Kanal mit Bandbreite, Latenz, Jitter, Priorisierung; Messages/Signals $\rightarrow$ Traffic-Flows; SWC/Chain $\rightarrow$ Tasks/Pipelines; Redundanzgruppen $\rightarrow$ parallele Pfade.
+
+\subsection{Grundprinzipien}
+
+Mapping-Regeln definieren, wie Architektur-Elemente aus PREEvision in Simulations-Elemente der Zielplattform transformiert werden. Die Regeln müssen semantisch korrekt sein und alle relevanten Aspekte berücksichtigen.
+
+\subsection{ECU $\rightarrow$ Rechenknoten}
+
+\subsubsection{Strukturelles Mapping}
+
+Ein ECU aus PREEvision wird zu einem Rechenknoten im Simulationsmodell:
+
+\begin{itemize}
+  \item \textbf{ECU-Identifikation} $\rightarrow$ \textbf{Node-ID}: Eindeutige Identifikation bleibt erhalten
+  \item \textbf{CPU-Kerne} $\rightarrow$ \textbf{CPU-Ressourcen}: Anzahl Kerne, Frequenz, Topologie
+  \item \textbf{GPU/NPU} $\rightarrow$ \textbf{Accelerator-Ressourcen}: Rechenleistung, Speicher
+  \item \textbf{RAM/Storage} $\rightarrow$ \textbf{Memory-Ressourcen}: Größe, Zugriffszeiten
+  \item \textbf{ASIL-Level} $\rightarrow$ \textbf{Safety-Attribute}: Für Verfügbarkeitsmodellierung
+\end{itemize}
+
+\subsubsection{Scheduler-Parameter}
+
+Die Scheduling-Parameter werden aus Task-Definitionen abgeleitet:
+
+\begin{table}[h]
+  \centering
+  \caption{Mapping: Task-Parameter zu Scheduler-Konfiguration}
+  \begin{tabular}{lll}
+    \toprule
+    PREEvision & Simulationsmodell & Beschreibung \\
+    \midrule
+    task.period & scheduler.period & Periodizität \\
+    task.deadline & scheduler.deadline & Deadline \\
+    task.wcet & scheduler.execution\_time & Ausführungszeit \\
+    task.priority & scheduler.priority & Priorität \\
+    task.scheduling\_policy & scheduler.policy & Scheduling-Algorithmus \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:task_mapping}
+\end{table}
+
+\subsection{Netzwerk $\rightarrow$ Kanal}
+
+\subsubsection{Link-Mapping}
+
+Ein Link aus PREEvision wird zu einem Kommunikationskanal:
+
+\begin{itemize}
+  \item \textbf{Link-Bandbreite} $\rightarrow$ \textbf{Channel-Bandwidth}: Datenrate (bit/s)
+  \item \textbf{Link-Latenz} $\rightarrow$ \textbf{Channel-Latency}: Basis-Latenz
+  \item \textbf{Link-Jitter} $\rightarrow$ \textbf{Channel-Jitter}: Variabilität
+  \item \textbf{Protokoll} $\rightarrow$ \textbf{Channel-Type}: Ethernet, CAN, LIN, etc.
+\end{itemize}
+
+\subsubsection{TSN-Mapping}
+
+Für TSN-Netze werden zusätzliche Parameter gemappt:
+
+\begin{itemize}
+  \item \textbf{Gate-Schedules} $\rightarrow$ \textbf{TSN-Schedule}: Zeitgesteuerte Queues
+  \item \textbf{Prioritäten} $\rightarrow$ \textbf{Queue-Priorities}: IEEE 802.1Q-Prioritäten
+  \item \textbf{Traffic Shaping} $\rightarrow$ \textbf{Shaping-Parameters}: CBS/TAS-Parameter
+  \item \textbf{Synchronisation} $\rightarrow$ \textbf{Time-Sync}: gPTP-Konfiguration
+\end{itemize}
+
+\subsubsection{Switch-Mapping}
+
+Switches werden zu speziellen Netzwerkknoten:
+
+\begin{itemize}
+  \item \textbf{Switch-Ports} $\rightarrow$ \textbf{Network-Ports}: Anzahl, Bandbreiten
+  \item \textbf{Routing-Tabellen} $\rightarrow$ \textbf{Forwarding-Tables}: Routing-Logik
+  \item \textbf{Queue-Konfiguration} $\rightarrow$ \textbf{Queue-Settings}: Buffer-Größen, Policies
+\end{itemize}
+
+\subsection{Messages/Signals $\rightarrow$ Traffic-Flows}
+
+\subsubsection{Frame-Mapping}
+
+Frames werden zu Traffic-Flows im Simulationsmodell:
+
+\begin{table}[h]
+  \centering
+  \caption{Mapping: Frame-Parameter zu Traffic-Flow}
+  \begin{tabular}{lll}
+    \toprule
+    PREEvision & Simulationsmodell & Beschreibung \\
+    \midrule
+    frame.id & flow.id & Eindeutige Identifikation \\
+    frame.period & flow.period & Periodizität \\
+    frame.size & flow.size & Paket-Größe \\
+    frame.priority & flow.priority & Priorität \\
+    frame.source & flow.source & Quellknoten \\
+    frame.destinations & flow.destinations & Zielknoten \\
+    frame.route & flow.path & Routing-Pfad \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:frame_mapping}
+\end{table}
+
+\subsubsection{Signal-Mapping}
+
+Signale innerhalb von Frames werden zu Datenfeldern:
+
+\begin{itemize}
+  \item \textbf{Signal-Name} $\rightarrow$ \textbf{Field-Name}: Bezeichnung bleibt erhalten
+  \item \textbf{Signal-Type} $\rightarrow$ \textbf{Field-Type}: Datentyp (Integer, Float, etc.)
+  \item \textbf{Signal-Offset} $\rightarrow$ \textbf{Field-Offset}: Byte-Position im Frame
+  \item \textbf{Signal-Scale} $\rightarrow$ \textbf{Field-Scale}: Skalierung für physikalische Werte
+\end{itemize}
+
+\subsection{SWC/Chain $\rightarrow$ Tasks/Pipelines}
+
+\subsubsection{Software-Komponenten}
+
+SWCs werden zu Tasks oder Task-Gruppen:
+
+\begin{itemize}
+  \item \textbf{SWC-Runnables} $\rightarrow$ \textbf{Task-Functions}: Ausführbare Funktionen
+  \item \textbf{SWC-Ports} $\rightarrow$ \textbf{Task-Interfaces}: Daten-Ein-/Ausgänge
+  \item \textbf{SWC-Dependencies} $\rightarrow$ \textbf{Task-Dependencies}: Abhängigkeiten
+\end{itemize}
+
+\subsubsection{Funktionsketten}
+
+Chains werden zu Pipelines im Simulationsmodell:
+
+\begin{itemize}
+  \item \textbf{Chain-Path} $\rightarrow$ \textbf{Pipeline-Stages}: Sequenz von Verarbeitungsschritten
+  \item \textbf{Chain-Deadline} $\rightarrow$ \textbf{Pipeline-Deadline}: End-to-End-Deadline
+  \item \textbf{Chain-Latency-Budget} $\rightarrow$ \textbf{Pipeline-Latency-Budget}: Latenzbudget
+\end{itemize}
+
+\subsection{Redundanzgruppen $\rightarrow$ parallele Pfade}
+
+\subsubsection{Redundanz-Mapping}
+
+Redundanzgruppen werden zu parallelen Ausführungspfaden:
+
+\begin{itemize}
+  \item \textbf{Redundancy-Group} $\rightarrow$ \textbf{Parallel-Paths}: Mehrere identische Pfade
+  \item \textbf{Voting-Mechanismus} $\rightarrow$ \textbf{Voting-Logic}: Vergleich der Ausgaben
+  \item \textbf{Umschaltzeit} $\rightarrow$ \textbf{Failover-Time}: Zeit bis zur Umschaltung
+  \item \textbf{Health-Monitoring} $\rightarrow$ \textbf{Health-Checks}: Überwachungslogik
+\end{itemize}
 
 \section{Artefakte und Exporte}
-Export aus PREEvision (REST/CSV/AUTOSAR-XML/XMI); Intermediate Model (IM) als stabile Zwischenschicht.
 
+\subsection{Export aus PREEvision}
 
+\subsubsection{REST API Export}
+
+Die REST API ermöglicht einen strukturierten Export:
+
+\begin{itemize}
+  \item \textbf{Topologie}: JSON-Struktur mit Knoten, Ports, Links
+  \item \textbf{Kommunikation}: JSON-Struktur mit Frames, Signalen, Routen
+  \item \textbf{Software}: JSON-Struktur mit SWCs, Tasks, Deployment
+  \item \textbf{Attribute}: Alle annotierten Attribute als Key-Value-Paare
+\end{itemize}
+
+\subsubsection{CSV Export}
+
+CSV-Exporte für tabellarische Daten:
+
+\begin{itemize}
+  \item \textbf{Nodes.csv}: Alle Knoten mit Attributen
+  \item \textbf{Links.csv}: Alle Verbindungen mit Parametern
+  \item \textbf{Frames.csv}: Alle Frames mit Timing-Informationen
+  \item \textbf{Tasks.csv}: Alle Tasks mit Scheduling-Parametern
+\end{itemize}
+
+\subsubsection{AUTOSAR XML Export}
+
+Standardisiertes Format für AUTOSAR-Toolketten:
+
+\begin{itemize}
+  \item \textbf{System Description}: Topologie und Kommunikation
+  \item \textbf{Software Component Description}: SWC-Definitionen
+  \item \textbf{ECU Configuration}: Deployment-Informationen
+\end{itemize}
+
+\subsubsection{XMI/JSON Export}
+
+Metamodell-basierte Exporte:
+
+\begin{itemize}
+  \item \textbf{Metamodell}: Klassen, Attribute, Beziehungen
+  \item \textbf{Instanz-Daten}: Konkrete Modellinstanzen
+  \item \textbf{Versionierung}: Modellversionen und Historie
+\end{itemize}
+
+\subsection{Intermediate Model (IM)}
+
+\subsubsection{Konzept}
+
+Das Intermediate Model (IM) dient als stabile Zwischenschicht zwischen PREEvision und den verschiedenen Zielplattformen:
+
+\begin{itemize}
+  \item \textbf{Abstraktion}: Plattform-unabhängige Repräsentation
+  \item \textbf{Vollständigkeit}: Enthält alle für die Simulation relevanten Informationen
+  \item \textbf{Erweiterbarkeit}: Kann um neue Architekturmerkmale erweitert werden
+  \item \textbf{Validierbarkeit}: Kann auf Konsistenz und Vollständigkeit geprüft werden
+\end{itemize}
+
+\subsubsection{IM-Struktur}
+
+Das IM besteht aus folgenden Hauptkomponenten:
+
+\begin{enumerate}
+  \item \textbf{Topology Model}: Knoten, Ports, Links, Switches
+  \item \textbf{Communication Model}: Frames, Signale, Routen, TSN-Konfiguration
+  \item \textbf{Software Model}: SWCs, Tasks, Runnables, Chains
+  \item \textbf{Deployment Model}: Zuordnung von Software zu Hardware
+  \item \textbf{Resource Model}: CPU, GPU, NPU, Memory, Bandbreite
+  \item \textbf{Timing Model}: Periodizitäten, Deadlines, Latenzbudgets
+  \item \textbf{Safety Model}: ASIL-Level, Redundanz, Ausfallraten
+  \item \textbf{Energy Model}: Power States, Energieprofile
+\end{enumerate}
+
+\subsubsection{IM-Format}
+
+Das IM wird als strukturiertes Format (z.\,B. JSON, XML) gespeichert:
+
+\begin{verbatim}
+{
+  "version": "1.0",
+  "metadata": {
+    "source": "PREEvision",
+    "export_date": "2024-01-15",
+    "model_version": "v2.3"
+  },
+  "topology": {
+    "nodes": [...],
+    "links": [...],
+    "switches": [...]
+  },
+  "communication": {
+    "frames": [...],
+    "signals": [...],
+    "routes": [...],
+    "tsn_config": [...]
+  },
+  "software": {
+    "swcs": [...],
+    "tasks": [...],
+    "chains": [...]
+  },
+  ...
+}
+\end{verbatim}
+
+\subsubsection{Vorteile des IM}
+
+\begin{itemize}
+  \item \textbf{Plattform-Unabhängigkeit}: Ein IM kann in verschiedene Zielplattformen transformiert werden
+  \item \textbf{Wiederverwendbarkeit}: IM kann für verschiedene Analysen verwendet werden
+  \item \textbf{Validierung}: Konsistenzprüfung unabhängig von Zielplattform
+  \item \textbf{Versionierung}: Änderungen im IM können nachverfolgt werden
+  \item \textbf{Debugging}: Probleme können im IM identifiziert werden, bevor sie in die Zielplattform überführt werden
+\end{itemize}
+
+\section{Erweiterte Transformations-Beispiele}
+
+Dieser Abschnitt präsentiert erweiterte Beispiele für die Transformation von PREEvision-Modellen in Simulationsmodelle. Die Beispiele zeigen, wie verschiedene Aspekte der Architektur transformiert werden.
+
+\subsection{Beispiel: Transformation einer zonalen Architektur}
+
+Dieses Beispiel zeigt die vollständige Transformation einer zonalen Architektur mit vier Zonen-Controllern und einem zentralen Rechenknoten.
+
+\subsubsection{Topologie-Transformation}
+
+Die Topologie wird wie folgt transformiert:
+
+\begin{itemize}
+  \item \textbf{Zentraler Rechenknoten}:
+    \begin{itemize}
+      \item PREEvision: \texttt{ECU\_CentralCompute} mit Attributen (CPU: 16 cores, GPU: 20 TFLOPS, RAM: 16 GB)
+      \item OMNeT++: \texttt{StandardHost} mit \texttt{ResourceManager} für CPU/GPU/Memory
+      \item Konfiguration: CPU-Kerne, GPU-Performance, Memory-Größe werden direkt gemappt
+    \end{itemize}
+  
+  \item \textbf{Zonen-Controller}:
+    \begin{itemize}
+      \item PREEvision: \texttt{ECU\_ZoneFront}, \texttt{ECU\_ZoneLeft}, etc.
+      \item OMNeT++: \texttt{StandardHost} mit \texttt{EthernetInterface} und \texttt{CanInterface}
+      \item Gateway-Funktionalität: Modelliert als \texttt{Application} mit CAN/Ethernet-Bridge
+    \end{itemize}
+  
+  \item \textbf{TSN-Switch}:
+    \begin{itemize}
+      \item PREEvision: \texttt{Switch\_TSN} mit Gate-Schedule-Konfiguration
+      \item OMNeT++: \texttt{EthernetSwitch} mit \texttt{TsnGate} Modulen
+      \item Gate-Schedule: Transformiert in \texttt{TsnGateSchedule} Konfiguration
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Kommunikations-Transformation}
+
+Die Kommunikation wird transformiert:
+
+\begin{itemize}
+  \item \textbf{Ethernet-Links}:
+    \begin{itemize}
+      \item PREEvision: \texttt{Link} mit Attributen (Bandwidth: 2.5 Gbps, Latency: 1 ms)
+      \item OMNeT++: \texttt{EthernetLink} mit \texttt{DatarateChannel} (2.5 Gbps)
+      \item Latenz: Modelliert als \texttt{delay} Parameter im Channel
+    \end{itemize}
+  
+  \item \textbf{TSN-Frames}:
+    \begin{itemize}
+      \item PREEvision: \texttt{Frame} mit Attributen (Size: 1500 Byte, Priority: 6, Period: 33.3 ms)
+      \item OMNeT++: \texttt{EthernetFrame} mit \texttt{UserPriority} (6) und \texttt{PeriodicSource}
+      \item Gate-Scheduling: Frame wird in entsprechende TSN-Queue eingeordnet
+    \end{itemize}
+  
+  \item \textbf{CAN-Frames}:
+    \begin{itemize}
+      \item PREEvision: \texttt{Frame} mit Attributen (CAN-ID: 0x123, Size: 8 Byte, Period: 10 ms)
+      \item OMNeT++: \texttt{CanFrame} mit \texttt{CanId} (0x123) und \texttt{PeriodicSource}
+      \item Gateway: CAN-Frame wird in Ethernet-Frame eingebettet (Gateway-Funktionalität)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Software-Transformation}
+
+Die Software wird transformiert:
+
+\begin{itemize}
+  \item \textbf{Tasks}:
+    \begin{itemize}
+      \item PREEvision: \texttt{Task} mit Attributen (WCET: 15 ms, Period: 33.3 ms, Priority: 10)
+      \item OMNeT++: \texttt{Application} mit \texttt{PeriodicTask} (Period: 33.3 ms)
+      \item Scheduling: Task wird von \texttt{ResourceManager} mit Fixed-Priority Scheduling ausgeführt
+      \item WCET: Modelliert als \texttt{executionTime} Parameter
+    \end{itemize}
+  
+  \item \textbf{Chains}:
+    \begin{itemize}
+      \item PREEvision: \texttt{Chain} mit Sequenz von Tasks und Frames
+      \item OMNeT++: \texttt{CompoundApplication} mit mehreren \texttt{PeriodicTask} Instanzen
+      \item Datenfluss: Tasks kommunizieren über \texttt{Socket} oder \texttt{MessageQueue}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Beispiel: Transformation einer redundanten Architektur}
+
+Dieses Beispiel zeigt die Transformation einer redundanten Lenkungsarchitektur.
+
+\subsubsection{Redundanz-Transformation}
+
+Die Redundanz wird wie folgt transformiert:
+
+\begin{itemize}
+  \item \textbf{RedundancyGroup}:
+    \begin{itemize}
+      \item PREEvision: \texttt{RedundancyGroup} mit zwei Pfaden (Primär, Backup)
+      \item OMNeT++: \texttt{RedundantApplication} mit zwei \texttt{Application} Instanzen
+      \item Voting: Modelliert als \texttt{VotingModule}, das beide Ausgaben vergleicht
+    \end{itemize}
+  
+  \item \textbf{Switchover}:
+    \begin{itemize}
+      \item PREEvision: \texttt{SwitchoverConfig} mit Attributen (SwitchoverTime: 10 ms)
+      \item OMNeT++: \texttt{SwitchoverManager} mit \texttt{switchoverDelay} (10 ms)
+      \item Health-Monitoring: Modelliert als \texttt{HealthMonitor}, das beide Pfade überwacht
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Fehler-Injection}
+
+Für die Simulation von Fehlerszenarien:
+
+\begin{itemize}
+  \item \textbf{ECU-Ausfall}:
+    \begin{itemize}
+      \item PREEvision: \texttt{FailureModel} mit Attributen (MTBF: 10000 h, FailureMode: Immediate)
+      \item OMNeT++: \texttt{FailureGenerator} mit \texttt{exponential} Verteilung (MTBF: 10000 h)
+      \item Ausfallmodus: Modelliert als \texttt{immediateFailure} Event
+    \end{itemize}
+  
+  \item \textbf{Link-Ausfall}:
+    \begin{itemize}
+      \item PREEvision: \texttt{LinkFailureModel} mit Attributen (MTBF: 50000 h)
+      \item OMNeT++: \texttt{LinkFailureGenerator} mit \texttt{exponential} Verteilung
+      \item Auswirkung: Link wird als \texttt{broken} markiert, Frames werden verworfen
+    \end{itemize}
+\end{itemize}
+
+\section{Erweiterte Transformations-Strategien}
+
+Dieser Abschnitt beschreibt erweiterte Strategien für die Transformation komplexer Architekturen.
+
+\subsection{Inkrementelle Transformation}
+
+Inkrementelle Transformation ermöglicht die effiziente Aktualisierung von Simulationsmodellen:
+
+\begin{itemize}
+  \item \textbf{Change-Detection}: Automatische Erkennung von Änderungen im Architekturmodell
+  \item \textbf{Dependency-Analyse}: Analyse von Abhängigkeiten, um zu bestimmen, welche Teile neu transformiert werden müssen
+  \item \textbf{Inkrementelle Generierung}: Nur geänderte Teile werden neu generiert
+  \item \textbf{Validierung}: Validierung der inkrementellen Änderungen
+\end{itemize}
+
+\subsection{Multi-Platform-Transformation}
+
+Multi-Platform-Transformation ermöglicht die gleichzeitige Transformation in mehrere Zielplattformen:
+
+\begin{itemize}
+  \item \textbf{Plattform-Abstraktion}: Gemeinsame Abstraktion für verschiedene Plattformen
+  \item \textbf{Plattform-spezifische Generatoren}: Separate Generatoren für jede Plattform
+  \item \textbf{Plattform-Vergleich}: Vergleich von Ergebnissen zwischen Plattformen
+  \item \textbf{Plattform-Optimierung}: Plattform-spezifische Optimierungen
+\end{itemize}
+
+\subsection{Hybrid-Transformation}
+
+Hybrid-Transformation kombiniert verschiedene Transformationsansätze:
+
+\begin{itemize}
+  \item \textbf{Regelbasierte Transformation}: Für strukturierte Transformationen
+  \item \textbf{Template-basierte Transformation}: Für Code-Generierung
+  \item \textbf{Programmatische Transformation}: Für komplexe Transformationen
+  \item \textbf{KI-basierte Transformation}: Für intelligente Transformationen (zukünftig)
+\end{itemize}
+
+\section{Erweiterte Transformations-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Beispiele für die Transformation verschiedener Architektur-Elemente.
+
+\subsection{Beispiel: Transformation einer zonalen Architektur}
+
+Dieses Beispiel zeigt die vollständige Transformation einer zonalen Architektur:
+
+\subsubsection{Topologie-Transformation}
+
+\begin{itemize}
+  \item \textbf{Central Compute} $\rightarrow$ OMNeT++ StandardHost mit CPU/GPU/NPU-Ressourcen
+  \item \textbf{Zonen-Controller} $\rightarrow$ OMNeT++ StandardHost mit Gateway-Funktionalität
+  \item \textbf{Sensoren} $\rightarrow$ OMNeT++ Sensor-Nodes mit Daten-Generierung
+  \item \textbf{Aktoren} $\rightarrow$ OMNeT++ Actuator-Nodes mit Daten-Verarbeitung
+  \item \textbf{Switches} $\rightarrow$ OMNeT++ EthernetSwitch mit TSN-Unterstützung
+\end{itemize}
+
+\subsubsection{Kommunikations-Transformation}
+
+\begin{itemize}
+  \item \textbf{TSN-Frames} $\rightarrow$ OMNeT++ EthernetFrames mit TSN-Konfiguration
+  \item \textbf{Gate-Schedules} $\rightarrow$ OMNeT++ GateSchedule-Konfiguration
+  \item \textbf{Routen} $\rightarrow$ OMNeT++ Routing-Tabellen
+  \item \textbf{Redundanz} $\rightarrow$ OMNeT++ Redundancy-Mechanismen
+\end{itemize}
+
+\subsubsection{Software-Transformation}
+
+\begin{itemize}
+  \item \textbf{Tasks} $\rightarrow$ OMNeT++ Applications mit Periodicity
+  \item \textbf{SWCs} $\rightarrow$ OMNeT++ CompoundApplications
+  \item \textbf{Chains} $\rightarrow$ OMNeT++ ChainApplications
+  \item \textbf{Scheduling} $\rightarrow$ OMNeT++ Scheduler-Konfiguration
+\end{itemize}
+
+\section{Erweiterte Transformations-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Beispiele für die Transformation verschiedener Architektur-Elemente.
+
+\subsection{Beispiel: Transformation einer komplexen Funktionskette}
+
+\subsubsection{Ausgangs-Architektur}
+
+Die Funktionskette umfasst:
+\begin{itemize}
+  \item \textbf{Sensoren}: 3x Kameras (Front, Left, Right), 2x Radar, 1x LiDAR
+  \item \textbf{Verarbeitung}: 
+    \begin{itemize}
+      \item Bildverarbeitung auf ZC\_Front (3x Kamera-Streams)
+      \item Radar-Signalverarbeitung auf ZC\_Front
+      \item LiDAR-Verarbeitung auf ZC\_Front
+      \item Sensorfusion auf AD-DC
+      \item Objekterkennung (YOLOv8) auf AD-DC (NPU)
+      \item Tracking auf AD-DC (CPU)
+      \item Trajektorien-Prädiktion auf AD-DC (CPU)
+      \item Pfadplanung auf AD-DC (CPU)
+      \item Regelung auf AD-DC (CPU)
+    \end{itemize}
+  \item \textbf{Aktoren}: EPS (Lenkung), EHB (Bremse)
+\end{itemize}
+
+\subsubsection{Transformation-Schritte}
+
+\begin{enumerate}
+  \item \textbf{Sensoren}: Transformation in OMNeT++ Sensor-Nodes
+    \begin{verbatim}
+    sensor_front_camera: CameraSensor {
+        frameRate = 30fps;
+        resolution = 1920x1080;
+        outputSize = 1500B;
+    }
+    \end{verbatim}
+  
+  \item \textbf{Zonen-Controller}: Transformation in OMNeT++ StandardHost mit Gateway-Funktionalität
+    \begin{verbatim}
+    zc_front: StandardHost {
+        cpu.clock = 1.5GHz;
+        interfaces[0].bandwidth = 1Gbps;
+        gateway = true;
+    }
+    \end{verbatim}
+  
+  \item \textbf{AD-DC}: Transformation in OMNeT++ StandardHost mit CPU/GPU/NPU-Ressourcen
+    \begin{verbatim}
+    ad_dc: StandardHost {
+        cpu.clock = 2.5GHz;
+        gpu.performance = 20TFLOPS;
+        npu.performance = 200TOPS;
+        interfaces[0].bandwidth = 10Gbps;
+    }
+    \end{verbatim}
+  
+  \item \textbf{Tasks}: Transformation in OMNeT++ Applications mit Periodicity
+    \begin{verbatim}
+    perception_task: Application {
+        period = 33ms;  // 30fps
+        wcet = 15ms;
+        priority = 10;
+        cpuCore = 0;
+    }
+    \end{verbatim}
+  
+  \item \textbf{Frames}: Transformation in OMNeT++ EthernetFrames mit TSN-Konfiguration
+    \begin{verbatim}
+    camera_frame: EthernetFrame {
+        size = 1500B;
+        period = 33ms;
+        priority = 7;
+        route = [zc_front, switch, ad_dc];
+        tsn_config = {
+            gate_schedule = [...];
+            traffic_shaping = {...};
+        };
+    }
+    \end{verbatim}
+  
+  \item \textbf{Chains}: Transformation in OMNeT++ CompoundApplications
+    \begin{verbatim}
+    perception_chain: CompoundApplication {
+        components = [
+            camera_front,
+            image_processing,
+            object_detection,
+            tracking
+        ];
+        e2e_deadline = 100ms;
+    }
+    \end{verbatim}
+\end{enumerate}
+
+\subsubsection{Ergebnisse}
+
+Die Transformation ergab:
+\begin{itemize}
+  \item \textbf{OMNeT++-Modell}: 150+ Nodes, 500+ Connections
+  \item \textbf{Simulationszeit}: 2 Stunden für 1 Stunde Fahrzeit
+  \item \textbf{Ergebnisse}: Alle KPIs innerhalb der Ziele
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat das Transformationskonzept beschrieben, das Architekturmodelle aus PREEvision in Simulationsmodelle überführt. Die wichtigsten Aspekte umfassen:
+
+\begin{itemize}
+  \item \textbf{Zielplattformen}: Übersicht verschiedener Simulationsplattformen und deren Stärken/Schwächen
+  \item \textbf{Mapping-Regeln}: Detaillierte Regeln für die Transformation von Architektur-Elementen in Simulations-Elemente
+  \item \textbf{Artefakte und Exporte}: Verschiedene Exportformate aus PREEvision
+  \item \textbf{Intermediate Model}: Konzept einer stabilen Zwischenschicht für plattform-unabhängige Transformation
+\end{itemize}
+
+Das Transformationskonzept bildet die Grundlage für die technische Realisierung, wie sie im folgenden Kapitel beschrieben wird.

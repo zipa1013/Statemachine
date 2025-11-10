@@ -1,0 +1,238 @@
+\chapter{Energiemanagement in E/E-Architekturen}\label{chap:energiemanagement}
+
+\noindent
+Dieses Kapitel beschreibt die Modellierung und Optimierung des Energieverbrauchs in E/E-Architekturen. Energiemanagement ist besonders wichtig für elektrische Fahrzeuge, wo der Energieverbrauch direkt die Reichweite beeinflusst.
+
+\section{Energieverbrauch in E/E-Architekturen}
+
+Der Energieverbrauch in E/E-Architekturen setzt sich zusammen aus:
+
+\begin{itemize}
+  \item \textbf{Rechenknoten}: CPU, GPU, NPU, Memory
+  \item \textbf{Kommunikation}: Netzwerk-Interfaces, Switches
+  \item \textbf{Sensoren}: Kameras, Radar, LiDAR, etc.
+  \item \textbf{Aktoren}: EPS, EHB, E-Motor, etc.
+  \item \textbf{Auxiliary}: Beleuchtung, Klima, etc.
+\end{itemize}
+
+\subsection{Power-States}
+
+Rechenknoten können verschiedene Power-States haben:
+
+\begin{itemize}
+  \item \textbf{Active}: Volle Leistung, alle Funktionen aktiv
+  \item \textbf{Idle}: Niedrige Leistung, keine aktiven Tasks
+  \item \textbf{Sleep}: Sehr niedrige Leistung, minimale Funktionen
+  \item \textbf{Off}: Keine Energieversorgung
+\end{itemize}
+
+\section{Energie-Optimierung}
+
+Energie-Optimierung kann auf verschiedenen Ebenen erfolgen:
+
+\subsection{Hardware-Optimierung}
+
+\begin{itemize}
+  \item \textbf{Dynamic Voltage and Frequency Scaling (DVFS)}: Anpassung von Spannung und Frequenz
+  \item \textbf{Power-Gating}: Abschalten nicht genutzter Komponenten
+  \item \textbf{Clock-Gating}: Abschalten nicht genutzter Clock-Domains
+  \item \textbf{Low-Power-Modi}: Nutzung von Low-Power-Modi
+\end{itemize}
+
+\subsection{Software-Optimierung}
+
+\begin{itemize}
+  \item \textbf{Task-Scheduling}: Energie-effizientes Scheduling
+  \item \textbf{Load-Balancing}: Gleichmäßige Lastverteilung
+  \item \textbf{Adaptive Quality}: Anpassung der Qualität basierend auf verfügbarer Energie
+  \item \textbf{Predictive Shutdown}: Vorhersagbares Abschalten nicht benötigter Komponenten
+\end{itemize}
+
+\section{Modellierung}
+
+Der Energieverbrauch wird in der Simulation modelliert:
+
+\begin{equation}
+E_{total} = \sum_{i=1}^{N} \left( P_i \times t_i \right)
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $P_i$: Leistung in Zustand $i$
+  \item $t_i$: Zeit in Zustand $i$
+  \item $N$: Anzahl der Zustände
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Modellierung und Optimierung des Energieverbrauchs in E/E-Architekturen beschrieben. Energiemanagement ist entscheidend für die Effizienz elektrischer Fahrzeuge und muss bereits in der Architektur-Phase berücksichtigt werden.
+
+\section{Erweiterte Energie-Modellierung}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Modellierung des Energieverbrauchs.
+
+\subsection{Detaillierte Power-State-Modellierung}
+
+Rechenknoten haben verschiedene Power-States mit unterschiedlichen Leistungen:
+
+\begin{table}[h]
+  \centering
+  \caption{Power-States für Central Compute}
+  \begin{tabular}{lllll}
+    \toprule
+    State & CPU & GPU & NPU & Gesamt \\
+    \midrule
+    Active & 25W & 30W & 15W & 70W \\
+    Idle & 5W & 2W & 1W & 8W \\
+    Sleep & 0.5W & 0.1W & 0.1W & 0.7W \\
+    Off & 0W & 0W & 0W & 0W \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:power_states_cc}
+\end{table}
+
+\subsection{DVFS-Modellierung}
+
+Dynamic Voltage and Frequency Scaling (DVFS) ermöglicht Energie-Optimierung:
+
+\begin{equation}
+P_{DVFS}(f, V) = C_{eff} \times V^2 \times f + P_{static}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $f$: Frequenz
+  \item $V$: Spannung
+  \item $C_{eff}$: Effektive Kapazität
+  \item $P_{static}$: Statische Leistung
+\end{itemize}
+
+Die optimale Frequenz für minimale Energie bei gegebener Last:
+
+\begin{equation}
+f_{opt} = \sqrt{\frac{L}{C_{eff} \times V^2}}
+\end{equation}
+
+\subsection{Temperaturabhängigkeit}
+
+Der Energieverbrauch hängt von der Temperatur ab:
+
+\begin{equation}
+P_{total}(T) = P_{dyn} + P_{leak}(T) + P_{static}
+\end{equation}
+
+wobei der Leckstrom temperaturabhängig ist:
+
+\begin{equation}
+I_{leak}(T) = I_0 \times e^{\frac{E_a}{k_B T}}
+\end{equation}
+
+\section{Erweiterte Energie-Optimierungs-Strategien}
+
+Dieser Abschnitt beschreibt erweiterte Strategien zur Energie-Optimierung.
+
+\subsection{Task-Scheduling für Energie-Effizienz}
+
+Energie-effizientes Task-Scheduling:
+
+\begin{itemize}
+  \item \textbf{Consolidation}: Zusammenfassung von Tasks auf wenige Cores
+  \item \textbf{Migration}: Migration von Tasks zwischen Cores
+  \item \textbf{Frequency-Scaling}: Anpassung der Frequenz basierend auf Last
+  \item \textbf{Power-Gating}: Abschalten nicht genutzter Cores
+\end{itemize}
+
+\subsection{Adaptive-Quality}
+
+Anpassung der Qualität basierend auf verfügbarer Energie:
+
+\begin{table}[h]
+  \centering
+  \caption{Adaptive-Quality-Strategien}
+  \begin{tabular}{lllll}
+    \toprule
+    Energie-Level & Qualität & Latenz & Genauigkeit & Energie \\
+    \midrule
+    Hoch & Hoch & Niedrig & Hoch & Hoch \\
+    Mittel & Mittel & Mittel & Mittel & Mittel \\
+    Niedrig & Niedrig & Hoch & Niedrig & Niedrig \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:adaptive_quality}
+\end{table}
+
+\subsection{Predictive-Power-Management}
+
+Vorhersagbares Power-Management:
+
+\begin{itemize}
+  \item \textbf{Load-Prediction}: Vorhersage der zukünftigen Last
+  \item \textbf{Preemptive-Scaling}: Proaktive Skalierung
+  \item \textbf{Energy-Budgeting}: Energie-Budget-Verwaltung
+  \item \textbf{Optimization}: Optimierung basierend auf Vorhersagen
+\end{itemize}
+
+\section{Erweiterte Energie-Analyse}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Analyse des Energieverbrauchs.
+
+\subsection{Energie-Profil-Analyse}
+
+Energie-Profile für verschiedene Szenarien:
+
+\begin{table}[h]
+  \centering
+  \caption{Energie-Profile für verschiedene Szenarien}
+  \begin{tabular}{llll}
+    \toprule
+    Szenario & Energie (Wh/km) & Komponente & Anteil \\
+    \midrule
+    Stadtverkehr & 25 & E-Motor & 60\% \\
+    Stadtverkehr & 25 & E/E-System & 15\% \\
+    Stadtverkehr & 25 & Klima & 20\% \\
+    Stadtverkehr & 25 & Sonstiges & 5\% \\
+    Autobahn & 30 & E-Motor & 70\% \\
+    Autobahn & 30 & E/E-System & 10\% \\
+    Autobahn & 30 & Klima & 15\% \\
+    Autobahn & 30 & Sonstiges & 5\% \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:energy_profiles}
+\end{table}
+
+\subsection{Energie-Optimierungs-Potenzial}
+
+Potenzial für Energie-Optimierung:
+
+\begin{itemize}
+  \item \textbf{Hardware}: 10-20\% durch effizientere Hardware
+  \item \textbf{Software}: 15-25\% durch optimierte Software
+  \item \textbf{Architektur}: 20-30\% durch optimierte Architektur
+  \item \textbf{Gesamt}: 30-50\% durch kombinierte Optimierungen
+\end{itemize}
+
+\section{Erweiterte Energie-Simulation}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Simulation des Energieverbrauchs.
+
+\subsection{Multi-Level-Energie-Simulation}
+
+Energie-Simulation auf verschiedenen Ebenen:
+
+\begin{itemize}
+  \item \textbf{System-Level}: Gesamtsystem-Energieverbrauch
+  \item \textbf{Component-Level}: Komponenten-Energieverbrauch
+  \item \textbf{Task-Level}: Task-Energieverbrauch
+  \item \textbf{Instruction-Level}: Instruction-Energieverbrauch
+\end{itemize}
+
+\subsection{Energie-Validierung}
+
+Validierung der Energie-Simulation:
+
+\begin{itemize}
+  \item \textbf{Benchmarking}: Vergleich mit realen Messungen
+  \item \textbf{Sensitivity-Analysis}: Analyse der Sensitivität
+  \item \textbf{Uncertainty-Quantification}: Quantifizierung der Unsicherheit
+\end{itemize}
+

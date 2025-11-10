@@ -1,14 +1,885 @@
 \chapter{Architekturmodellierung in PREEvision}\label{chap:preevision}
+
+\noindent
+Dieses Kapitel beschreibt die Modellierung einer modernen E/E-Architektur in PREEvision, einer etablierten Werkzeugkette für die Entwicklung von Elektrik/Elektronik-Architekturen in der Automobilindustrie \cite{preevision}. PREEvision ermöglicht die modellbasierte Entwicklung von Hardware- und Software-Architekturen mit Fokus auf Topologie, Kommunikation, Software-Deployment und Datenqualität \cite{model_based_development, autosar_practice}. Im Kontext dieser Arbeit wird PREEvision als Quellsystem für die Architekturmodellierung verwendet, aus dem die Daten für die Transformation in ein Simulationsmodell extrahiert werden.
+
+Die Modellierung moderner E/E-Architekturen erfordert eine umfassende Berücksichtigung verschiedener Aspekte, die in Standardwerken zur Fahrzeugtechnik \cite{braess_seiffen_handbuch, reif_ee_architektur} und E/E-Architekturen \cite{embedded_systems_automotive, automotive_electronics} beschrieben werden. Insbesondere die zunehmende Komplexität durch autonomes Fahren \cite{automated_driving_systems} und moderne Kommunikationstechnologien wie TSN \cite{tsn_automotive} erfordern detaillierte Modellierungsansätze.
+
 \section{Topologiemodell}
-Knoten (ECUs, Sensoren, Aktoren, Switches) mit Ports, Interfaces und Leitungen; Ressourcen- und Energieprofile per Attributkatalogen.
+
+\subsection{Grundstruktur und Komponenten}
+
+Das Topologiemodell in PREEvision bildet die physische Struktur der E/E-Architektur ab. Es besteht aus hierarchisch organisierten Komponenten, die über definierte Schnittstellen miteinander verbunden sind. Die zentrale Abstraktionsebene bilden \emph{Knoten} (Nodes), die physische oder logische Einheiten repräsentieren.
+
+\begin{itemize}
+  \item \textbf{Rechenknoten (ECUs)}: Zentrale Rechenplattformen (Central Compute), Zonen-Controller, Domain-Controller, Gateways und spezialisierte Steuergeräte. Jeder Rechenknoten verfügt über eine eindeutige Identifikation, Ressourcenprofile (CPU, GPU, NPU, Speicher) und Safety-Level (ASIL).
+  \item \textbf{Sensoren}: Kameras, Radar, LiDAR, Ultraschall, GNSS/IMU sowie domänenspezifische Sensoren (z.\,B. Temperatur, Türkontakte, Gewichtssensoren im Laderaum). Sensoren werden mit ihren technischen Parametern (Auflösung, Framerate, Reichweite) modelliert.
+  \item \textbf{Aktoren}: Lenkung (EPS), Bremse (EHB/EMB), Antrieb, Fahrwerk, Lichtsysteme, Türen/Heckklappen, Klimaanlagen. Aktoren werden mit ihren Ansteuerungscharakteristika (Latenz, Genauigkeit, Redundanz) beschrieben.
+  \item \textbf{Switches und Gateways}: Netzwerkkomponenten für Ethernet-Backbones, TSN-Switches, CAN/LIN-Gateways. Diese Komponenten ermöglichen die Segmentierung und das Routing von Datenströmen.
+\end{itemize}
+
+\subsection{Ports und Interfaces}
+
+Jeder Knoten verfügt über \emph{Ports}, die als physische oder logische Anschlussstellen fungieren. Ports werden zu \emph{Interfaces} zusammengefasst, die eine konsistente Schnittstellendefinition ermöglichen. Ein Interface definiert:
+
+\begin{itemize}
+  \item \textbf{Protokoll und Datenrate}: Ethernet (100M/1G/2.5G/10G), CAN/CAN-FD, LIN, FlexRay
+  \item \textbf{Signal-/Nachrichtendefinitionen}: Datenstrukturen, die über das Interface übertragen werden
+  \item \textbf{QoS-Parameter}: Prioritäten, Periodizität, Latenzanforderungen, Zuverlässigkeit
+  \item \textbf{TSN-Konfiguration}: Gate-Schedules, Prioritäts-Mappings, Redundanzpfade
+\end{itemize}
+
+\subsection{Leitungen und Verbindungen}
+
+\emph{Leitungen} (Links) verbinden Ports zwischen Knoten und bilden die physikalische oder logische Verbindung ab. Eine Leitung kann:
+
+\begin{itemize}
+  \item \textbf{Point-to-Point} sein: Direkte Verbindung zwischen zwei Knoten
+  \item \textbf{Multi-Drop} sein: Mehrere Knoten an einem Bus (CAN, LIN)
+  \item \textbf{Switched} sein: Verbindung über einen Switch im Ethernet-Backbone
+\end{itemize}
+
+Jede Leitung wird mit Attributen wie Bandbreite, Latenz, Jitter-Budget, Redundanzpfaden und TSN-Parametern annotiert.
+
+\subsection{Ressourcen- und Energieprofile}
+
+Ressourcenprofile werden über \emph{Attributkataloge} definiert, die jedem Knoten zugeordnet werden können. Diese Kataloge enthalten:
+
+\begin{table}[h]
+  \centering
+  \caption{Attributkatalog für Rechenknoten (Auszug)}
+  \begin{tabular}{lll}
+    \toprule
+    Attribut & Typ & Beschreibung \\
+    \midrule
+    cpu\_cores & Integer & Anzahl CPU-Kerne, Topologie (big.LITTLE) \\
+    cpu\_freq\_max & Float & Maximale Taktfrequenz (GHz) \\
+    gpu\_tflops & Float & GPU-Rechenleistung (TFLOP/s) \\
+    npu\_tops & Float & NPU-Rechenleistung (TOPS) \\
+    ram\_size & Integer & RAM-Größe (GB) \\
+    storage\_size & Integer & Speicherkapazität (GB) \\
+    virtualization & Enum & none | hypervisor | containers \\
+    asil\_level & Enum & QM | A | B | C | D \\
+    power\_idle & Float & Leerlaufleistung (W) \\
+    power\_max & Float & Maximale Verlustleistung (W) \\
+    thermal\_max & Float & Zulässige Verlustleistung (W) \\
+    power\_states & List & Zustände + Übergangszeiten \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:rechenknoten_attr}
+\end{table}
+
+Energieprofile modellieren den Energieverbrauch über verschiedene Betriebszustände (Power States) mit Übergangszeiten zwischen den Zuständen. Dies ermöglicht eine realistische Abschätzung des Energieverbrauchs in Abhängigkeit von der Lastverteilung.
+
+\subsubsection{Power State Modelle}
+
+Ein Power State Modell definiert verschiedene Betriebszustände eines Rechenknotens mit zugehörigen Energieverbräuchen und Übergangszeiten:
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Power States für einen Zonen-Controller}
+  \begin{tabular}{llll}
+    \toprule
+    State & Leistung (W) & Übergang zu (ms) & Beschreibung \\
+    \midrule
+    OFF & 0.1 & -- & Ausgeschaltet \\
+    SLEEP & 0.5 & 50 & Schlafmodus \\
+    IDLE & 2.0 & 20 & Leerlauf \\
+    ACTIVE\_LOW & 8.0 & 10 & Niedrige Last \\
+    ACTIVE\_HIGH & 25.0 & 5 & Hohe Last \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:power_states}
+\end{table}
+
+Die Übergangszeiten sind wichtig für die Simulation, da sie die Reaktionszeit des Systems auf Laständerungen beeinflussen. In PREEvision werden diese als Attribute an Rechenknoten annotiert.
+
+\subsection{Zonale Topologie in PREEvision}
+
+Für eine zonale Architektur werden Zonen-Controller als spezielle Rechenknoten modelliert, die jeweils eine physische Zone des Fahrzeugs (Front, Links, Rechts, Heck) verwalten. Diese sind über einen zentralen Ethernet-Backbone mit TSN-Funktionalität mit der zentralen Rechenplattform verbunden. Die Modellierung erfolgt hierarchisch:
+
+\begin{enumerate}
+  \item \textbf{Top-Level}: Fahrzeug als Container für alle Zonen
+  \item \textbf{Zonen-Ebene}: Zonen-Controller mit zugeordneten Sensoren/Aktoren
+  \item \textbf{Backbone-Ebene}: TSN-Switches und Verbindungen
+  \item \textbf{Central Compute}: Zentrale Rechenplattform mit Domain-Controllern
+\end{enumerate}
+
+\subsubsection{Beispiel: Modellierung einer Front-Zone}
+
+Eine Front-Zone in PREEvision könnte folgende Komponenten enthalten:
+
+\begin{itemize}
+  \item \textbf{Zonen-Controller (ZC\_Front)}: 
+    \begin{itemize}
+      \item CPU: 4 Kerne @ 1.5 GHz
+      \item RAM: 2 GB
+      \item Interfaces: 2x Ethernet (1G), 2x CAN-FD, 1x LIN
+      \item ASIL: B
+      \item Power: 8-15 W (abhängig von Last)
+    \end{itemize}
+  \item \textbf{Sensoren}:
+    \begin{itemize}
+      \item Front-Kamera (Bosch 8MP Multifunktionskamera): 3840x2160 @ 30 fps, 120° FOV, 300 m Reichweite, Ethernet 2.5G
+      \item Front-Radar (Bosch Long-Range): 250 m Reichweite, CAN-FD
+      \item Side-Radar (Bosch Mid-Range, 2x): 160 m Reichweite, CAN-FD
+      \item LiDAR (Bosch High-Resolution, optional): 64 Layer, 200 m Reichweite, Ethernet 10G
+      \item Ultraschall-Sensoren (4x): 5 m Reichweite, LIN
+      \item Rear-Kamera: 1920x1080 @ 30 fps, Ethernet 1G
+    \end{itemize}
+  \item \textbf{Aktoren}:
+    \begin{itemize}
+      \item Frontscheinwerfer (LED-Matrix): CAN-FD
+      \item Blinker: LIN
+    \end{itemize}
+  \item \textbf{Verbindungen}:
+    \begin{itemize}
+      \item ZC\_Front $\leftrightarrow$ TSN-Switch (Ethernet 1G)
+      \item Sensoren/Aktoren $\leftrightarrow$ ZC\_Front (CAN/LIN)
+    \end{itemize}
+\end{itemize}
+
+Diese Struktur wird in PREEvision als hierarchisches Modell mit Containment-Beziehungen modelliert, wobei jeder Komponente die entsprechenden Attribute zugeordnet werden.
 
 \section{Kommunikationsmodell}
-Netze, Routen, Frames/Signale; TSN-Konfiguration (Zeitslots, Prioritäten), Gateways und Mapping-Regeln.
+
+\subsection{Netzwerksegmente und Protokolle}
+
+Das Kommunikationsmodell in PREEvision organisiert die Datenübertragung in \emph{Netzwerksegmenten}, die jeweils ein bestimmtes Protokoll und eine Topologie repräsentieren:
+
+\begin{itemize}
+  \item \textbf{Ethernet-Backbone}: Hochgeschwindigkeitsnetzwerk mit TSN-Unterstützung für deterministische Kommunikation. Unterstützt verschiedene Geschwindigkeiten (1G, 2.5G, 10G) und TSN-Features wie Time-Aware Shaping, Credit-Based Shaping und Frame Preemption.
+  \item \textbf{CAN/CAN-FD-Netze}: Klassische Fahrzeugbusse für Echtzeitkommunikation mit geringer Latenz. Modelliert als Multi-Drop-Busse mit definierten Bitraten (125 kbit/s bis 2 Mbit/s für CAN-FD).
+  \item \textbf{LIN-Netze}: Sub-Bus-Systeme für kostengünstige Sensoren und Aktoren. Master-Slave-Topologie mit definierten Schedules.
+  \item \textbf{Legacy-Protokolle}: FlexRay für sicherheitskritische Anwendungen (falls vorhanden).
+\end{itemize}
+
+\subsection{Routen und Pfade}
+
+\emph{Routen} definieren den Pfad, den Datenpakete durch das Netzwerk nehmen. In einem Ethernet-Backbone mit Switches werden Routen durch die Switch-Konfiguration (Routing-Tabellen, VLANs) bestimmt. PREEvision ermöglicht die Modellierung von:
+
+\begin{itemize}
+  \item \textbf{End-to-End-Routen}: Vollständiger Pfad von Quelle zu Senke über mehrere Hops
+  \item \textbf{Redundante Pfade}: Alternative Routen für Fehlertoleranz (z.\,B. PRP, HSR, dual-path)
+  \item \textbf{Gateway-Routen}: Übersetzung zwischen verschiedenen Protokollen (z.\,B. Ethernet zu CAN)
+\end{itemize}
+
+\subsection{Frames und Signale}
+
+\emph{Frames} (Nachrichten) sind die Grundeinheiten der Datenübertragung. Sie enthalten \emph{Signale}, die die eigentlichen Datenfelder repräsentieren. Die Modellierung umfasst:
+
+\begin{table}[h]
+  \centering
+  \caption{Frame-Attribute in PREEvision}
+  \begin{tabular}{lll}
+    \toprule
+    Attribut & Typ & Beschreibung \\
+    \midrule
+    frame\_id & String & Eindeutige Identifikation \\
+    period & Float & Periodizität (ms) \\
+    deadline & Float & Deadline (ms) \\
+    size & Integer & Frame-Größe (Byte) \\
+    priority & Integer & Priorität (0..7 für TSN) \\
+    source & Node & Quellknoten \\
+    destination & Node[] & Zielknoten (Multicast) \\
+    protocol & Enum & Ethernet | CAN | LIN | FlexRay \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:frame_attr}
+\end{table}
+
+Signale innerhalb eines Frames werden mit Datentyp (Integer, Float, Enum, Array), Byte-Offset, Bit-Länge und Skalierung/Offset modelliert.
+
+\subsection{TSN-Konfiguration}
+
+Für Time-Sensitive Networking (TSN) werden spezielle Konfigurationsparameter modelliert:
+
+\begin{itemize}
+  \item \textbf{Zeitslots (Time Slots)}: Zeitfenster für deterministische Übertragungen im Rahmen eines zyklischen Schedules
+  \item \textbf{Gate-Schedules}: Zeitgesteuerte Öffnung/Schließung von Ausgangsports an Switches
+  \item \textbf{Prioritäten}: IEEE 802.1Q-Prioritäten (0..7) mit zugeordneten Queues
+  \item \textbf{Traffic Shaping}: Credit-Based Shaping (CBS) oder Time-Aware Shaping (TAS) Parameter
+  \item \textbf{Synchronisation}: IEEE 802.1AS (gPTP) Konfiguration für Zeitsynchronisation
+  \item \textbf{Frame Preemption}: Konfiguration für unterbrechbare Frames (IEEE 802.1Qbu)
+\end{itemize}
+
+Diese Parameter werden in PREEvision als Attribute an Switches, Links und Frames annotiert und ermöglichen eine präzise Modellierung deterministischer Kommunikation.
+
+\subsubsection{Beispiel: TSN Gate-Schedule}
+
+Ein Gate-Schedule definiert, wann bestimmte Prioritäts-Queues an einem Switch-Port geöffnet oder geschlossen werden. Ein typisches Schedule für einen zyklischen Zeitplan könnte wie folgt aussehen:
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: TSN Gate-Schedule (Zyklus: 1 ms)}
+  \begin{tabular}{llll}
+    \toprule
+    Zeit (µs) & Queue 0-3 & Queue 4-5 & Queue 6-7 \\
+    \midrule
+    0-200 & geschlossen & geschlossen & offen \\
+    200-400 & offen & geschlossen & geschlossen \\
+    400-600 & geschlossen & offen & geschlossen \\
+    600-1000 & offen & offen & geschlossen \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:gate_schedule}
+\end{table}
+
+Dieser Schedule stellt sicher, dass kritische Frames (Queue 6-7) in einem dedizierten Zeitfenster übertragen werden, während andere Queues in anderen Zeitfenstern bedient werden. In PREEvision wird dies als strukturiertes Attribut an Switch-Ports modelliert.
+
+\subsubsection{Traffic Shaping Parameter}
+
+Für Credit-Based Shaping (CBS) werden folgende Parameter modelliert:
+
+\begin{itemize}
+  \item \textbf{idleSlope}: Rate, mit der Credits akkumuliert werden (Byte/s)
+  \item \textbf{sendSlope}: Rate, mit der Credits verbraucht werden (Byte/s)
+  \item \textbf{hiCredit}: Maximaler Credit-Wert (Byte)
+  \item \textbf{loCredit}: Minimaler Credit-Wert (Byte)
+\end{itemize}
+
+Diese Parameter ermöglichen eine präzise Kontrolle der Bandbreitenverteilung für verschiedene Traffic-Klassen.
+
+\subsection{Gateways und Protokollübersetzung}
+
+\emph{Gateways} verbinden verschiedene Netzwerksegmente und führen Protokollübersetzungen durch. In PREEvision werden Gateways als spezielle Knoten modelliert, die:
+
+\begin{itemize}
+  \item \textbf{Mapping-Regeln} definieren: Welche Frames/Signale von einem Protokoll in ein anderes übersetzt werden
+  \item \textbf{Signal-Mapping} durchführen: Zuordnung von Signalen zwischen verschiedenen Frame-Definitionen
+  \item \textbf{Timing-Anpassungen} berücksichtigen: Unterschiedliche Periodizitäten und Latenzen zwischen Protokollen
+  \item \textbf{Redundanz-Handling} implementieren: Behandlung von redundanten Pfaden über verschiedene Protokolle
+\end{itemize}
+
+\subsubsection{Beispiel: Ethernet-zu-CAN Gateway}
+
+Ein typisches Gateway-Szenario ist die Übersetzung von Ethernet-Frames (DDS/SOME\-IP) in CAN-Frames für Legacy-Aktoren. In PREEvision wird dies wie folgt modelliert:
+
+\begin{enumerate}
+  \item \textbf{Gateway-Knoten}: Zonen-Controller mit Ethernet- und CAN-Interfaces
+  \item \textbf{Mapping-Regel}: 
+    \begin{itemize}
+      \item Quelle: Ethernet-Frame \texttt{SteeringCommand} (DDS Topic)
+      \item Ziel: CAN-Frame \texttt{0x123} (CAN-ID)
+      \item Signal-Mapping: 
+        \begin{itemize}
+          \item \texttt{SteeringCommand.angle} $\rightarrow$ \texttt{CAN\_0x123.steering\_angle} (16 Bit, Skalierung: 0.1°/Bit)
+          \item \texttt{SteeringCommand.velocity} $\rightarrow$ \texttt{CAN\_0x123.steering\_vel} (8 Bit, Skalierung: 1°/s/Bit)
+        \end{itemize}
+    \end{itemize}
+  \item \textbf{Timing}: 
+    \begin{itemize}
+      \item Ethernet: Aperiodisch (Event-triggered)
+      \item CAN: Periodisch (10 ms)
+      \item Gateway: Puffert Eingänge und sendet periodisch auf CAN
+    \end{itemize}
+  \item \textbf{Latenz}: Gateway-Verarbeitungszeit (typisch 0.5-2 ms)
+\end{enumerate}
+
+Diese Mapping-Regeln werden in PREEvision als strukturierte Konfiguration am Gateway-Knoten gespeichert und können für die Simulation extrahiert werden.
 
 \section{Software- und Deployment-Modell}
-SWCs, Tasks, WCET/BCET, Scheduling-Policies, Partitionierung und ECU-Zuordnung; Diagnose- und Redundanzmechanismen mit Umschaltzeiten.
+
+\subsection{Software-Komponenten (SWCs)}
+
+\emph{Software-Komponenten} (SWCs) repräsentieren funktionale Einheiten der Software-Architektur. Sie werden in PREEvision mit folgenden Eigenschaften modelliert:
+
+\begin{itemize}
+  \item \textbf{Ports und Interfaces}: R-Ports (Required) und P-Ports (Provided) für die Kommunikation zwischen SWCs
+  \item \textbf{Runnables}: Ausführbare Funktionen innerhalb einer SWC, die periodisch oder ereignisgesteuert aufgerufen werden
+  \item \textbf{Datenabhängigkeiten}: Abhängigkeiten zwischen Runnables und zugehörigen Datenflüssen
+  \item \textbf{Ressourcenanforderungen}: CPU-Zeit, Speicher, I/O-Bandbreite
+\end{itemize}
+
+\subsection{Tasks und Scheduling}
+
+\emph{Tasks} sind die Ausführungseinheiten auf einem Betriebssystem. Sie enthalten eine oder mehrere Runnables und werden nach einer \emph{Scheduling-Policy} ausgeführt:
+
+\begin{table}[h]
+  \centering
+  \caption{Task-Attribute und Scheduling-Policies}
+  \begin{tabular}{lll}
+    \toprule
+    Attribut & Typ & Beschreibung \\
+    \midrule
+    task\_id & String & Eindeutige Identifikation \\
+    priority & Integer & Task-Priorität (fixed priority) \\
+    period & Float & Periodizität (ms) \\
+    deadline & Float & Deadline (ms) \\
+    wcet & Float & Worst-Case Execution Time (ms) \\
+    bcet & Float & Best-Case Execution Time (ms) \\
+    scheduling\_policy & Enum & FP | EDF | TSN-triggered \\
+    stack\_size & Integer & Stack-Größe (Byte) \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:task_attr}
+\end{table}
+
+Scheduling-Policies umfassen:
+\begin{itemize}
+  \item \textbf{Fixed Priority (FP)}: Präemptives Scheduling mit festen Prioritäten
+  \item \textbf{Earliest Deadline First (EDF)}: Dynamisches Scheduling basierend auf Deadlines
+  \item \textbf{TSN-triggered}: Task-Ausführung synchronisiert mit TSN-Zeitslots
+\end{itemize}
+
+\subsubsection{Beispiel: Task-Konfiguration für Perzeption}
+
+Ein typisches Beispiel für die Modellierung von Tasks in einer Perzeptions-Pipeline:
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Task-Konfiguration für Perzeption}
+  \begin{tabular}{llllll}
+    \toprule
+    Task & Period (ms) & Deadline (ms) & WCET (ms) & Priority & Policy \\
+    \midrule
+    Camera\_Capture & 33.3 & 33.3 & 2.0 & 10 & FP \\
+    Image\_Preprocess & 33.3 & 30.0 & 5.0 & 9 & FP \\
+    Object\_Detection & 33.3 & 25.0 & 15.0 & 8 & FP \\
+    Tracking & 33.3 & 20.0 & 3.0 & 7 & FP \\
+    Fusion & 50.0 & 45.0 & 8.0 & 6 & FP \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:task_example}
+\end{table}
+
+Diese Tasks werden in PREEvision als Teil der Software-Architektur modelliert, wobei die Scheduling-Parameter als Attribute annotiert werden. Die Prioritäten werden so gewählt, dass kritische Tasks (mit früheren Deadlines) höhere Prioritäten erhalten.
+
+\subsection{Deployment und Partitionierung}
+
+\emph{Deployment} beschreibt die Zuordnung von Software-Komponenten zu Hardware-Knoten. In PREEvision wird dies durch folgende Konzepte modelliert:
+
+\begin{itemize}
+  \item \textbf{Partitionen}: Logische Abgrenzungen innerhalb eines Rechenknotens (z.\,B. für Safety-Isolation, Virtualisierung)
+  \item \textbf{ECU-Zuordnung}: Welche SWCs auf welchem ECU ausgeführt werden
+  \item \textbf{Memory-Mapping}: Zuordnung von Variablen und Datenstrukturen zu Speicherbereichen
+  \item \textbf{Inter-Partition-Kommunikation}: Mechanismen für die Kommunikation zwischen Partitionen (z.\,B. Shared Memory, Message Queues)
+\end{itemize}
+
+\subsubsection{Beispiel: Deployment auf Central Compute}
+
+Ein Central Compute Node könnte mehrere Partitionen für verschiedene Domänen enthalten:
+
+\begin{itemize}
+  \item \textbf{Partition 1 (AD-Domain, ASIL D)}:
+    \begin{itemize}
+      \item SWCs: Perzeption, Sensorfusion, Planung, Regelung
+      \item Ressourcen: 4 CPU-Kerne, 8 GB RAM, GPU-Zugriff
+      \item Isolation: Hypervisor-basiert, keine Kommunikation mit anderen Partitionen
+    \end{itemize}
+  \item \textbf{Partition 2 (Body-Domain, ASIL B)}:
+    \begin{itemize}
+      \item SWCs: Karosserie-Steuerung, Türsteuerung, Lichtsteuerung
+      \item Ressourcen: 2 CPU-Kerne, 2 GB RAM
+      \item Isolation: Hypervisor-basiert
+    \end{itemize}
+  \item \textbf{Partition 3 (Infotainment, QM)}:
+    \begin{itemize}
+      \item SWCs: HMI, Audio/Video, Navigation
+      \item Ressourcen: 2 CPU-Kerne, 4 GB RAM, GPU-Zugriff
+      \item Isolation: Container-basiert
+    \end{itemize}
+\end{itemize}
+
+In PREEvision wird dies als Deployment-Modell modelliert, wobei jede Partition als Container für zugeordnete SWCs dient und Ressourcenlimits definiert werden.
+
+\subsection{Redundanzmechanismen}
+
+Für sicherheitskritische Funktionen werden Redundanzmechanismen modelliert:
+
+\begin{itemize}
+  \item \textbf{Redundancy Groups}: Gruppen von redundanten SWCs oder Tasks, die dieselbe Funktion ausführen
+  \item \textbf{Voting-Mechanismen}: Vergleich der Ausgaben redundanter Komponenten (z.\,B. 2-out-of-3 Voting)
+  \item \textbf{Umschaltzeiten}: Zeit, die benötigt wird, um von einer ausgefallenen Komponente auf eine redundante umzuschalten
+  \item \textbf{Health Monitoring}: Überwachung des Zustands redundanter Komponenten
+\end{itemize}
+
+\subsubsection{Beispiel: Redundante Lenkungssteuerung}
+
+Für eine ASIL D Lenkungssteuerung könnte folgende Redundanz modelliert werden:
+
+\begin{itemize}
+  \item \textbf{Redundancy Group}: \texttt{SteeringControl\_Redundant}
+  \item \textbf{Komponenten}:
+    \begin{itemize}
+      \item \texttt{SteeringControl\_Primary} (ECU 1, Partition 1)
+      \item \texttt{SteeringControl\_Secondary} (ECU 2, Partition 1)
+      \item \texttt{SteeringControl\_Tertiary} (ECU 3, Partition 1)
+    \end{itemize}
+  \item \textbf{Voting}: 2-out-of-3 Voting (mindestens 2 identische Ausgaben erforderlich)
+  \item \textbf{Health Monitoring}: 
+    \begin{itemize}
+      \item Heartbeat alle 10 ms
+      \item Watchdog-Timeout: 50 ms
+      \item Fehlererkennung: Abweichung der Ausgaben > 5\%
+    \end{itemize}
+  \item \textbf{Umschaltzeit}: 20 ms (Zeit bis zur Erkennung und Umschaltung)
+\end{itemize}
+
+Diese Konfiguration wird in PREEvision als Redundancy Group modelliert, wobei die Voting-Parameter und Umschaltzeiten als Attribute annotiert werden.
+
+\subsection{Diagnosefunktionen}
+
+Diagnosefunktionen werden als spezielle Software-Komponenten modelliert, die:
+
+\begin{itemize}
+  \item \textbf{Fehlererkennung} durchführen: Monitoring von Komponenten, Bussen und Kommunikationspfaden
+  \item \textbf{Fehlerspeicherung} implementieren: DTCs (Diagnostic Trouble Codes) und Fehlerhistorie
+  \item \textbf{Fehlerbehandlung} steuern: Degradationsmodi, Notlauffunktionen, Abschaltungen
+  \item \textbf{Diagnose-Protokolle} nutzen: UDS (Unified Diagnostic Services), OBD
+\end{itemize}
 
 \section{Datenqualität und Exporte}
-Validierungsprofile, Review-Gates; Exportprofile (REST, CSV, AUTOSAR-XML, XMI/JSON) für die Transformation.
 
+\subsection{Validierungsprofile}
 
+PREEvision bietet \emph{Validierungsprofile}, die die Konsistenz und Vollständigkeit des Modells prüfen. Diese Profile können:
+
+\begin{itemize}
+  \item \textbf{Syntax-Validierung} durchführen: Prüfung auf korrekte Modellstruktur und erforderliche Attribute
+  \item \textbf{Semantik-Validierung} durchführen: Prüfung auf logische Konsistenz (z.\,B. alle Referenzen aufgelöst, keine Zyklen in Abhängigkeiten)
+  \item \textbf{Completeness-Checks} durchführen: Prüfung, ob alle erforderlichen Informationen vorhanden sind (z.\,B. WCET für alle Tasks, Bandbreiten für alle Links)
+  \item \textbf{Constraint-Validierung} durchführen: Prüfung von Randbedingungen (z.\,B. E2E-Latenzen, Ressourcenlimits)
+\end{itemize}
+
+\subsection{Review-Gates}
+
+\emph{Review-Gates} definieren Meilensteine im Entwicklungsprozess, an denen das Modell bestimmte Qualitätskriterien erfüllen muss, bevor die Entwicklung fortgesetzt werden kann. Typische Review-Gates umfassen:
+
+\begin{enumerate}
+  \item \textbf{Concept Review}: Vollständigkeit der Topologie und grundlegende Kommunikationspfade definiert
+  \item \textbf{Design Review}: Software-Deployment vollständig, alle Ressourcenanforderungen spezifiziert
+  \item \textbf{Implementation Review}: Alle Timing-Parameter validiert, Redundanzmechanismen spezifiziert
+  \item \textbf{Release Review}: Vollständige Validierung bestanden, Export für nachgelagerte Prozesse freigegeben
+\end{enumerate}
+
+\subsection{Exportprofile}
+
+PREEvision unterstützt verschiedene \emph{Exportformate}, die für die Transformation in ein Simulationsmodell genutzt werden können:
+
+\begin{table}[h]
+  \centering
+  \caption{Exportformate in PREEvision}
+  \begin{tabular}{lll}
+    \toprule
+    Format & Beschreibung & Verwendungszweck \\
+    \midrule
+    REST API & Programmatischer Zugriff & Automatisierte Extraktion \\
+    CSV & Tabellarische Daten & Einfache Datenverarbeitung \\
+    AUTOSAR XML & Standardisiertes Format & Integration in AUTOSAR-Toolketten \\
+    XMI/JSON & Metamodell-basiert & Transformation in andere Modellformate \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:export_formate}
+\end{table}
+
+\subsubsection{REST API}
+
+Die REST API ermöglicht einen programmatischen Zugriff auf das PREEvision-Modell. Sie bietet Endpunkte für:
+
+\begin{itemize}
+  \item \textbf{Topologie-Abfragen}: Abruf von Knoten, Ports, Links und deren Attributen
+  \item \textbf{Kommunikations-Abfragen}: Abruf von Frames, Signalen, Routen und TSN-Konfigurationen
+  \item \textbf{Software-Abfragen}: Abruf von SWCs, Tasks, Runnables und Deployment-Informationen
+  \item \textbf{Validierungs-Ergebnisse}: Abruf von Validierungsergebnissen und Review-Gate-Status
+\end{itemize}
+
+\paragraph{Beispiel: REST API Abfrage}
+
+Ein typischer API-Aufruf könnte wie folgt aussehen:
+
+\begin{verbatim}
+GET /api/v1/nodes/{nodeId}/attributes
+Response: {
+  "nodeId": "ZC_Front",
+  "attributes": {
+    "cpu_cores": 4,
+    "cpu_freq_max": 1.5,
+    "ram_size": 2048,
+    "asil_level": "B",
+    "power_idle": 2.0,
+    "power_max": 15.0
+  }
+}
+
+GET /api/v1/frames?source={nodeId}
+Response: {
+  "frames": [
+    {
+      "frameId": "CameraStream_Front",
+      "period": 33.3,
+      "size": 1500,
+      "priority": 6,
+      "source": "Camera_Front",
+      "destinations": ["ZC_Front", "AD_DC"]
+    }
+  ]
+}
+\end{verbatim}
+
+Diese API ermöglicht eine automatisierte Extraktion aller für die Simulation relevanten Daten.
+
+\subsubsection{CSV-Export}
+
+CSV-Exporte ermöglichen eine einfache tabellarische Darstellung von Modellinformationen. Typische Exporte umfassen:
+
+\begin{itemize}
+  \item Knoten-Listen mit Ressourcenprofilen
+  \item Frame-Listen mit Timing- und Prioritätsinformationen
+  \item Task-Listen mit WCET/BCET und Scheduling-Parametern
+  \item Signal-Mappings für Gateway-Konfigurationen
+\end{itemize}
+
+\subsubsection{AUTOSAR XML}
+
+AUTOSAR XML-Export ermöglicht die Integration in AUTOSAR-basierte Toolketten. Es werden folgende Artefakte exportiert:
+
+\begin{itemize}
+  \item \textbf{System Description}: Topologie und Kommunikation
+  \item \textbf{Software Component Description}: SWC-Definitionen
+  \item \textbf{ECU Configuration}: Deployment und Ressourcen
+\end{itemize}
+
+\subsubsection{XMI/JSON-Export}
+
+XMI (XML Metadata Interchange) und JSON-Exporte ermöglichen eine modellbasierte Transformation in andere Formate. Sie enthalten:
+
+\begin{itemize}
+  \item \textbf{Metamodell-Informationen}: Klassen, Attribute, Beziehungen
+  \item \textbf{Instanz-Daten}: Konkrete Modellinstanzen mit allen Attributwerten
+  \item \textbf{Versionierungs-Informationen}: Modellversionen und Änderungshistorie
+\end{itemize}
+
+\subsection{Transformation in Simulationsmodell}
+
+Für die Transformation in ein Simulationsmodell werden die Exporte so konfiguriert, dass alle für die Simulation relevanten Informationen enthalten sind:
+
+\begin{itemize}
+  \item \textbf{Topologie}: Vollständige Knoten- und Verbindungsstruktur
+  \item \textbf{Kommunikation}: Alle Frames, Signale, Routen und TSN-Parameter
+  \item \textbf{Software}: SWCs, Tasks, Runnables, Scheduling-Parameter, WCET/BCET
+  \item \textbf{Deployment}: Zuordnung von Software zu Hardware, Partitionierung
+  \item \textbf{Ressourcen}: CPU/GPU/NPU-Kapazitäten, Speicher, Bandbreiten
+  \item \textbf{Timing}: Periodizitäten, Deadlines, Latenzbudgets, Jitter-Budgets
+  \item \textbf{Redundanz}: Redundanzgruppen, Umschaltzeiten, Voting-Mechanismen
+\end{itemize}
+
+Diese Informationen bilden die Grundlage für die in Kapitel~\ref{chap:transformation} beschriebene Transformation in ein Simulationsmodell.
+
+\section{Erweiterte Modellierungs-Beispiele}
+
+Dieser Abschnitt präsentiert erweiterte Beispiele für die Modellierung komplexer Architekturen in PREEvision. Die Beispiele zeigen, wie verschiedene Aspekte einer modernen E/E-Architektur modelliert werden können.
+
+\subsection{Beispiel: Vollständige Zonale Architektur}
+
+Dieses Beispiel zeigt die Modellierung einer vollständigen zonalen Architektur mit vier Zonen-Controllern, einem zentralen Rechenknoten und einem TSN-Backbone.
+
+\subsubsection{Topologie}
+
+Die Topologie umfasst:
+
+\begin{itemize}
+  \item \textbf{Zentraler Rechenknoten (Central Compute)}:
+    \begin{itemize}
+      \item CPU: 16 Kerne (8x Cortex-A78, 8x Cortex-A55) @ 2.5 GHz
+      \item GPU: Mali-G78 MP24, 20 TFLOPS
+      \item NPU: Ethos-N78, 200 TOPS
+      \item RAM: 16 GB LPDDR5
+      \item Storage: 256 GB eUFS
+      \item Interfaces: 4x Ethernet 2.5 Gbps (für Zonen), 1x Ethernet 10 Gbps (für externe Verbindungen)
+      \item ASIL: D (für sicherheitskritische Partitionen)
+    \end{itemize}
+  
+  \item \textbf{Zonen-Controller (4x)}:
+    \begin{itemize}
+      \item Front-Zone: Position im Front-Bereich, 8x CAN-FD, 4x LIN, 1x Ethernet 1 Gbps
+      \item Left-Zone: Position links, 6x CAN-FD, 4x LIN, 1x Ethernet 1 Gbps
+      \item Right-Zone: Position rechts, 6x CAN-FD, 4x LIN, 1x Ethernet 1 Gbps
+      \item Rear-Zone: Position hinten, 8x CAN-FD, 4x LIN, 1x Ethernet 1 Gbps
+      \item CPU: 4 Kerne @ 1.5 GHz (für lokale Verarbeitung)
+      \item RAM: 2 GB
+      \item ASIL: B (für Gateway-Funktionen)
+    \end{itemize}
+  
+  \item \textbf{TSN-Switch}:
+    \begin{itemize}
+      \item Ports: 8x Ethernet 2.5 Gbps
+      \item TSN-Features: gPTP, Time-Aware Shaping, Frame Preemption
+      \item Gate-Scheduling: Konfiguriert für deterministische Kommunikation
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Kommunikation}
+
+Die Kommunikation wird über einen TSN-Backbone realisiert:
+
+\begin{itemize}
+  \item \textbf{Backbone-Topologie}: Stern-Topologie mit TSN-Switch im Zentrum
+  \item \textbf{TSN-Konfiguration}:
+    \begin{itemize}
+      \item Zykluszeit: 1 ms
+      \item Gate-Schedules für verschiedene Prioritätsklassen
+      \item Time-Synchronisation: gPTP mit < 1 µs Genauigkeit
+    \end{itemize}
+  \item \textbf{Traffic-Klassen}:
+    \begin{itemize}
+      \item Priority 7: Kritische sicherheitskritische Frames (Lenkung, Bremse)
+      \item Priority 6: Wichtige ADAS-Frames (Perzeption, Planung)
+      \item Priority 4-5: Standard-Frames (Sensor-Daten, Status)
+      \item Priority 0-3: Best-Effort (Infotainment, Diagnose)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Software-Deployment}
+
+Die Software wird auf verschiedene Partitionen verteilt:
+
+\begin{itemize}
+  \item \textbf{ASIL D Partition (Central Compute)}:
+    \begin{itemize}
+      \item Lenkungssteuerung
+      \item Bremssteuerung
+      \item Kollisionsvermeidung
+    \end{itemize}
+  
+  \item \textbf{ASIL B Partition (Central Compute)}:
+    \begin{itemize}
+      \item Perzeption (Objekterkennung, Tracking)
+      \item Sensorfusion
+      \item Planung
+    \end{itemize}
+  
+  \item \textbf{QM Partition (Central Compute)}:
+    \begin{itemize}
+      \item Infotainment
+      \item Navigation
+      \item Diagnose
+    \end{itemize}
+  
+  \item \textbf{Zonen-Controller}:
+    \begin{itemize}
+      \item Gateway-Funktionen (CAN/LIN zu Ethernet)
+      \item Lokale Verarbeitung (Türsteuerung, Beleuchtung)
+      \item Diagnose
+    \end{itemize}
+\end{itemize}
+
+\subsection{Beispiel: Redundante Lenkungsarchitektur}
+
+Dieses Beispiel zeigt die Modellierung einer redundanten Lenkungsarchitektur für höchste Sicherheitsanforderungen.
+
+\subsubsection{Redundanz-Konzept}
+
+Die redundante Architektur umfasst:
+
+\begin{itemize}
+  \item \textbf{Primärer Pfad}:
+    \begin{itemize}
+      \item Sensor: Front-Kamera (Primär)
+      \item ECU: AD-DC Partition A
+      \item Aktor: EPS (Primär)
+    \end{itemize}
+  
+  \item \textbf{Backup-Pfad}:
+    \begin{itemize}
+      \item Sensor: Front-Kamera (Backup) oder Radar
+      \item ECU: AD-DC Partition B (separate Partition)
+      \item Aktor: EPS (Backup) oder redundanter Aktor
+    \end{itemize}
+  
+  \item \textbf{Redundanz-Mechanismus}:
+    \begin{itemize}
+      \item Voting: Vergleich der Ausgaben beider Pfade
+      \item Switchover: Automatischer Wechsel bei Ausfall
+      \item Switchover-Zeit: < 10 ms
+      \item Health-Monitoring: Kontinuierliche Überwachung beider Pfade
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Modellierung in PREEvision}
+
+In PREEvision wird dies wie folgt modelliert:
+
+\begin{itemize}
+  \item \textbf{RedundancyGroup}: Definiert die beiden Pfade als Redundanzgruppe
+  \item \textbf{Voting-Mechanismus}: Konfiguriert als "2-out-of-2" Voting
+  \item \textbf{Switchover-Konfiguration}: Definiert die Bedingungen für den Switchover
+  \item \textbf{Health-Monitoring}: Konfiguriert die Überwachungsparameter
+\end{itemize}
+
+\section{Zusammenfassung und Ausblick}
+
+Dieses Kapitel hat die Modellierung einer modernen E/E-Architektur in PREEvision detailliert beschrieben. Die wichtigsten Aspekte umfassen:
+
+\begin{itemize}
+  \item \textbf{Topologiemodell}: Hierarchische Strukturierung von Knoten, Ports, Interfaces und Verbindungen mit Ressourcen- und Energieprofilen
+  \item \textbf{Kommunikationsmodell}: Netzwerksegmente, Routen, Frames/Signale und TSN-Konfiguration für deterministische Kommunikation
+  \item \textbf{Software- und Deployment-Modell}: SWCs, Tasks, Scheduling, Partitionierung, Redundanz und Diagnosefunktionen
+  \item \textbf{Datenqualität und Exporte}: Validierungsprofile, Review-Gates und verschiedene Exportformate für die Transformation
+  \item \textbf{Erweiterte Beispiele}: Vollständige zonale Architektur und redundante Lenkungsarchitektur als praktische Anwendungsfälle
+\end{itemize}
+
+Die in PREEvision modellierten Daten bilden die Grundlage für die Transformation in ein Simulationsmodell, wie sie in den folgenden Kapiteln beschrieben wird. Die Herausforderung liegt dabei in der korrekten Extraktion und Interpretation aller relevanten Parameter, insbesondere der Timing-Parameter, Ressourcenprofile und Kommunikationskonfigurationen, die für eine realistische Simulation erforderlich sind. Die präsentierten Beispiele zeigen, wie komplexe Architekturen modelliert werden können und welche Aspekte für die Simulation besonders relevant sind.
+
+\section{Erweiterte Modellierungs-Patterns}
+
+Dieser Abschnitt beschreibt erweiterte Modellierungs-Patterns, die für komplexe Architekturen verwendet werden können.
+
+\subsection{Service-orientierte Modellierung}
+
+Service-orientierte Architekturen werden zunehmend in modernen E/E-Architekturen verwendet. In PREEvision können Services wie folgt modelliert werden:
+
+\begin{itemize}
+  \item \textbf{Service-Definition}: Services werden als spezielle SWCs modelliert mit:
+    \begin{itemize}
+      \item Service-Interface (Request/Response, Event-based)
+      \item Service-Properties (QoS, Priorität, Deadline)
+      \item Service-Dependencies (andere Services, die benötigt werden)
+    \end{itemize}
+  
+  \item \textbf{Service-Registry}: Zentrale Registry für Service-Discovery
+  \item \textbf{Service-Binding}: Dynamische oder statische Bindung von Service-Clients zu Service-Providers
+  \item \textbf{Service-Versionierung}: Unterstützung für mehrere Service-Versionen
+\end{itemize}
+
+\subsection{Event-driven Modellierung}
+
+Event-driven Architekturen ermöglichen lose gekoppelte Kommunikation:
+
+\begin{itemize}
+  \item \textbf{Events}: Events werden als spezielle Frames modelliert
+  \item \textbf{Event-Handler}: Event-Handler werden als Tasks modelliert
+  \item \textbf{Event-Broker}: Zentrale Event-Broker für Event-Routing
+  \item \textbf{Event-Filtering}: Filter-Mechanismen für Event-Selektion
+\end{itemize}
+
+\subsection{Microservice-Modellierung}
+
+Microservices ermöglichen modulare, skalierbare Architekturen:
+
+\begin{itemize}
+  \item \textbf{Microservice-Container}: Jeder Microservice läuft in einem eigenen Container
+  \item \textbf{Service-Mesh}: Service-Mesh für Kommunikation zwischen Microservices
+  \item \textbf{API-Gateway}: Zentrale API-Gateway für externe Zugriffe
+  \item \textbf{Load-Balancing}: Load-Balancing für skalierbare Services
+\end{itemize}
+
+\section{Qualitätssicherung in PREEvision}
+
+Qualitätssicherung ist ein kritischer Aspekt der Modellierung. PREEvision bietet verschiedene Mechanismen zur Qualitätssicherung:
+
+\subsection{Validierungsprofile}
+
+Validierungsprofile definieren Regeln für die Modellqualität:
+
+\begin{itemize}
+  \item \textbf{Syntax-Validierung}: Prüfung der strukturellen Korrektheit
+  \item \textbf{Semantik-Validierung}: Prüfung der logischen Korrektheit
+  \item \textbf{Constraint-Validierung}: Prüfung von Randbedingungen
+  \item \textbf{Completeness-Validierung}: Prüfung der Vollständigkeit
+\end{itemize}
+
+\subsection{Review-Gates}
+
+Review-Gates definieren Meilensteine für Modell-Reviews:
+
+\begin{itemize}
+  \item \textbf{Design-Review}: Review des Architektur-Designs
+  \item \textbf{Timing-Review}: Review der Timing-Parameter
+  \item \textbf{Safety-Review}: Review der Safety-Aspekte
+  \item \textbf{Integration-Review}: Review der Integration
+\end{itemize}
+
+\subsection{Metriken und KPIs}
+
+PREEvision kann verschiedene Metriken berechnen:
+
+\begin{itemize}
+  \item \textbf{Komplexitäts-Metriken}: Anzahl Knoten, Links, Frames
+  \item \textbf{Last-Metriken}: CPU-Last, Netzwerk-Last
+  \item \textbf{Timing-Metriken}: E2E-Latenzen, Jitter
+  \item \textbf{Safety-Metriken}: ASIL-Verteilung, Redundanz-Grade
+\end{itemize}
+
+\section{Erweiterte PREEvision-Modellierungs-Patterns}
+
+Dieser Abschnitt beschreibt erweiterte Patterns für die Modellierung in PREEvision.
+
+\subsection{Pattern: Redundante Architektur}
+
+\subsubsection{Modellierung von Redundanz}
+
+Redundanz kann auf verschiedenen Ebenen modelliert werden:
+
+\begin{itemize}
+  \item \textbf{Hardware-Redundanz}: Redundante ECUs, Links, Switches
+  \item \textbf{Software-Redundanz}: Redundante SWCs, Tasks
+  \item \textbf{Data-Redundanz}: Redundante Datenpfade, Replikation
+  \item \textbf{Functional-Redundanz}: Alternative Implementierungen
+\end{itemize}
+
+\subsubsection{Redundanz-Mechanismen}
+
+\begin{table}[h]
+  \centering
+  \caption{Redundanz-Mechanismen in PREEvision}
+  \begin{tabular}{llll}
+    \toprule
+    Mechanismus & Typ & Switchover-Zeit & Anwendung \\
+    \midrule
+    Hot-Standby & Hardware & < 1 ms & Kritische Funktionen \\
+    Warm-Standby & Hardware & < 10 ms & Wichtige Funktionen \\
+    Cold-Standby & Hardware & < 100 ms & Optionale Funktionen \\
+    Voting (2-out-of-3) & Software & < 5 ms & Safety-Critical \\
+    Voting (2-out-of-2) & Software & < 2 ms & ASIL D \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:redundanz_mechanismen}
+\end{table}
+
+\subsection{Pattern: Skalierbare Architektur}
+
+\subsubsection{Modellierung von Skalierbarkeit}
+
+Skalierbarkeit kann durch verschiedene Mechanismen erreicht werden:
+
+\begin{itemize}
+  \item \textbf{Horizontale Skalierung}: Mehrere Instanzen derselben Komponente
+  \item \textbf{Vertikale Skalierung}: Leistungsstärkere Komponenten
+  \item \textbf{Load-Balancing}: Verteilung der Last auf mehrere Komponenten
+  \item \textbf{Dynamische Skalierung}: Anpassung basierend auf Last
+\end{itemize}
+
+\subsection{Pattern: Service-orientierte Architektur}
+
+\subsubsection{Modellierung von Services}
+
+Services werden in PREEvision wie folgt modelliert:
+
+\begin{itemize}
+  \item \textbf{Service-Definition}: Service-Interface mit Request/Response oder Event-based
+  \item \textbf{Service-Provider}: SWC, der den Service bereitstellt
+  \item \textbf{Service-Client}: SWC, der den Service nutzt
+  \item \textbf{Service-Registry}: Zentrale Registry für Service-Discovery
+  \item \textbf{Service-Binding}: Statische oder dynamische Bindung
+\end{itemize}
+
+\subsubsection{Service-QoS}
+
+Quality of Service (QoS) für Services:
+
+\begin{table}[h]
+  \centering
+  \caption{Service-QoS-Parameter}
+  \begin{tabular}{llll}
+    \toprule
+    Parameter & Typ & Beschreibung & Beispiel \\
+    \midrule
+    latency & Float & Max. Latenz (ms) & 10.0 \\
+    throughput & Float & Min. Durchsatz (req/s) & 100.0 \\
+    reliability & Float & Verfügbarkeit (\%) & 99.9 \\
+    priority & Integer & Priorität & 7 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:service_qos}
+\end{table}

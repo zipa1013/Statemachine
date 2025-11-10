@@ -1,11 +1,823 @@
 \chapter{Synthese-Metrik: Konzeption und Erweiterung}\label{chap:metrik}
+
+\noindent
+Dieses Kapitel beschreibt die Konzeption und Erweiterung von Synthese-Metriken, die aus Architekturmerkmalen in PREEvision abgeleitet werden, um simulative Parameter für die Performance-Analyse zu generieren. Die Herausforderung liegt darin, aus statischen Architekturmodellen dynamische Simulationsparameter zu synthetisieren, die eine realistische Bewertung des Systemverhaltens ermöglichen.
+
 \section{Zielsetzung}
-Ableitung simulativer Parameter aus Architekturmerkmalen: Rechenlast, Netzwerklast, Timingpfade, Verfügbarkeits- und Energieprofile.
+
+\subsection{Grundprinzipien}
+
+Die Synthese-Metrik dient der automatisierten Ableitung simulativer Parameter aus Architekturmerkmalen. Ziel ist es, aus den in PREEvision modellierten statischen Informationen dynamische Simulationsparameter zu generieren, die für eine realistische Performance-Analyse erforderlich sind.
+
+Die wichtigsten abzuleitenden Parameter umfassen:
+
+\begin{itemize}
+  \item \textbf{Rechenlast}: CPU/GPU/NPU-Auslastung basierend auf Task-WCETs, Periodizitäten und Scheduling-Parametern
+  \item \textbf{Netzwerklast}: Bandbreitenauslastung, Paketraten, Queueing-Verhalten basierend auf Frame-Parametern und Routen
+  \item \textbf{Timingpfade}: End-to-End-Latenzen entlang von Funktionsketten von Sensoren zu Aktoren
+  \item \textbf{Verfügbarkeitsprofile}: MTBF (Mean Time Between Failures), Ausfallraten, Degradationsmodi
+  \item \textbf{Energieprofile}: Energieverbrauch über verschiedene Betriebszustände und Lastszenarien
+\end{itemize}
+
+\subsection{Anforderungen an die Metrik}
+
+Die Synthese-Metrik muss folgenden Anforderungen genügen:
+
+\begin{enumerate}
+  \item \textbf{Vollständigkeit}: Alle für die Simulation relevanten Parameter müssen ableitbar sein
+  \item \textbf{Konsistenz}: Abgeleitete Parameter müssen konsistent mit den Architekturmerkmalen sein
+  \item \textbf{Validierbarkeit}: Die Metrik muss gegen bekannte analytische Modelle validierbar sein
+  \item \textbf{Erweiterbarkeit}: Neue Architekturmerkmale müssen einfach integrierbar sein
+  \item \textbf{Nachvollziehbarkeit}: Die Ableitung muss nachvollziehbar und dokumentiert sein
+\end{enumerate}
 
 \section{Erweiterungen}
-Flow-Aggregation von Nachrichtenströmen zu Funktionsketten; Lastabschätzung (Datenrate $\times$ Algorithmenkomplexität); Netzmodelle (Bandbreite, Jitter, Queueing, TSN-Prioritäten); Ausfall-/Degradationsprofile; Energieprofile über Duty-Cycles.
+
+\subsection{Flow-Aggregation von Nachrichtenströmen}
+
+Ein zentraler Aspekt ist die Aggregation einzelner Nachrichtenströme zu Funktionsketten (Chains). Eine Funktionskette repräsentiert einen End-to-End-Datenfluss von einem Sensor über Verarbeitungsschritte bis zu einem Aktor.
+
+\subsubsection{Chain-Identifikation}
+
+Funktionsketten werden durch Analyse der Datenabhängigkeiten identifiziert:
+
+\begin{enumerate}
+  \item \textbf{Startpunkte}: Sensoren oder externe Eingaben
+  \item \textbf{Verarbeitungsschritte}: SWCs, Tasks, Runnables, die Daten transformieren
+  \item \textbf{Kommunikationsschritte}: Frames, Signale, die Daten zwischen Komponenten übertragen
+  \item \textbf{Endpunkte}: Aktoren oder externe Ausgaben
+\end{enumerate}
+
+\subsubsection{Chain-Attribute}
+
+Jede identifizierte Chain erhält folgende Attribute:
+
+\begin{table}[h]
+  \centering
+  \caption{Chain-Attribute für die Simulation}
+  \begin{tabular}{lll}
+    \toprule
+    Attribut & Typ & Beschreibung \\
+    \midrule
+    chain\_id & String & Eindeutige Identifikation \\
+    source & Node & Startknoten (Sensor) \\
+    sink & Node & Endknoten (Aktor) \\
+    path & Node[] & Sequenz von Verarbeitungsknoten \\
+    e2e\_deadline & Float & End-to-End-Deadline (ms) \\
+    e2e\_latency\_budget & Float & Latenzbudget (ms) \\
+    e2e\_jitter\_budget & Float & Jitter-Budget (ms) \\
+    asil\_level & Enum & Safety-Level der Chain \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:chain_attr}
+\end{table}
+
+\subsubsection{Beispiel: Perzeption-zu-Aktorik Chain}
+
+Eine typische Chain für eine Fahrerassistenzfunktion wird im Detail analysiert, um die Komplexität und die Anforderungen zu verdeutlichen:
+
+\begin{itemize}
+  \item \textbf{Chain-ID}: \texttt{Perception\_to\_Steering}
+  \item \textbf{Beschreibung}: Diese Chain implementiert eine L2-Fahrerassistenzfunktion (Lane Keeping Assist), die kontinuierlich die Fahrspur überwacht und bei Bedarf lenkt.
+  
+  \item \textbf{Startpunkt}: Front-Kamera (Mono-Kamera, 1920x1080, 30 fps)
+    \begin{itemize}
+      \item Position: Frontscheibe, hinter dem Rückspiegel
+      \item Sensor-Typ: CMOS-Sensor mit HDR-Unterstützung
+      \item Datenrate: 1920 × 1080 × 3 Bytes × 30 fps = 186.6 MB/s (roh), komprimiert auf ~12 MB/s
+      \item Interface: Ethernet 1 Gbps
+      \item ASIL-Level: QM (Sensor selbst), aber Chain ist ASIL D
+    \end{itemize}
+  
+  \item \textbf{Verarbeitungsschritte}:
+    \begin{enumerate}
+      \item \textbf{Bildaufnahme (Kamera)}:
+        \begin{itemize}
+          \item Task: Image\_Capture
+          \item WCET: 2.0 ms
+          \item Period: 33.3 ms (30 fps)
+          \item ECU: Kamera-Modul (lokale Verarbeitung)
+        \end{itemize}
+      
+      \item \textbf{Bildvorverarbeitung (ZC\_Front)}:
+        \begin{itemize}
+          \item Task: Image\_Preprocessing
+          \item Funktionen: Entzerrung, Normalisierung, ROI-Extraktion
+          \item WCET: 5.0 ms
+          \item Period: 33.3 ms
+          \item ECU: Zonen-Controller Front
+          \item Output: Vorverarbeitetes Bild (reduzierte Auflösung: 640x480)
+        \end{itemize}
+      
+      \item \textbf{Objekterkennung (AD-DC)}:
+        \begin{itemize}
+          \item Task: Object\_Detection
+          \item Algorithmus: CNN-basiert (YOLO-ähnlich)
+          \item WCET: 15.0 ms (auf GPU)
+          \item Period: 33.3 ms
+          \item ECU: AD Domain Controller (GPU-Partition)
+          \item Output: Erkannte Objekte mit Bounding Boxes und Klassifikation
+        \end{itemize}
+      
+      \item \textbf{Tracking (AD-DC)}:
+        \begin{itemize}
+          \item Task: Object\_Tracking
+          \item Algorithmus: Kalman-Filter + Data Association
+          \item WCET: 3.0 ms
+          \item Period: 33.3 ms
+          \item ECU: AD Domain Controller (CPU-Partition)
+          \item Output: Getrackte Objekte mit Trajektorien
+        \end{itemize}
+      
+      \item \textbf{Sensorfusion (AD-DC)}:
+        \begin{itemize}
+          \item Task: Sensor\_Fusion
+          \item Input: Kamera-Daten + Radar-Daten (von anderer Chain)
+          \item WCET: 4.0 ms
+          \item Period: 33.3 ms
+          \item ECU: AD Domain Controller
+          \item Output: Fused Object List mit erhöhter Zuverlässigkeit
+        \end{itemize}
+      
+      \item \textbf{Planung (AD-DC)}:
+        \begin{itemize}
+          \item Task: Trajectory\_Planning
+          \item Algorithmus: A*-basierte Pfadplanung
+          \item WCET: 8.0 ms
+          \item Period: 50.0 ms (20 Hz, niedrigere Rate als Perzeption)
+          \item ECU: AD Domain Controller
+          \item Output: Geplanter Pfad (Trajektorie)
+        \end{itemize}
+      
+      \item \textbf{Regelung (AD-DC)}:
+        \begin{itemize}
+          \item Task: Steering\_Control
+          \item Algorithmus: PID-Regler mit Feedforward
+          \item WCET: 1.0 ms
+          \item Period: 10.0 ms (100 Hz für präzise Regelung)
+          \item ECU: AD Domain Controller
+          \item Output: Lenkwinkel-Kommando
+        \end{itemize}
+    \end{enumerate}
+  
+  \item \textbf{Kommunikation}:
+    \begin{itemize}
+      \item \textbf{Kamera $\rightarrow$ ZC\_Front}: 
+        \begin{itemize}
+          \item Protokoll: Ethernet 1 Gbps
+          \item Frame-Größe: 1500 Byte (MTU)
+          \item Periodizität: 33.3 ms (30 fps)
+          \item Priorität: TSN Priority 6 (hoch)
+          \item Latenz-Budget: 5 ms
+        \end{itemize}
+      
+      \item \textbf{ZC\_Front $\rightarrow$ AD-DC}: 
+        \begin{itemize}
+          \item Protokoll: Ethernet/TSN 2.5 Gbps
+          \item Frame-Größe: 500 Byte (komprimiertes Bild)
+          \item Periodizität: 33.3 ms
+          \item Priorität: TSN Priority 6
+          \item Route: Über TSN-Switch mit Gate-Scheduling
+          \item Latenz-Budget: 10 ms
+        \end{itemize}
+      
+      \item \textbf{AD-DC $\rightarrow$ Lenkaktor}: 
+        \begin{itemize}
+          \item Protokoll: CAN-FD 500 kbps
+          \item Frame-Größe: 8 Byte (Lenkwinkel-Kommando)
+          \item Periodizität: 10 ms
+          \item CAN-ID: 0x123 (hohe Priorität)
+          \item Latenz-Budget: 2 ms
+        \end{itemize}
+    \end{itemize}
+  
+  \item \textbf{Endpunkt}: Lenkaktor (EPS - Electric Power Steering)
+    \begin{itemize}
+      \item Typ: Elektrische Servolenkung
+      \item Interface: CAN-FD
+      \item ASIL-Level: D
+      \item Reaktionszeit: < 50 ms
+    \end{itemize}
+  
+  \item \textbf{E2E-Deadline}: 100 ms
+    \begin{itemize}
+      \item Begründung: Für L2-Funktionen ist eine Reaktionszeit < 100 ms erforderlich, um sicher auf Hindernisse reagieren zu können
+      \item Latenz-Budget-Zerlegung:
+        \begin{itemize}
+          \item Sensor-Verarbeitung: 2 ms
+          \item Netzwerk (Kamera $\rightarrow$ ZC): 5 ms
+          \item ZC-Verarbeitung: 5 ms
+          \item Netzwerk (ZC $\rightarrow$ AD-DC): 10 ms
+          \item AD-DC-Verarbeitung: 30 ms (kritischer Pfad: Objekterkennung 15 ms + Planung 8 ms + Regelung 1 ms)
+          \item Netzwerk (AD-DC $\rightarrow$ Aktor): 2 ms
+          \item Aktor-Reaktion: 50 ms
+          \item \textbf{Gesamt (Worst-Case)}: 104 ms (knapp über Budget, erfordert Optimierung)
+        \end{itemize}
+    \end{itemize}
+  
+  \item \textbf{ASIL-Level}: D
+    \begin{itemize}
+      \item Begründung: Lenkung ist sicherheitskritisch und erfordert höchstes Safety-Level
+      \item Konsequenzen: Redundanz erforderlich, formale Verifikation, umfassende Tests
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    node distance=1cm and 2cm,
+    sensor/.style={rectangle, draw, fill=blue!30, minimum width=2cm, minimum height=1cm, text centered, font=\small},
+    zc/.style={rectangle, draw, fill=green!30, minimum width=2cm, minimum height=1cm, text centered, font=\small},
+    ecu/.style={rectangle, draw, fill=red!30, minimum width=2.5cm, minimum height=1.5cm, text centered, font=\small},
+    actuator/.style={rectangle, draw, fill=orange!30, minimum width=2cm, minimum height=1cm, text centered, font=\small},
+    task/.style={rectangle, draw, fill=gray!20, minimum width=1.8cm, minimum height=0.6cm, text centered, font=\tiny},
+    link/.style={thick, -stealth, blue},
+    data/.style={thick, -stealth, red, dashed}
+  ]
+    % Nodes
+    \node[sensor] (camera) {Front\\Kamera};
+    \node[zc, right=of camera] (zc_front) {ZC Front};
+    \node[ecu, right=of zc_front] (ad_dc) {AD-DC\\CPU/GPU};
+    \node[actuator, right=of ad_dc] (eps) {EPS\\Lenkaktor};
+    
+    % Tasks in AD-DC
+    \node[task, above=0.3cm of ad_dc] (detect) {Detection\\15ms};
+    \node[task, right=0.2cm of detect] (track) {Tracking\\3ms};
+    \node[task, below=0.3cm of ad_dc] (plan) {Planning\\8ms};
+    \node[task, right=0.2cm of plan] (control) {Control\\1ms};
+    
+    % Links
+    \draw[link] (camera) -- node[above, font=\tiny] {Ethernet\\1500B, 30fps} (zc_front);
+    \draw[link] (zc_front) -- node[above, font=\tiny] {TSN\\500B, 30fps} (ad_dc);
+    \draw[link] (ad_dc) -- node[above, font=\tiny] {CAN-FD\\8B, 10ms} (eps);
+    
+    % Data flow
+    \draw[data] (detect) -- (track);
+    \draw[data] (track) -- (plan);
+    \draw[data] (plan) -- (control);
+    
+    % Timing annotation
+    \node[below=0.5cm of eps, font=\tiny, align=center] {E2E Deadline: 100ms\\Worst-Case: 104ms};
+  \end{tikzpicture}
+  \caption{Beispiel: Perzeption-zu-Aktorik Chain mit Timing-Details}
+  \label{fig:perception_chain}
+\end{figure}
+\end{itemize}
+
+\subsection{Lastabschätzung}
+
+\subsubsection{Rechenlast}
+
+Die Rechenlast wird basierend auf Task-Parametern abgeschätzt:
+
+\begin{equation}
+U_{CPU} = \sum_{i=1}^{n} \frac{WCET_i}{T_i}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $U_{CPU}$: CPU-Auslastung
+  \item $WCET_i$: Worst-Case Execution Time von Task $i$
+  \item $T_i$: Periodizität von Task $i$
+  \item $n$: Anzahl der Tasks
+\end{itemize}
+
+Für GPU/NPU wird die Last basierend auf Datenrate und Algorithmenkomplexität abgeschätzt:
+
+\begin{equation}
+L_{GPU} = \frac{D \times C}{P_{GPU}}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $L_{GPU}$: GPU-Last
+  \item $D$: Datenrate (z.\,B. Pixel/s)
+  \item $C$: Algorithmenkomplexität (Operationen pro Pixel)
+  \item $P_{GPU}$: GPU-Performance (Operationen/s)
+\end{itemize}
+
+\subsubsection{Netzwerklast}
+
+Die Netzwerklast wird basierend auf Frame-Parametern berechnet:
+
+\begin{equation}
+B_{link} = \sum_{i=1}^{m} \frac{S_i \times 8}{T_i}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $B_{link}$: Bandbreitenauslastung (bit/s)
+  \item $S_i$: Frame-Größe $i$ (Byte)
+  \item $T_i$: Periodizität von Frame $i$ (s)
+  \item $m$: Anzahl der Frames auf dem Link
+\end{itemize}
+
+Für TSN-Netze wird zusätzlich der Overhead durch Protokoll-Header und Guard-Bands berücksichtigt.
+
+\subsection{Netzmodelle}
+
+\subsubsection{Bandbreitenmodell}
+
+Das Bandbreitenmodell berücksichtigt:
+
+\begin{itemize}
+  \item \textbf{Nominal-Bandbreite}: Theoretische maximale Datenrate des Links
+  \item \textbf{Effektive Bandbreite}: Tatsächlich verfügbare Bandbreite nach Abzug von Overhead
+  \item \textbf{TSN-Overhead}: Guard-Bands, Protokoll-Header, Synchronisations-Traffic
+  \item \textbf{Queueing}: Warteschlangen an Switch-Ports
+\end{itemize}
+
+\subsubsection{Latenz- und Jitter-Modell}
+
+Die Latenz setzt sich zusammen aus:
+
+\begin{equation}
+L_{total} = L_{processing} + L_{transmission} + L_{propagation} + L_{queueing}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $L_{processing}$: Verarbeitungslatenz (Switch, Gateway)
+  \item $L_{transmission}$: Übertragungslatenz (Frame-Größe / Bandbreite)
+  \item $L_{propagation}$: Ausbreitungslatenz (Kabel, typisch vernachlässigbar)
+  \item $L_{queueing}$: Warteschlangenlatenz (abhängig von Auslastung)
+\end{itemize}
+
+Der Jitter wird durch Variationen in der Queueing-Latenz verursacht und hängt von der Netzauslastung ab.
+
+\subsubsection{TSN-Prioritäten und Scheduling}
+
+Für TSN-Netze werden die Prioritäten und Gate-Schedules in das Simulationsmodell übernommen:
+
+\begin{itemize}
+  \item \textbf{Prioritäts-Mapping}: IEEE 802.1Q-Prioritäten (0..7) werden auf Switch-Queues abgebildet
+  \item \textbf{Gate-Schedules}: Zeitgesteuerte Öffnung/Schließung von Queues
+  \item \textbf{Traffic Shaping}: Credit-Based Shaping oder Time-Aware Shaping Parameter
+\end{itemize}
+
+\subsection{Ausfall- und Degradationsprofile}
+
+\subsubsection{Ausfallraten}
+
+Ausfallraten werden basierend auf Komponententypen und ASIL-Leveln modelliert:
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Ausfallraten (MTBF) für verschiedene Komponententypen}
+  \begin{tabular}{lll}
+    \toprule
+    Komponententyp & ASIL & MTBF (h) \\
+    \midrule
+    ECU (Standard) & QM & 10.000 \\
+    ECU (Safety) & B & 50.000 \\
+    ECU (Safety) & C & 100.000 \\
+    ECU (Safety) & D & 200.000 \\
+    Sensor (Kamera) & B & 20.000 \\
+    Aktor (EPS) & D & 100.000 \\
+    Switch (TSN) & B & 30.000 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:ausfallraten}
+\end{table}
+
+\subsubsection{Degradationsmodi}
+
+Degradationsmodi beschreiben, wie das System bei Ausfällen reagiert:
+
+\begin{itemize}
+  \item \textbf{Graceful Degradation}: System reduziert Funktionalität, bleibt aber betriebsfähig
+  \item \textbf{Fail-Safe}: System geht in einen sicheren Zustand über
+  \item \textbf{Redundanz-Umschaltung}: Automatische Umschaltung auf redundante Komponente
+  \item \textbf{Notlaufmodus}: Eingeschränkte Funktionalität mit reduzierter Performance
+\end{itemize}
+
+\subsection{Energieprofile über Duty-Cycles}
+
+Energieprofile werden basierend auf Power States und Duty-Cycles modelliert:
+
+\begin{equation}
+E_{total} = \sum_{i=1}^{k} P_i \times t_i
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $E_{total}$: Gesamtenergieverbrauch
+  \item $P_i$: Leistung im Zustand $i$
+  \item $t_i$: Zeit im Zustand $i$
+  \item $k$: Anzahl der Power States
+\end{itemize}
+
+Der Duty-Cycle beschreibt, wie viel Zeit ein Knoten in jedem Power State verbringt, abhängig von der Lastverteilung.
 
 \section{Validierung}
-Analytische Bounds, Microbenchmarks und Sensitivitätsanalysen sichern die Prognosequalität ab.
 
+\subsection{Analytische Bounds}
 
+Die abgeleiteten Parameter werden gegen analytische Bounds validiert:
+
+\subsubsection{CPU-Auslastung}
+
+Für Fixed-Priority Scheduling gilt:
+
+\begin{equation}
+U_{CPU} \leq n(2^{1/n} - 1)
+\end{equation}
+
+wobei $n$ die Anzahl der Tasks ist. Diese Bound stellt sicher, dass alle Deadlines eingehalten werden können.
+
+\subsubsection{Netzwerk-Latenz}
+
+Für TSN-Netze kann eine obere Schranke für die Latenz berechnet werden:
+
+\begin{equation}
+L_{max} = L_{min} + \frac{S_{max}}{B} + Q_{max}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $L_{min}$: Minimale Latenz (ohne Queueing)
+  \item $S_{max}$: Maximale Frame-Größe
+  \item $B$: Bandbreite
+  \item $Q_{max}$: Maximale Queueing-Latenz
+\end{itemize}
+
+\subsection{Microbenchmarks}
+
+Microbenchmarks werden verwendet, um einzelne Komponenten der Metrik zu validieren:
+
+\begin{itemize}
+  \item \textbf{Task-Scheduling}: Vergleich simulierter vs. gemessener Ausführungszeiten
+  \item \textbf{Netzwerk-Latenz}: Vergleich simulierter vs. gemessener Latenzen
+  \item \textbf{Energieverbrauch}: Vergleich simulierter vs. gemessener Energieverbräuche
+\end{itemize}
+
+\subsection{Sensitivitätsanalysen}
+
+Sensitivitätsanalysen untersuchen, wie empfindlich die Simulationsergebnisse auf Änderungen der abgeleiteten Parameter reagieren:
+
+\begin{itemize}
+  \item \textbf{WCET-Variation}: Wie ändern sich Ergebnisse bei $\pm 20\%$ WCET-Variation?
+  \item \textbf{Bandbreiten-Variation}: Wie ändern sich Latenzen bei $\pm 10\%$ Bandbreiten-Variation?
+  \item \textbf{Periodizitäts-Variation}: Wie ändern sich Ergebnisse bei Änderungen der Frame-Periodizitäten?
+\end{itemize}
+
+Diese Analysen helfen, die Robustheit der Metrik zu bewerten und kritische Parameter zu identifizieren.
+
+\section{Erweiterte Beispiele für Synthese-Metriken}
+
+Dieser Abschnitt präsentiert erweiterte Beispiele für die Anwendung der Synthese-Metriken auf komplexe Architekturen.
+
+\subsection{Beispiel: Multi-Domain-Architektur}
+
+Dieses Beispiel zeigt die Synthese-Metrik für eine Multi-Domain-Architektur mit mehreren Domänen (AD, Body, Infotainment).
+
+\subsubsection{Architektur-Übersicht}
+
+Die Architektur umfasst:
+
+\begin{itemize}
+  \item \textbf{AD-Domain}:
+    \begin{itemize}
+      \item 1x AD-DC (Central Compute) mit 16 CPU-Kernen, GPU, NPU
+      \item 8x Sensoren (Kameras, Radar, LiDAR)
+      \item 2x Aktoren (Lenkung, Bremse)
+      \item 15x Funktionsketten (Perzeption, Planung, Regelung)
+    \end{itemize}
+  
+  \item \textbf{Body-Domain}:
+    \begin{itemize}
+      \item 4x Zonen-Controller
+      \item 20x Aktoren (Türen, Beleuchtung, Klima)
+      \item 30x Sensoren (Türkontakte, Temperatur, etc.)
+      \item 25x Funktionsketten (Türsteuerung, Beleuchtung, etc.)
+    \end{itemize}
+  
+  \item \textbf{Infotainment-Domain}:
+    \begin{itemize}
+      \item 1x HMI-ECU
+      \item 2x Displays
+      \item 1x Audio-System
+      \item 10x Funktionsketten (Navigation, Media, etc.)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Lastabschätzung}
+
+Die Lastabschätzung für die gesamte Architektur:
+
+\begin{table}[h]
+  \centering
+  \caption{Lastabschätzung: Multi-Domain-Architektur}
+  \begin{tabular}{llll}
+    \toprule
+    Domain & CPU-Last & GPU-Last & Netzwerk-Last \\
+    \midrule
+    AD & 68\% & 72\% & 58\% \\
+    Body & 45\% & 0\% & 35\% \\
+    Infotainment & 55\% & 30\% & 40\% \\
+    \midrule
+    \textbf{Gesamt} & \textbf{56\%} & \textbf{34\%} & \textbf{44\%} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:multidomain_load}
+\end{table}
+
+\subsubsection{Timing-Analyse}
+
+Die Timing-Analyse für kritische Chains:
+
+\begin{table}[h]
+  \centering
+  \caption{Timing-Analyse: Kritische Chains}
+  \begin{tabular}{lllll}
+    \toprule
+    Chain & Domain & E2E-Latenz (Mean) & E2E-Latenz (Max) & Deadline \\
+    \midrule
+    Notbremsung & AD & 42 ms & 78 ms & 100 ms \\
+    Lenkung & AD & 38 ms & 72 ms & 150 ms \\
+    Türöffnung & Body & 25 ms & 45 ms & 200 ms \\
+    Navigation & Infotainment & 120 ms & 250 ms & 500 ms \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:multidomain_timing}
+\end{table}
+
+\subsection{Beispiel: Skalierungs-Analyse}
+
+Dieses Beispiel zeigt, wie die Synthese-Metrik für Skalierungs-Analysen verwendet wird.
+
+\subsubsection{Szenario}
+
+Verschiedene Architektur-Varianten werden verglichen:
+
+\begin{itemize}
+  \item \textbf{Variante A}: Basis-Architektur (4 Zonen, 1 Central Compute)
+  \item \textbf{Variante B}: Erweiterte Architektur (6 Zonen, 2 Central Compute)
+  \item \textbf{Variante C}: Maximale Architektur (8 Zonen, 3 Central Compute)
+\end{itemize}
+
+\subsubsection{Vergleich}
+
+\begin{table}[h]
+  \centering
+  \caption{Skalierungs-Analyse: Architektur-Varianten}
+  \begin{tabular}{lllll}
+    \toprule
+    Variante & CPU-Last & Netzwerk-Last & E2E-Latenz & Kosten \\
+    \midrule
+    A (Basis) & 75\% & 65\% & 95 ms & 1.0x \\
+    B (Erweitert) & 55\% & 45\% & 72 ms & 1.5x \\
+    C (Maximal) & 40\% & 30\% & 58 ms & 2.2x \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:scaling_analysis}
+\end{table}
+
+Die Analyse zeigt, dass Variante B einen guten Kompromiss zwischen Performance und Kosten bietet.
+
+\section{Erweiterte Metrik-Formeln und Berechnungen}
+
+Dieser Abschnitt präsentiert erweiterte Formeln und Berechnungen für die Synthese-Metrik.
+
+\subsection{Erweiterte Timing-Berechnungen}
+
+\subsubsection{Response-Time-Analyse für Multi-Core}
+
+Für Multi-Core-Systeme müssen zusätzliche Aspekte berücksichtigt werden:
+
+\begin{equation}
+R_i^{multi} = C_i + \sum_{j \in hp(i)} \left\lceil \frac{R_i}{T_j} \right\rceil C_j + I_i^{inter-core}
+\end{equation}
+
+wobei $I_i^{inter-core}$ die Inter-Core-Interferenz berücksichtigt:
+
+\begin{equation}
+I_i^{inter-core} = \sum_{k \in other-cores} \left( \frac{C_k}{T_k} \times L_{cache} \right)
+\end{equation}
+
+wobei $L_{cache}$ die Cache-Miss-Latenz ist.
+
+\subsubsection{TSN-End-to-End-Latenz}
+
+Die End-to-End-Latenz in TSN-Netzen setzt sich zusammen aus:
+
+\begin{equation}
+L_{E2E}^{TSN} = \sum_{h=1}^{H} \left( L_{tx}^h + L_{sw}^h + L_{gate}^h + L_{queue}^h \right)
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $H$: Anzahl der Hops
+  \item $L_{tx}^h$: Übertragungslatenz an Hop $h$
+  \item $L_{sw}^h$: Switch-Verarbeitungslatenz an Hop $h$
+  \item $L_{gate}^h$: Gate-Latenz an Hop $h$ (abhängig vom Gate-Schedule)
+  \item $L_{queue}^h$: Warteschlangenlatenz an Hop $h$
+\end{itemize}
+
+\subsection{Erweiterte Last-Berechnungen}
+
+\subsubsection{GPU-Last mit Tensor-Operationen}
+
+Für GPU-Last mit Tensor-Operationen:
+
+\begin{equation}
+L_{GPU}^{tensor} = \frac{\sum_{i=1}^{N} (D_i \times O_i)}{P_{GPU}^{tensor}}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $D_i$: Datenmenge für Operation $i$
+  \item $O_i$: Anzahl Operationen pro Datenelement für Operation $i$
+  \item $P_{GPU}^{tensor}$: Tensor-Performance der GPU (TOPS)
+  \item $N$: Anzahl der Operationen
+\end{itemize}
+
+\subsubsection{GPU-Last für KI-Inferenz (NVIDIA DRIVE Thor)}
+
+Für GPU-Last bei KI-Inferenz auf NVIDIA DRIVE Thor:
+
+\begin{equation}
+L_{GPU}^{Thor} = \frac{M \times FLOPS_{model}}{P_{Thor}}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $M$: Anzahl der Inferenz-Anfragen pro Sekunde
+  \item $FLOPS_{model}$: FLOPS pro Inferenz für das KI-Modell
+  \item $P_{Thor}$: NVIDIA DRIVE Thor GPU-Performance (2000 TOPS)
+\end{itemize}
+
+\paragraph{Beispiel: Bosch 8MP Kamera mit NVIDIA DRIVE Thor}
+
+Für eine Bosch 8MP Multifunktionskamera (3840x2160 @ 30 fps) mit YOLOv8 auf NVIDIA DRIVE Thor:
+
+\begin{itemize}
+  \item Input: 3840x2160 Pixel @ 30 fps
+  \item YOLOv8 FLOPS: ~65 GFLOPs pro Frame
+  \item DRIVE Thor Performance: 2000 TOPS = 2000 \times 10^{12} FLOPS/s
+  \item Last: $L = \frac{30 \times 65 \times 10^9}{2000 \times 10^{12}} = 0.975\%$
+  \item Inferenz-Zeit: ~15 ms (basierend auf Benchmarks)
+\end{itemize}
+
+\subsection{Energie-Berechnungen}
+
+\subsubsection{Dynamischer Energieverbrauch}
+
+Der dynamische Energieverbrauch hängt von der Last ab:
+
+\begin{equation}
+E_{dyn} = \sum_{i=1}^{N} \left( C_{eff} \times V_{dd}^2 \times f_i \times U_i \times t_i \right)
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $C_{eff}$: Effektive Kapazität
+  \item $V_{dd}$: Versorgungsspannung
+  \item $f_i$: Frequenz in Zustand $i$
+  \item $U_i$: Auslastung in Zustand $i$
+  \item $t_i$: Zeit in Zustand $i$
+  \item $N$: Anzahl der Zustände
+\end{itemize}
+
+\subsubsection{Leckstrom-Energie}
+
+Der Leckstrom-Energieverbrauch:
+
+\begin{equation}
+E_{leak} = V_{dd} \times I_{leak} \times t_{total}
+\end{equation}
+
+wobei $I_{leak}$ der Leckstrom ist, der temperaturabhängig ist.
+
+\subsection{Erweiterte Energie-Modellierung}
+
+\subsubsection{Temperaturabhängigkeit}
+
+Der Energieverbrauch hängt stark von der Temperatur ab:
+
+\begin{equation}
+P_{total}(T) = P_{dyn} + P_{leak}(T) + P_{static}
+\end{equation}
+
+wobei der Leckstrom temperaturabhängig ist:
+
+\begin{equation}
+I_{leak}(T) = I_0 \times e^{\frac{E_a}{k_B T}}
+\end{equation}
+
+mit:
+\begin{itemize}
+  \item $E_a$: Aktivierungsenergie (typisch 0.3-0.5 eV)
+  \item $k_B$: Boltzmann-Konstante
+  \item $T$: Temperatur in Kelvin
+\end{itemize}
+
+\subsubsection{DVFS-Modellierung}
+
+Dynamic Voltage and Frequency Scaling (DVFS) ermöglicht Energie-Optimierung:
+
+\begin{equation}
+P_{DVFS}(f, V) = C_{eff} \times V^2 \times f + P_{static}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $f$: Frequenz
+  \item $V$: Spannung
+  \item $C_{eff}$: Effektive Kapazität
+\end{itemize}
+
+Die optimale Frequenz für minimale Energie bei gegebener Last:
+
+\begin{equation}
+f_{opt} = \sqrt{\frac{L}{C_{eff} \times V^2}}
+\end{equation}
+
+\subsection{Erweiterte Timing-Analyse}
+
+\subsubsection{Probabilistische Timing-Analyse}
+
+Nicht nur Worst-Case, sondern auch probabilistische Verteilungen:
+
+\begin{equation}
+P(T_{response} > D) = \int_D^{\infty} f_{response}(t) dt
+\end{equation}
+
+wobei $f_{response}(t)$ die Wahrscheinlichkeitsdichtefunktion der Response-Zeit ist.
+
+\subsubsection{Multi-Core-Interferenz}
+
+Für Multi-Core-Systeme muss Cache-Interferenz berücksichtigt werden:
+
+\begin{equation}
+R_i^{multi} = C_i + \sum_{j \in hp(i)} \left\lceil \frac{R_i}{T_j} \right\rceil C_j + I_i^{cache} + I_i^{memory}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $I_i^{cache}$: Cache-Interferenz durch andere Cores
+  \item $I_i^{memory}$: Memory-Interferenz durch andere Cores
+\end{itemize}
+
+\section{Erweiterte Metrik-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Beispiele für die Anwendung der Synthese-Metrik.
+
+\subsection{Beispiel: Komplexe Multi-Domain-Architektur}
+
+Dieses Beispiel zeigt die Anwendung der Synthese-Metrik auf eine komplexe Multi-Domain-Architektur:
+
+\subsubsection{Architektur-Übersicht}
+
+\begin{itemize}
+  \item \textbf{AD-Domain}: 1x AD-DC, 4x Zonen-Controller, 12x Sensoren, 3x Aktoren
+  \item \textbf{Body-Domain}: 1x Body-DC, 2x Zonen-Controller, 20x Sensoren, 15x Aktoren
+  \item \textbf{Infotainment-Domain}: 1x Infotainment-DC, 1x Zonen-Controller, 5x Sensoren, 3x Aktoren
+  \item \textbf{Kommunikation}: TSN-Backbone (10 Gbps), CAN-FD für Aktoren
+\end{itemize}
+
+\subsubsection{Lastabschätzung}
+
+Die Lastabschätzung ergab:
+
+\begin{table}[h]
+  \centering
+  \caption{Lastabschätzung: Multi-Domain-Architektur}
+  \begin{tabular}{lllll}
+    \toprule
+    Domain & CPU-Last & GPU-Last & Netzwerk-Last & Energie \\
+    \midrule
+    AD & 65\% & 55\% & 45\% & 120 W \\
+    Body & 35\% & 5\% & 20\% & 40 W \\
+    Infotainment & 50\% & 30\% & 35\% & 60 W \\
+    Gesamt & 75\% & 60\% & 70\% & 220 W \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:multi_domain_load}
+\end{table}
+
+\subsubsection{Timing-Analyse}
+
+Die Timing-Analyse ergab:
+
+\begin{itemize}
+  \item \textbf{WCRT (AD-Tasks)}: 25 ms (kritischste Tasks)
+  \item \textbf{TSN-Latenz}: 0.5 ms (durchschnittlich)
+  \item \textbf{E2E-Latenz}: 85 ms (kritischste Chains)
+  \item \textbf{Deadline-Misses}: 0\% (alle Anforderungen erfüllt)
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Konzeption und Erweiterung von Synthese-Metriken beschrieben, die aus Architekturmerkmalen simulative Parameter ableiten. Die wichtigsten Aspekte umfassen:
+
+\begin{itemize}
+  \item \textbf{Flow-Aggregation}: Identifikation und Modellierung von Funktionsketten
+  \item \textbf{Lastabschätzung}: Berechnung von Rechen- und Netzwerklast
+  \item \textbf{Netzmodelle}: Modellierung von Bandbreite, Latenz, Jitter und TSN-Parametern
+  \item \textbf{Ausfall- und Degradationsprofile}: Modellierung von Fehlerverhalten
+  \item \textbf{Energieprofile}: Modellierung des Energieverbrauchs über Duty-Cycles
+  \item \textbf{Validierung}: Analytische Bounds, Microbenchmarks und Sensitivitätsanalysen
+\end{itemize}
+
+Diese Metriken bilden die Grundlage für die Transformation in ein Simulationsmodell, wie sie in den folgenden Kapiteln beschrieben wird.

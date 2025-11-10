@@ -1,4 +1,783 @@
 \chapter{Validierung und Iteration}\label{chap:validierung}
-Plausibilisierung gegen analytische Modelle; Sensitivitätsanalysen; Rückkopplung ins Architekturmodell zur Bottleneck-Beseitigung.
 
+\noindent
+Dieses Kapitel beschreibt die Validierung der Simulationsergebnisse und den iterativen Prozess zur Verbesserung der Architektur. Die Validierung umfasst insbesondere die Überprüfung der Modellierung von neuesten Sensoren (Bosch 8MP Multifunktionskamera) und Rechenplattformen (NVIDIA DRIVE Thor) sowie die Korrektheit der abgeleiteten Simulationsparameter. Die Validierung umfasst Plausibilisierung gegen analytische Modelle, Sensitivitätsanalysen und Rückkopplung ins Architekturmodell. Die Validierung ist ein kritischer Schritt, um sicherzustellen, dass die Simulationsergebnisse korrekt sind und als Grundlage für Architekturentscheidungen verwendet werden können \cite{validation_verification, simulation_automotive}. Ohne eine sorgfältige Validierung besteht die Gefahr, dass falsche Annahmen oder Implementierungsfehler zu unzuverlässigen Ergebnissen führen, die wiederum zu suboptimalen oder sogar gefährlichen Architekturentscheidungen führen können.
 
+Die Validierung von E/E-Architekturen erfordert insbesondere die Berücksichtigung von Echtzeit-Anforderungen \cite{real_time_systems} und funktionaler Sicherheit \cite{iso26262_practice}. Moderne Validierungsansätze für Fahrzeugsysteme werden in \cite{validation_verification, simulation_automotive} beschrieben.
+
+\section{Plausibilisierung gegen analytische Modelle}
+
+Die Plausibilisierung ist der erste Schritt der Validierung und dient dazu, die Simulationsergebnisse gegen bekannte analytische Modelle zu vergleichen. Analytische Modelle sind mathematische Formeln, die unter bestimmten Annahmen exakte oder approximative Lösungen für Timing- und Lastprobleme liefern. Der Vergleich zwischen Simulation und Analytik ermöglicht es, systematische Fehler in der Simulation zu identifizieren und die Genauigkeit der Simulationsergebnisse zu quantifizieren.
+
+\subsection{Analytische Timing-Modelle}
+
+Timing-Modelle sind von zentraler Bedeutung für die Validierung, da sie die zeitlichen Eigenschaften des Systems beschreiben. In E/E-Architekturen sind insbesondere die Response Times von Tasks, die End-to-End-Latenzen von Funktionsketten und die Netzwerk-Latenzen kritisch.
+
+\subsubsection{CPU-Scheduling-Analyse}
+
+Für Fixed-Priority Scheduling (FPS) kann die Worst-Case Response Time (WCRT) analytisch berechnet werden. Fixed-Priority Scheduling ist ein Scheduling-Algorithmus, bei dem jeder Task eine feste Priorität zugewiesen wird und der Scheduler immer den Task mit der höchsten Priorität ausführt, der bereit ist. Die WCRT ist die maximale Zeit, die ein Task vom Zeitpunkt seiner Bereitstellung bis zum Abschluss seiner Ausführung benötigt.
+
+Die iterative Berechnung der WCRT erfolgt nach der Formel von Joseph und Pandya:
+
+\begin{equation}
+R_i = C_i + \sum_{j \in hp(i)} \left\lceil \frac{R_i}{T_j} \right\rceil C_j
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $R_i$: Response Time von Task $i$ (zu berechnende Größe)
+  \item $C_i$: Worst-Case Execution Time (WCET) von Task $i$ - die maximale Zeit, die Task $i$ benötigt, um vollständig ausgeführt zu werden
+  \item $hp(i)$: Menge aller Tasks mit höherer Priorität als Task $i$
+  \item $T_j$: Periodizität (Period) von Task $j$ - das Zeitintervall zwischen zwei aufeinanderfolgenden Bereitstellungen
+  \item $\left\lceil \frac{R_i}{T_j} \right\rceil$: Anzahl der Unterbrechungen durch Task $j$ während der Ausführung von Task $i$
+\end{itemize}
+
+Die Berechnung erfolgt iterativ, beginnend mit $R_i^{(0)} = C_i$ und fortgesetzt mit $R_i^{(k+1)} = C_i + \sum_{j \in hp(i)} \left\lceil \frac{R_i^{(k)}}{T_j} \right\rceil C_j$, bis Konvergenz erreicht wird ($R_i^{(k+1)} = R_i^{(k)}$) oder bis $R_i^{(k)} > D_i$ (Deadline), was bedeutet, dass der Task seine Deadline nicht einhalten kann.
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: WCRT-Berechnung für drei Tasks}
+  \begin{tabular}{lllll}
+    \toprule
+    Task & Priorität & $C_i$ (ms) & $T_i$ (ms) & $D_i$ (ms) \\
+    \midrule
+    $\tau_1$ & 3 (höchste) & 2.0 & 10 & 10 \\
+    $\tau_2$ & 2 & 3.0 & 20 & 20 \\
+    $\tau_3$ & 1 (niedrigste) & 5.0 & 50 & 50 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:wcrt_example}
+\end{table}
+
+Für Task $\tau_3$ (niedrigste Priorität) ergibt sich:
+\begin{itemize}
+  \item $R_3^{(0)} = 5.0$ ms
+  \item $R_3^{(1)} = 5.0 + \left\lceil \frac{5.0}{10} \right\rceil \cdot 2.0 + \left\lceil \frac{5.0}{20} \right\rceil \cdot 3.0 = 5.0 + 1 \cdot 2.0 + 1 \cdot 3.0 = 10.0$ ms
+  \item $R_3^{(2)} = 5.0 + \left\lceil \frac{10.0}{10} \right\rceil \cdot 2.0 + \left\lceil \frac{10.0}{20} \right\rceil \cdot 3.0 = 5.0 + 1 \cdot 2.0 + 1 \cdot 3.0 = 10.0$ ms
+  \item Konvergenz: $R_3 = 10.0$ ms < $D_3 = 50$ ms $\Rightarrow$ Task ist schedulierbar
+\end{itemize}
+
+Die simulierten Response Times werden gegen diese analytischen Bounds validiert. Eine Abweichung von mehr als 10\% deutet auf einen Fehler in der Simulation hin und muss untersucht werden.
+
+\paragraph{Erweiterte Scheduling-Analyse}
+
+Für komplexere Scheduling-Algorithmen wie Earliest Deadline First (EDF) oder TSN-triggered Scheduling sind andere analytische Modelle erforderlich:
+
+\begin{itemize}
+  \item \textbf{EDF-Scheduling}: 
+    \begin{itemize}
+      \item Utilisation-Test: $\sum_{i=1}^{n} \frac{C_i}{T_i} \leq 1$ (nur für unabhängige Tasks)
+      \item Processor Demand Criterion für abhängige Tasks
+      \item Response Time Analysis für EDF mit Blocking
+    \end{itemize}
+  
+  \item \textbf{TSN-triggered Scheduling}:
+    \begin{itemize}
+      \item Berücksichtigung von Gate-Schedules in der Response Time
+      \item Integration von Netzwerk-Latenzen in Task-Response Times
+      \item Analyse von End-to-End-Latenzen über Netzwerk und CPU
+    \end{itemize}
+  
+  \item \textbf{Multi-Core-Scheduling}:
+    \begin{itemize}
+      \item Partitioned Scheduling: Tasks werden festen Kernen zugewiesen
+      \item Global Scheduling: Tasks können auf verschiedenen Kernen laufen
+      \item Inter-Core-Interferenz: Cache-Konflikte, Memory-Bandbreite
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Netzwerk-Latenz-Analyse}
+
+Für TSN-Netze (Time-Sensitive Networking) kann die maximale Latenz analytisch berechnet werden. TSN ist eine Erweiterung von Ethernet, die deterministische Kommunikation mit garantierten Latenzen und Bandbreiten ermöglicht. Die Latenzberechnung in TSN-Netzen ist komplexer als in herkömmlichen Ethernet-Netzen, da sie Gate-Schedules, Prioritäten und Traffic Shaping berücksichtigen muss.
+
+Die maximale End-to-End-Latenz für einen Frame in einem TSN-Netzwerk setzt sich aus mehreren Komponenten zusammen:
+
+\begin{equation}
+L_{max} = L_{fixed} + \sum_{i=1}^{n} \frac{S_i}{B} + Q_{max} + L_{gate}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $L_{fixed}$: Feste Latenz, bestehend aus:
+    \begin{itemize}
+      \item \textbf{Propagationslatenz}: Zeit für die Signalausbreitung im Medium (typisch $\approx 5$ ns/m für Kupfer)
+      \item \textbf{Processing-Latenz}: Zeit für die Verarbeitung im Switch (typisch $\approx 10-50$ $\mu$s pro Hop)
+      \item \textbf{Serialisierungs-Latenz}: Zeit zum Senden eines Frames auf das Medium (abhängig von Frame-Größe und Bandbreite)
+    \end{itemize}
+  \item $S_i$: Frame-Größe $i$ in Bytes
+  \item $B$: Bandbreite des Links in Bytes/s
+  \item $Q_{max}$: Maximale Queueing-Latenz - die Zeit, die ein Frame in der Warteschlange verbringt, bevor er gesendet wird
+  \item $L_{gate}$: Gate-Latenz - zusätzliche Latenz durch TSN Gate-Schedules, die bestimmen, wann ein Frame gesendet werden darf
+\end{itemize}
+
+Für TSN-Netze mit Gate-Scheduling wird die Gate-Latenz durch den Gate-Schedule bestimmt. Ein Gate-Schedule definiert Zeitfenster (Time Slots), in denen bestimmte Prioritätsklassen gesendet werden dürfen. Die maximale Gate-Latenz ist die Zeit, die ein Frame warten muss, bis sein zugewiesenes Zeitfenster beginnt.
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Latenzberechnung für einen TSN-Frame}
+  \begin{tabular}{lll}
+    \toprule
+    Komponente & Wert & Beschreibung \\
+    \midrule
+    Frame-Größe & 1500 Byte & Ethernet-Frame \\
+    Bandbreite & 1 Gbps & Link-Bandbreite \\
+    Hops & 3 & Anzahl der Switches \\
+    Processing pro Hop & 20 $\mu$s & Switch-Verarbeitungszeit \\
+    Gate-Schedule-Zyklus & 1 ms & TSN-Zykluszeit \\
+    \midrule
+    Serialisierungs-Latenz & 12 $\mu$s & $\frac{1500 \cdot 8}{10^9}$ \\
+    Processing-Latenz & 60 $\mu$s & $3 \cdot 20$ $\mu$s \\
+    Gate-Latenz (max) & 1 ms & Worst-Case Wartezeit \\
+    Queueing-Latenz (max) & 50 $\mu$s & Abhängig von Last \\
+    \midrule
+    \textbf{Gesamt-Latenz (max)} & \textbf{1.122 ms} & Summe aller Komponenten \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:tsn_latency_example}
+\end{table}
+
+Die simulierten Netzwerk-Latenzen werden gegen diese analytischen Berechnungen validiert. Abweichungen können auf Fehler in der TSN-Konfiguration, ungenaue Modellierung der Switch-Verarbeitung oder Probleme mit dem Gate-Scheduling hinweisen.
+
+\subsection{Vergleich Simulation vs. Analytik}
+
+Der Vergleich zwischen Simulations- und analytischen Ergebnissen erfolgt systematisch für alle relevanten Metriken. Dieser Vergleich dient nicht nur der Fehlererkennung, sondern auch der Quantifizierung der Simulationsgenauigkeit und der Identifikation von Bereichen, in denen die Simulation möglicherweise ungenau ist.
+
+\subsubsection{Validierungs-Metriken}
+
+Die Validierung verwendet mehrere Metriken, um die Übereinstimmung zwischen Simulation und Analytik zu quantifizieren:
+
+\begin{itemize}
+  \item \textbf{Abweichung (Deviation)}: Die prozentuale Abweichung zwischen simulierten und analytischen Werten:
+    \begin{equation}
+      \text{Deviation} = \frac{|V_{sim} - V_{analytical}|}{V_{analytical}} \cdot 100\%
+    \end{equation}
+    wobei $V_{sim}$ der simulierte Wert und $V_{analytical}$ der analytische Wert ist.
+  
+  \item \textbf{Korrelation (Correlation)}: Der Korrelationskoeffizient $r$ misst die lineare Beziehung zwischen simulierten und analytischen Werten:
+    \begin{equation}
+      r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \sum_{i=1}^{n}(y_i - \bar{y})^2}}
+    \end{equation}
+    wobei $x_i$ die analytischen Werte, $y_i$ die simulierten Werte und $\bar{x}$, $\bar{y}$ die Mittelwerte sind. $r$ liegt zwischen -1 und +1, wobei +1 eine perfekte positive Korrelation bedeutet.
+  
+  \item \textbf{Bestimmtheitsmaß ($R^2$)}: Das Bestimmtheitsmaß gibt an, wie gut die simulierten Werte durch die analytischen Werte erklärt werden:
+    \begin{equation}
+      R^2 = 1 - \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2}
+    \end{equation}
+    wobei $\hat{y}_i$ die durch die Regressionsgerade vorhergesagten Werte sind. $R^2$ liegt zwischen 0 und 1, wobei 1 eine perfekte Übereinstimmung bedeutet.
+  
+  \item \textbf{Outlier-Analyse}: Identifikation von Ausreißern - Werten, die signifikant von der erwarteten Beziehung abweichen. Outlier können auf Fehler in der Simulation, ungenaue analytische Modelle oder spezielle Randbedingungen hinweisen.
+  
+  \item \textbf{Mean Absolute Error (MAE)}: Der durchschnittliche absolute Fehler:
+    \begin{equation}
+      \text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_i - x_i|
+    \end{equation}
+  
+  \item \textbf{Root Mean Square Error (RMSE)}: Die Wurzel des mittleren quadratischen Fehlers, die größere Abweichungen stärker gewichtet:
+    \begin{equation}
+      \text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - x_i)^2}
+    \end{equation}
+\end{itemize}
+
+\subsubsection{Akzeptanzkriterien}
+
+Die Akzeptanzkriterien definieren Schwellenwerte, die erfüllt sein müssen, damit die Simulation als valide betrachtet wird. Diese Kriterien sind abhängig von der Art der Metrik und der kritischen Bedeutung für die Architektur:
+
+\begin{table}[h]
+  \centering
+  \caption{Akzeptanzkriterien für Validierungs-Metriken}
+  \begin{tabular}{lll}
+    \toprule
+    Metrik-Kategorie & Kriterium & Begründung \\
+    \midrule
+    Timing (kritische Pfade) & Abweichung < 10\% & Sicherheitskritische Funktionen erfordern hohe Genauigkeit \\
+    Timing (normale Pfade) & Abweichung < 20\% & Weniger kritische Funktionen tolerieren größere Abweichungen \\
+    Last (CPU/Netzwerk) & Abweichung < 5\% & Lastberechnungen müssen präzise sein für Dimensionierung \\
+    Korrelation & $R^2 > 0.9$ & Starke lineare Beziehung zwischen Simulation und Analytik \\
+    Outlier-Rate & < 5\% & Nur wenige Ausreißer erlaubt \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:acceptance_criteria}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{Timing}: Abweichung < 10\% für kritische Pfade (z.\,B. Lenkung, Bremse), < 20\% für normale Pfade
+  \item \textbf{Last}: Abweichung < 5\% für CPU/Netzwerk-Auslastung, da diese Metriken für die Dimensionierung kritisch sind
+  \item \textbf{Korrelation}: $R^2 > 0.9$ für lineare Zusammenhänge, um sicherzustellen, dass die Simulation die analytischen Trends korrekt wiedergibt
+  \item \textbf{Outlier}: < 5\% der Messpunkte dürfen Ausreißer sein, und diese müssen dokumentiert und erklärt werden
+\end{itemize}
+
+Wenn die Akzeptanzkriterien nicht erfüllt werden, muss die Ursache identifiziert und behoben werden, bevor die Simulation für Architekturentscheidungen verwendet werden kann.
+
+\section{Sensitivitätsanalysen}
+
+Sensitivitätsanalysen untersuchen, wie empfindlich die Simulationsergebnisse auf Änderungen der Eingabeparameter reagieren. Diese Analysen sind wichtig, um zu verstehen, welche Parameter kritisch sind und welche Unsicherheiten in den Eingabedaten zu welchen Unsicherheiten in den Ergebnissen führen. Sensitivitätsanalysen helfen auch dabei, Robustheit zu bewerten und Prioritäten für die Genauigkeit der Eingabedaten zu setzen.
+
+\subsection{Parameter-Sensitivität}
+
+Die Parameter-Sensitivität wird für alle relevanten Eingabeparameter untersucht. Dabei werden die Parameter systematisch variiert und die Auswirkungen auf die Ausgabemetriken gemessen.
+
+\subsubsection{WCET-Variation}
+
+Die Worst-Case Execution Time (WCET) ist einer der kritischsten Parameter für Timing-Analysen. WCET-Werte sind oft unsicher, da sie von vielen Faktoren abhängen (Compiler-Optimierungen, Cache-Verhalten, Pipeline-Stalls, etc.). Die Sensitivität auf WCET-Variationen wird untersucht:
+
+\begin{itemize}
+  \item \textbf{Variation}: $\pm 20\%$ WCET für alle Tasks (realistischer Unsicherheitsbereich)
+  \item \textbf{Auswirkung}: Änderung der E2E-Latenz, CPU-Auslastung, Response Times, Deadline-Misses
+  \item \textbf{Ziel}: Identifikation kritischer Tasks, deren WCET besonders genau bekannt sein muss
+  \item \textbf{Methodik}: Monte-Carlo-Simulation mit zufälligen WCET-Variationen oder systematische Sweep-Analyse
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Sensitivität der E2E-Latenz auf WCET-Variationen}
+  \begin{tabular}{llll}
+    \toprule
+    Task & WCET-Basis (ms) & $\Delta$ E2E bei +20\% (ms) & Sensitivität \\
+    \midrule
+    Object\_Detection & 15.0 & +3.2 & Hoch \\
+    Image\_Capture & 2.0 & +0.4 & Mittel \\
+    Steering\_Control & 1.0 & +0.1 & Niedrig \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:wcet_sensitivity}
+\end{table}
+
+Tasks mit hoher Sensitivität erfordern besonders genaue WCET-Messungen oder -Analysen, da Unsicherheiten in diesen Werten direkt zu Unsicherheiten in den E2E-Latenzen führen.
+
+\subsubsection{Bandbreiten-Variation}
+
+Die Bandbreite von Netzwerk-Links kann durch verschiedene Faktoren beeinflusst werden (Kabelqualität, Interferenzen, Switch-Konfiguration). Die Sensitivität auf Bandbreiten-Variationen wird untersucht:
+
+\begin{itemize}
+  \item \textbf{Variation}: $\pm 10\%$ Bandbreite für alle Links (realistischer Toleranzbereich)
+  \item \textbf{Auswirkung}: Änderung der Netzwerk-Latenz, Paketverluste, Busauslastung, E2E-Latenz
+  \item \textbf{Ziel}: Identifikation kritischer Links, die besonders zuverlässig dimensioniert werden müssen
+  \item \textbf{Methodik}: Systematische Variation der Bandbreite für jeden Link einzeln und in Kombination
+\end{itemize}
+
+Links mit hoher Sensitivität sollten mit ausreichendem Sicherheitsabstand dimensioniert werden, um Schwankungen zu tolerieren.
+
+\subsubsection{Periodizitäts-Variation}
+
+Die Periodizität von Tasks und Frames kann sich durch Änderungen in den Anforderungen oder durch Jitter in der Triggerung ändern. Die Sensitivität auf Periodizitäts-Variationen wird untersucht:
+
+\begin{itemize}
+  \item \textbf{Variation}: $\pm 15\%$ Periodizität für alle Frames/Tasks (realistischer Jitter-Bereich)
+  \item \textbf{Auswirkung}: Änderung der Last, Timing, CPU/Netzwerk-Auslastung, E2E-Latenz
+  \item \textbf{Ziel}: Robustheits-Bewertung - wie robust ist die Architektur gegen Timing-Variationen?
+  \item \textbf{Methodik}: Systematische Variation der Periodizität und Messung der Auswirkungen
+\end{itemize}
+
+Eine Architektur, die sehr empfindlich auf Periodizitäts-Variationen reagiert, ist weniger robust und erfordert eine präzise Zeitsteuerung.
+
+\subsubsection{Prioritäts-Variation}
+
+Die Prioritäten von Tasks und Frames können sich durch Änderungen in den Anforderungen ändern. Die Sensitivität auf Prioritäts-Variationen wird untersucht:
+
+\begin{itemize}
+  \item \textbf{Variation}: Änderung der Priorität um $\pm 1$ Stufe für alle Tasks/Frames
+  \item \textbf{Auswirkung}: Änderung der Response Times, E2E-Latenzen, Deadline-Misses
+  \item \textbf{Ziel}: Identifikation von Tasks/Frames, deren Priorität kritisch ist
+\end{itemize}
+
+\subsection{Sensitivitäts-Koeffizienten}
+
+Sensitivitäts-Koeffizienten quantifizieren die Abhängigkeit zwischen Eingabe- und Ausgabeparametern. Der Sensitivitäts-Koeffizient $S_{x,y}$ gibt an, um wie viel Prozent sich der Ausgabeparameter $y$ ändert, wenn sich der Eingabeparameter $x$ um 1\% ändert:
+
+\begin{equation}
+S_{x,y} = \frac{\partial y / y}{\partial x / x} = \frac{x}{y} \frac{\partial y}{\partial x}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $S_{x,y}$: Sensitivitäts-Koeffizient von $y$ bezüglich $x$ (dimensionslos)
+  \item $x$: Eingabeparameter (z.\,B. WCET, Bandbreite, Periodizität)
+  \item $y$: Ausgabeparameter (z.\,B. E2E-Latenz, CPU-Auslastung, Response Time)
+\end{itemize}
+
+Interpretation der Sensitivitäts-Koeffizienten:
+\begin{itemize}
+  \item $|S_{x,y}| < 0.5$: Niedrige Sensitivität - Änderungen in $x$ haben geringe Auswirkungen auf $y$
+  \item $0.5 \leq |S_{x,y}| < 1.0$: Mittlere Sensitivität - Änderungen in $x$ haben moderate Auswirkungen auf $y$
+  \item $|S_{x,y}| \geq 1.0$: Hohe Sensitivität - Änderungen in $x$ haben starke Auswirkungen auf $y$ (nichtlineare Beziehung möglich)
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Sensitivitäts-Koeffizienten für verschiedene Parameter}
+  \begin{tabular}{llll}
+    \toprule
+    Eingabeparameter $x$ & Ausgabeparameter $y$ & $S_{x,y}$ & Interpretation \\
+    \midrule
+    WCET (Object\_Detection) & E2E-Latenz (Lenkung) & 0.85 & Hohe Sensitivität \\
+    Bandbreite (Ethernet) & Netzwerk-Latenz & -0.92 & Hohe Sensitivität (negativ) \\
+    Periodizität (Camera) & CPU-Auslastung & -0.45 & Niedrige Sensitivität \\
+    Priorität (Task) & Response Time & -0.78 & Hohe Sensitivität (negativ) \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:sensitivity_coefficients}
+\end{table}
+
+Negative Sensitivitäts-Koeffizienten bedeuten, dass eine Erhöhung des Eingabeparameters zu einer Verringerung des Ausgabeparameters führt (z.\,B. höhere Bandbreite führt zu niedrigerer Latenz).
+
+\section{Rückkopplung ins Architekturmodell}
+
+Die Rückkopplung der Simulationsergebnisse ins Architekturmodell ist ein kritischer Schritt im iterativen Verbesserungsprozess. Die Simulationsergebnisse liefern wertvolle Erkenntnisse über die Performance der Architektur, die genutzt werden, um die Architektur zu optimieren. Dieser Prozess ermöglicht es, Probleme frühzeitig zu identifizieren und zu beheben, bevor sie zu kostspieligen Änderungen in späteren Entwicklungsphasen führen.
+
+\subsection{Bottleneck-Identifikation}
+
+Ein Bottleneck (Engpass) ist eine Komponente oder ein Pfad im System, der die Gesamtperformance limitiert. Die Identifikation von Bottlenecks ist wichtig, um Optimierungsmaßnahmen gezielt auf die kritischsten Bereiche zu fokussieren. Bottlenecks können in verschiedenen Bereichen auftreten: Timing, Ressourcen, Kommunikation oder Verfügbarkeit.
+
+\subsubsection{Timing-Bottlenecks}
+
+Timing-Bottlenecks sind Komponenten oder Pfade, die zu hohen Latenzen führen und damit die E2E-Latenz von Funktionsketten negativ beeinflussen. Simulationsergebnisse identifizieren Timing-Bottlenecks durch Analyse der Response Times, Latenzen und E2E-Latenzen:
+
+\begin{itemize}
+  \item \textbf{Kritische Tasks}: Tasks mit hoher Response Time, die nahe an ihrer Deadline liegen oder diese überschreiten. Diese Tasks können die E2E-Latenz von Funktionsketten dominieren.
+  
+  \item \textbf{Kritische Links}: Netzwerk-Links mit hoher Latenz, die durch lange Übertragungszeiten, hohe Queueing-Latenzen oder Gate-Schedule-Verzögerungen verursacht werden.
+  
+  \item \textbf{Kritische Chains}: Funktionsketten mit hoher E2E-Latenz, die ihre Anforderungen nicht erfüllen. Diese Chains müssen analysiert werden, um die Ursache der hohen Latenz zu identifizieren.
+  
+  \item \textbf{Kritische Hops}: Switches oder Gateways, die hohe Processing-Latenzen verursachen.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Identifizierte Timing-Bottlenecks}
+  \begin{tabular}{lllll}
+    \toprule
+    Komponente & Typ & Latenz (ms) & Budget (ms) & Status \\
+    \midrule
+    Object\_Detection Task & Task & 18.5 & 15.0 & \textcolor{red}{Überschreitung} \\
+    Ethernet Link (Camera) & Link & 2.1 & 1.5 & \textcolor{orange}{Kritisch} \\
+    Lenkung Chain (E2E) & Chain & 95.0 & 100.0 & \textcolor{green}{OK} \\
+    TSN Switch (Front) & Hop & 0.8 & 0.5 & \textcolor{orange}{Kritisch} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:timing_bottlenecks}
+\end{table}
+
+Die Identifikation von Timing-Bottlenecks ermöglicht es, gezielt Optimierungsmaßnahmen zu ergreifen, z.\,B. durch WCET-Optimierung, Prioritätsanpassung oder Bandbreiten-Erhöhung.
+
+\subsubsection{Ressourcen-Bottlenecks}
+
+Ressourcen-Bottlenecks sind Komponenten, die ihre Ressourcenkapazität nahezu vollständig ausnutzen und damit zu Performance-Problemen führen können. Hohe Ressourcenauslastung kann zu erhöhten Latenzen, Jitter und im Extremfall zu Deadline-Misses führen:
+
+\begin{itemize}
+  \item \textbf{CPU-Bottlenecks}: ECUs mit hoher CPU-Auslastung (typisch > 80\%), die zu erhöhten Response Times führen. Diese ECUs können keine zusätzliche Last aufnehmen, ohne dass Performance-Probleme auftreten.
+  
+  \item \textbf{Netzwerk-Bottlenecks}: Links mit hoher Busauslastung (typisch > 70\%), die zu erhöhten Latenzen und möglicherweise zu Paketverlusten führen. Diese Links sind kritisch für die Kommunikation und können die E2E-Latenz dominieren.
+  
+  \item \textbf{Speicher-Bottlenecks}: ECUs mit hoher Speicher-Auslastung (typisch > 85\%), die zu Performance-Problemen durch häufige Speicher-Allokationen/Deallokationen oder durch Paging führen können.
+  
+  \item \textbf{GPU/NPU-Bottlenecks}: Rechenknoten mit hoher GPU/NPU-Auslastung, die für AI/ML-Workloads kritisch sind.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Identifizierte Ressourcen-Bottlenecks}
+  \begin{tabular}{lllll}
+    \toprule
+    Komponente & Ressource & Auslastung (\%) & Schwellwert (\%) & Status \\
+    \midrule
+    AD-ECU & CPU & 87.5 & 80 & \textcolor{red}{Bottleneck} \\
+    Ethernet Link (Front) & Bandbreite & 72.3 & 70 & \textcolor{orange}{Kritisch} \\
+    AD-ECU & RAM & 78.2 & 85 & \textcolor{green}{OK} \\
+    AD-ECU & GPU & 91.2 & 80 & \textcolor{red}{Bottleneck} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:resource_bottlenecks}
+\end{table}
+
+Ressourcen-Bottlenecks können durch Lastverteilung, Ressourcen-Erhöhung oder Optimierung der Workloads behoben werden.
+
+\subsection{Optimierungs-Vorschläge}
+
+Basierend auf den identifizierten Bottlenecks werden gezielte Optimierungs-Vorschläge generiert. Diese Vorschläge werden priorisiert nach ihrer Wirksamkeit, ihrem Aufwand und ihrer Auswirkung auf andere Systemeigenschaften. Die Optimierungs-Vorschläge werden systematisch kategorisiert in Architektur-Anpassungen und Parameter-Tuning.
+
+\subsubsection{Architektur-Anpassungen}
+
+Architektur-Anpassungen sind strukturelle Änderungen an der Architektur, die typischerweise einen höheren Aufwand erfordern, aber auch größere Verbesserungen bewirken können:
+
+\begin{itemize}
+  \item \textbf{Task-Migration}: Verschiebung von Tasks auf weniger ausgelastete ECUs, um die Last zu verteilen und CPU-Bottlenecks zu reduzieren. Dies erfordert eine Analyse der Kommunikationsabhängigkeiten, um sicherzustellen, dass die Migration nicht zu erhöhten Netzwerk-Latenzen führt.
+  
+  \item \textbf{Bandbreiten-Erhöhung}: Erhöhung der Bandbreite für kritische Links (z.\,B. von 1 Gbps auf 2.5 Gbps oder 10 Gbps), um Netzwerk-Bottlenecks zu beheben. Dies kann Hardware-Änderungen erfordern.
+  
+  \item \textbf{Prioritäts-Anpassung}: Änderung von Task/Frame-Prioritäten, um kritische Pfade zu bevorzugen und Timing-Bottlenecks zu reduzieren. Dies erfordert eine sorgfältige Analyse, um sicherzustellen, dass keine anderen Pfade negativ beeinflusst werden.
+  
+  \item \textbf{Redundanz-Hinzufügung}: Hinzufügung von Redundanz für kritische Komponenten, um Verfügbarkeit zu erhöhen und Single Points of Failure zu vermeiden. Dies erhöht die Kosten, aber verbessert die Robustheit.
+  
+  \item \textbf{Link-Redundanz}: Hinzufügung von redundanten Kommunikationspfaden (z.\,B. PRP - Parallel Redundancy Protocol) für sicherheitskritische Kommunikation.
+  
+  \item \textbf{ECU-Konsolidierung}: Zusammenlegung mehrerer ECUs zu einer leistungsfähigeren ECU, um Kosten zu reduzieren und die Kommunikation zu vereinfachen.
+  
+  \item \textbf{ECU-Aufteilung}: Aufteilung einer überlasteten ECU in mehrere ECUs, um die Last zu verteilen.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Optimierungs-Vorschläge für identifizierte Bottlenecks}
+  \begin{tabular}{llll}
+    \toprule
+    Bottleneck & Vorschlag & Aufwand & Erwartete Verbesserung \\
+    \midrule
+    AD-ECU CPU (87.5\%) & Task-Migration & Mittel & -15\% CPU-Last \\
+    Ethernet Link (72.3\%) & Bandbreite 1G $\rightarrow$ 2.5G & Hoch & -40\% Latenz \\
+    Object\_Detection (18.5 ms) & Priorität erhöhen & Niedrig & -3 ms Response Time \\
+    Lenkung Chain & Link-Redundanz & Hoch & +Verfügbarkeit \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:optimization_suggestions}
+\end{table}
+
+\subsubsection{Parameter-Tuning}
+
+Parameter-Tuning sind Änderungen an Konfigurationsparametern, die typischerweise einen geringeren Aufwand erfordern, aber auch geringere Verbesserungen bewirken können:
+
+\begin{itemize}
+  \item \textbf{WCET-Optimierung}: Reduzierung von WCETs durch Code-Optimierung, Compiler-Optimierungen oder Algorithmus-Verbesserungen. Dies erfordert Software-Entwicklung, kann aber erhebliche Verbesserungen bewirken.
+  
+  \item \textbf{Periodizitäts-Anpassung}: Optimierung von Frame/Task-Periodizitäten, um die Last zu reduzieren oder die Reaktionszeit zu verbessern. Längere Perioden reduzieren die Last, kürzere Perioden verbessern die Reaktionszeit.
+  
+  \item \textbf{Scheduling-Optimierung}: Änderung von Scheduling-Policies (z.\,B. von Fixed-Priority zu Earliest-Deadline-First) oder Anpassung von Scheduling-Parametern, um die CPU-Auslastung zu optimieren.
+  
+  \item \textbf{TSN-Konfiguration}: Optimierung von TSN Gate-Schedules, Prioritäten und Traffic Shaping-Parametern, um die Netzwerk-Latenz zu reduzieren.
+  
+  \item \textbf{Buffer-Größen}: Anpassung von Buffer-Größen in Switches und ECUs, um Paketverluste zu reduzieren, ohne die Latenz zu erhöhen.
+  
+  \item \textbf{Power-State-Management}: Optimierung von Power-State-Übergängen, um Energie zu sparen, ohne die Reaktionszeit zu beeinträchtigen.
+\end{itemize}
+
+Parameter-Tuning kann iterativ durchgeführt werden, wobei die Auswirkungen jeder Änderung gemessen werden, um die optimale Konfiguration zu finden.
+
+\subsection{Iterativer Verbesserungsprozess}
+
+Der iterative Verbesserungsprozess ist ein systematischer Ansatz zur kontinuierlichen Optimierung der Architektur basierend auf Simulationsergebnissen. Dieser Prozess ermöglicht es, die Architektur schrittweise zu verbessern, ohne dass alle Probleme gleichzeitig gelöst werden müssen. Der iterative Ansatz ist besonders wertvoll, da er es ermöglicht, die Auswirkungen von Änderungen zu messen und den Optimierungsprozess zu steuern.
+
+\subsubsection{Iterations-Zyklus}
+
+Der Iterations-Zyklus besteht aus mehreren Phasen, die wiederholt werden, bis die Ziele erreicht sind:
+
+\begin{enumerate}
+  \item \textbf{Simulation}: Durchführung der Simulation mit der aktuellen Architektur-Konfiguration. Die Simulation wird mit repräsentativen Szenarien durchgeführt, die die relevanten Use-Cases und Lastbedingungen abdecken.
+  
+  \item \textbf{Auswertung}: Analyse der Simulationsergebnisse mit Fokus auf die definierten KPIs (E2E-Latenz, CPU-Auslastung, Netzwerk-Auslastung, Deadline-Misses, etc.). Die Auswertung identifiziert Bereiche, die nicht die Anforderungen erfüllen.
+  
+  \item \textbf{Identifikation}: Identifikation von Bottlenecks und Problemen durch systematische Analyse der Ergebnisse. Dies umfasst die Identifikation von Timing-Bottlenecks, Ressourcen-Bottlenecks und anderen Performance-Problemen.
+  
+  \item \textbf{Anpassung}: Anpassung des Architekturmodells basierend auf den identifizierten Problemen. Dies kann Architektur-Anpassungen (z.\,B. Task-Migration, Bandbreiten-Erhöhung) oder Parameter-Tuning (z.\,B. Prioritäts-Anpassung, TSN-Konfiguration) umfassen.
+  
+  \item \textbf{Validierung}: Validierung der Anpassungen durch erneute Simulation, um sicherzustellen, dass die Änderungen die erwarteten Verbesserungen bewirken und keine neuen Probleme verursachen.
+  
+  \item \textbf{Wiederholung}: Wiederholung des Zyklus, bis die Ziele erreicht sind oder keine weiteren signifikanten Verbesserungen möglich sind.
+\end{enumerate}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Iterations-Zyklus für eine Lenkungs-Funktionskette}
+  \begin{tabular}{llll}
+    \toprule
+    Iteration & Problem & Maßnahme & Ergebnis \\
+    \midrule
+    1 & E2E-Latenz 120 ms > 100 ms & Priorität erhöhen & 105 ms (noch zu hoch) \\
+    2 & Object\_Detection 18.5 ms & WCET optimieren & 15.2 ms, E2E 98 ms \\
+    3 & CPU-Auslastung 87\% & Task migrieren & CPU 75\%, E2E 95 ms \\
+    4 & -- & -- & Ziel erreicht \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:iteration_cycle}
+\end{table}
+
+Der Iterations-Zyklus sollte dokumentiert werden, um die Entscheidungen nachvollziehbar zu machen und um zu verhindern, dass bereits getestete Konfigurationen erneut getestet werden.
+
+\subsubsection{Konvergenz-Kriterien}
+
+Der iterative Prozess endet, wenn die Konvergenz-Kriterien erfüllt sind. Diese Kriterien definieren, wann die Architektur als ausreichend optimiert betrachtet wird:
+
+\begin{itemize}
+  \item \textbf{Alle Deadlines eingehalten}: Keine Deadline-Misses mehr für kritische Tasks. Alle Funktionsketten erfüllen ihre E2E-Latenz-Anforderungen.
+  
+  \item \textbf{Auslastung akzeptabel}: CPU/Netzwerk-Auslastung < Schwellenwerte (typisch CPU < 80\%, Netzwerk < 70\%), um ausreichend Reserve für zukünftige Erweiterungen zu haben.
+  
+  \item \textbf{Verbesserung minimal}: Weitere Iterationen bringen keine signifikante Verbesserung mehr (typisch < 2\% Verbesserung pro Iteration). Dies deutet darauf hin, dass die Architektur nahe am Optimum ist.
+  
+  \item \textbf{Kosten-Nutzen-Verhältnis}: Weitere Optimierungen erfordern einen unverhältnismäßig hohen Aufwand im Vergleich zur erwarteten Verbesserung.
+  
+  \item \textbf{Alle Anforderungen erfüllt}: Alle funktionalen und nichtfunktionalen Anforderungen werden erfüllt.
+\end{itemize}
+
+Wenn die Konvergenz-Kriterien erfüllt sind, kann die Architektur als finalisiert betrachtet werden. Wenn die Kriterien nicht erfüllt werden können, müssen möglicherweise die Anforderungen überprüft oder alternative Architektur-Ansätze in Betracht gezogen werden.
+
+\section{Validierungs-Benchmarks}
+
+Validierungs-Benchmarks sind standardisierte Test-Cases, die verwendet werden, um die Korrektheit und Genauigkeit der Simulation zu überprüfen. Diese Benchmarks dienen als Referenzpunkte für die Validierung und ermöglichen es, die Performance der Simulation über verschiedene Architekturen und Konfigurationen hinweg zu bewerten.
+
+\subsection{Referenz-Architekturen}
+
+Referenz-Architekturen sind repräsentative Architekturen, die verschiedene Komplexitätsgrade und Anwendungsfälle abdecken. Diese Architekturen werden verwendet, um die Simulation zu validieren und um Performance-Trends zu identifizieren.
+
+\subsubsection{Standard-Test-Cases}
+
+Standard-Test-Cases werden für die Validierung verwendet und decken verschiedene Komplexitätsgrade ab:
+
+\begin{itemize}
+  \item \textbf{Minimal-Architektur}: Kleinste mögliche Architektur mit minimaler Komplexität (z.\,B. Kamera $\rightarrow$ ECU $\rightarrow$ Aktor). Diese Architektur dient als Basis-Test, um sicherzustellen, dass die grundlegende Funktionalität korrekt ist.
+  
+  \item \textbf{Typische Architektur}: Repräsentative Architektur mit typischer Komplexität (z.\,B. mehrere Sensoren, mehrere ECUs, TSN-Netzwerk). Diese Architektur repräsentiert realistische Anwendungsfälle und dient als Haupt-Validierungs-Benchmark.
+  
+  \item \textbf{Maximale Architektur}: Größte mögliche Architektur mit maximaler Komplexität (z.\,B. viele Sensoren, viele ECUs, komplexes TSN-Netzwerk, Redundanz). Diese Architektur testet die Skalierbarkeit und die Grenzen der Simulation.
+  
+  \item \textbf{Spezielle Architekturen}: Architekturen mit speziellen Eigenschaften (z.\,B. hohe Redundanz, extreme Last, spezielle TSN-Konfigurationen), um spezifische Aspekte zu testen.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Übersicht der Referenz-Architekturen}
+  \begin{tabular}{lllll}
+    \toprule
+    Architektur & Sensoren & ECUs & Links & Komplexität \\
+    \midrule
+    Minimal & 1 & 1 & 2 & Niedrig \\
+    Typisch & 8 & 5 & 12 & Mittel \\
+    Maximal & 20 & 10 & 30 & Hoch \\
+    Redundanz & 4 & 6 & 16 & Mittel (hohe Redundanz) \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:reference_architectures}
+\end{table}
+
+\subsubsection{Benchmark-Ergebnisse}
+
+Benchmark-Ergebnisse werden systematisch dokumentiert, um die Validierung zu unterstützen und um Performance-Trends zu identifizieren:
+
+\begin{itemize}
+  \item \textbf{Baseline-Metriken}: Referenz-Werte für jede Benchmark-Architektur, die als Vergleichsbasis für zukünftige Simulationen dienen. Diese Werte werden mit analytischen Berechnungen verglichen, um die Genauigkeit zu validieren.
+  
+  \item \textbf{Performance-Trends}: Entwicklung der Performance-Metriken über verschiedene Architekturen hinweg, um zu verstehen, wie die Performance mit der Komplexität skaliert.
+  
+  \item \textbf{Reproduzierbarkeit}: Konsistenz der Ergebnisse über mehrere Simulationsläufe hinweg, um sicherzustellen, dass die Simulation deterministisch und reproduzierbar ist.
+  
+  \item \textbf{Validierungs-Status}: Dokumentation, ob die Benchmark die Validierungs-Kriterien erfüllt (z.\,B. Abweichung < 10\% für Timing, $R^2 > 0.9$ für Korrelation).
+  
+  \item \textbf{Known Issues}: Dokumentation bekannter Probleme oder Einschränkungen für jede Benchmark.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Benchmark-Ergebnisse für typische Architektur}
+  \begin{tabular}{lllll}
+    \toprule
+    Metrik & Analytisch & Simuliert & Abweichung (\%) & Status \\
+    \midrule
+    E2E-Latenz (Lenkung) & 95.0 ms & 97.2 ms & 2.3 & \textcolor{green}{OK} \\
+    CPU-Auslastung (AD-ECU) & 75.0\% & 76.5\% & 2.0 & \textcolor{green}{OK} \\
+    Netzwerk-Auslastung & 65.0\% & 67.2\% & 3.4 & \textcolor{green}{OK} \\
+    Response Time (Task) & 12.0 ms & 12.8 ms & 6.7 & \textcolor{green}{OK} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:benchmark_results}
+\end{table}
+
+Die Benchmark-Ergebnisse werden regelmäßig aktualisiert, wenn Änderungen an der Simulation vorgenommen werden, um sicherzustellen, dass die Validierung aktuell bleibt.
+
+\section{Erweiterte Validierungs-Beispiele}
+
+Dieser Abschnitt präsentiert erweiterte Beispiele für die Validierung und Iteration von E/E-Architekturen.
+
+\subsection{Beispiel: Vollständige Validierungs-Pipeline}
+
+Dieses Beispiel zeigt eine vollständige Validierungs-Pipeline für eine komplexe Architektur.
+
+\subsubsection{Validierungs-Phasen}
+
+Die Validierung erfolgt in mehreren Phasen:
+
+\begin{enumerate}
+  \item \textbf{Plausibilisierung}: Vergleich mit analytischen Modellen
+    \begin{itemize}
+      \item WCRT-Berechnung für alle Tasks
+      \item TSN-Latenz-Berechnung für alle Frames
+      \item E2E-Latenz-Berechnung für alle Chains
+      \item Vergleich mit simulierten Werten
+    \end{itemize}
+  
+  \item \textbf{Sensitivitäts-Analyse}: Analyse der Sensitivität gegenüber Parametern
+    \begin{itemize}
+      \item Variation von WCETs: $\pm 20\%$
+      \item Variation von Periodizitäten: $\pm 10\%$
+      \item Variation von Bandbreiten: $\pm 25\%$
+      \item Analyse der Auswirkungen auf KPIs
+    \end{itemize}
+  
+  \item \textbf{Bottleneck-Identifikation}: Systematische Identifikation von Bottlenecks
+    \begin{itemize}
+      \item CPU-Bottlenecks: ECUs mit Auslastung > 80\%
+      \item Netzwerk-Bottlenecks: Links mit Auslastung > 70\%
+      \item Timing-Bottlenecks: Chains mit Latenz > Deadline
+      \item Verfügbarkeits-Bottlenecks: Komponenten mit niedriger MTBF
+    \end{itemize}
+  
+  \item \textbf{Optimierung}: Iterative Optimierung basierend auf identifizierten Bottlenecks
+    \begin{itemize}
+      \item Architektur-Anpassungen
+      \item Parameter-Tuning
+      \item Validierung der Optimierungen
+    \end{itemize}
+  
+  \item \textbf{Final-Validierung}: Finale Validierung der optimierten Architektur
+    \begin{itemize}
+      \item Alle KPIs erfüllen Anforderungen
+      \item Keine kritischen Bottlenecks
+      \item Robustheit unter verschiedenen Szenarien
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Erweiterte Validierungs-Methoden}
+
+\subsubsection{Formale Verifikation}
+
+Formale Verifikation kann Simulation ergänzen:
+
+\begin{itemize}
+  \item \textbf{Model Checking}: Automatische Verifikation von Eigenschaften
+  \item \textbf{Theorem Proving}: Mathematische Beweise von Eigenschaften
+  \item \textbf{Abstract Interpretation}: Statische Analyse von Programmen
+  \item \textbf{Symbolic Execution}: Symbolische Ausführung für Test-Generierung
+\end{itemize}
+
+\subsubsection{Machine-Learning-basierte Validierung}
+
+ML-Methoden können für Validierung verwendet werden:
+
+\begin{itemize}
+  \item \textbf{Anomalie-Erkennung}: Automatische Erkennung von Anomalien in Ergebnissen
+  \item \textbf{Prädiktion}: Vorhersage von Metriken basierend auf Parametern
+  \item \textbf{Klassifikation}: Klassifikation von Architekturen nach Qualität
+  \item \textbf{Regression}: Regression für Metrik-Prädiktion
+\end{itemize}
+
+\subsubsection{Validierungs-Ergebnisse}
+
+Typische Validierungs-Ergebnisse für eine komplexe Architektur:
+
+\begin{table}[h]
+  \centering
+  \caption{Validierungs-Ergebnisse: Vor und Nach Optimierung}
+  \begin{tabular}{llll}
+    \toprule
+    Metrik & Vor Optimierung & Nach Optimierung & Ziel \\
+    \midrule
+    E2E-Latenz (Max) & 112 ms & 95 ms & < 100 ms \\
+    Deadline-Misses & 2.3\% & 0\% & 0\% \\
+    CPU-Last (Peak) & 92\% & 78\% & < 80\% \\
+    Netzwerk-Last (Peak) & 78\% & 62\% & < 70\% \\
+    Verfügbarkeit & 99.5\% & 99.9\% & > 99.9\% \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:validation_results}
+\end{table}
+
+\subsection{Beispiel: Sensitivitäts-Analyse}
+
+Dieses Beispiel zeigt eine detaillierte Sensitivitäts-Analyse für kritische Parameter.
+
+\subsubsection{WCET-Sensitivität}
+
+Die Sensitivität gegenüber WCET-Variationen:
+
+\begin{table}[h]
+  \centering
+  \caption{WCET-Sensitivität: Auswirkung auf E2E-Latenz}
+  \begin{tabular}{llll}
+    \toprule
+    Task & WCET-Änderung & E2E-Latenz-Änderung & Sensitivitäts-Koeffizient \\
+    \midrule
+    Object\_Detection & +20\% & +12 ms & 0.6 \\
+    Trajectory\_Planning & +20\% & +8 ms & 0.4 \\
+    Steering\_Control & +20\% & +2 ms & 0.1 \\
+    Image\_Preprocessing & +20\% & +3 ms & 0.15 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:wcet_sensitivity}
+\end{table}
+
+Die Analyse zeigt, dass Object\_Detection die höchste Sensitivität aufweist und daher besonders sorgfältig optimiert werden sollte.
+
+\subsubsection{Bandbreiten-Sensitivität}
+
+Die Sensitivität gegenüber Bandbreiten-Variationen:
+
+\begin{table}[h]
+  \centering
+  \caption{Bandbreiten-Sensitivität: Auswirkung auf Netzwerk-Latenz}
+  \begin{tabular}{llll}
+    \toprule
+    Link & Bandbreiten-Änderung & Latenz-Änderung & Sensitivitäts-Koeffizient \\
+    \midrule
+    Camera $\rightarrow$ ZC & -25\% & +8 ms & 0.32 \\
+    ZC $\rightarrow$ AD-DC & -25\% & +12 ms & 0.48 \\
+    AD-DC $\rightarrow$ EPS & -25\% & +1 ms & 0.04 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bandwidth_sensitivity}
+\end{table}
+
+Die Analyse zeigt, dass der Link ZC $\rightarrow$ AD-DC die höchste Sensitivität aufweist und daher besonders kritisch ist.
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Validierung und Iteration als kritische Komponenten des Entwicklungsprozesses beschrieben. Die Validierung stellt sicher, dass die Simulationsergebnisse korrekt sind und als Grundlage für Architekturentscheidungen verwendet werden können. Die Iteration ermöglicht es, die Architektur kontinuierlich zu verbessern, basierend auf den Erkenntnissen aus der Simulation.
+
+\section{Erweiterte Validierungs-Methoden}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Validierung von Simulationsergebnissen.
+
+\subsection{Formale Verifikation}
+
+Formale Verifikation ermöglicht mathematische Beweise für Eigenschaften:
+
+\begin{itemize}
+  \item \textbf{Model Checking}: Automatische Verifikation von Temporal-Logic-Eigenschaften
+  \item \textbf{Theorem Proving}: Mathematische Beweise für Eigenschaften
+  \item \textbf{Abstract Interpretation}: Statische Analyse zur Verifikation
+  \item \textbf{Symbolic Execution}: Symbolische Ausführung zur Fehlerfindung
+\end{itemize}
+
+\subsection{Hybrid-Validierung}
+
+Hybrid-Validierung kombiniert Simulation und formale Verifikation:
+
+\begin{itemize}
+  \item \textbf{Simulation für Exploration}: Simulation für Design-Space-Exploration
+  \item \textbf{Formale Verifikation für Korrektheit}: Formale Verifikation für kritische Eigenschaften
+  \item \textbf{Integration}: Nahtlose Integration beider Ansätze
+\end{itemize}
+
+\subsection{Statistische Validierung}
+
+Statistische Methoden für Validierung:
+
+\begin{itemize}
+  \item \textbf{Confidence Intervals}: Konfidenzintervalle für Metriken
+  \item \textbf{Hypothesis Testing}: Hypothesentests für Vergleich
+  \item \textbf{Bayesian Analysis}: Bayes'sche Analyse für Unsicherheit
+  \item \textbf{Regression Analysis}: Regressionsanalyse für Trends
+\end{itemize}
+
+Die wichtigsten Aspekte dieses Kapitels sind:
+
+\begin{itemize}
+  \item \textbf{Plausibilisierung}: Vergleich der Simulationsergebnisse gegen analytische Modelle (WCRT-Berechnung, TSN-Latenz-Analyse) mit definierten Akzeptanzkriterien (Abweichung < 10\% für kritische Pfade, $R^2 > 0.9$ für Korrelation). Die Plausibilisierung identifiziert systematische Fehler und quantifiziert die Simulationsgenauigkeit.
+  
+  \item \textbf{Sensitivitätsanalysen}: Untersuchung der Parameter-Abhängigkeit (WCET, Bandbreite, Periodizität, Priorität) mit Sensitivitäts-Koeffizienten zur Quantifizierung. Diese Analysen identifizieren kritische Parameter und bewerten die Robustheit der Architektur.
+  
+  \item \textbf{Rückkopplung}: Bottleneck-Identifikation (Timing-Bottlenecks, Ressourcen-Bottlenecks) und gezielte Optimierungs-Vorschläge (Architektur-Anpassungen, Parameter-Tuning). Die Rückkopplung ermöglicht es, Probleme frühzeitig zu identifizieren und zu beheben.
+  
+  \item \textbf{Iterativer Prozess}: Systematischer Verbesserungsprozess mit definiertem Iterations-Zyklus (Simulation $\rightarrow$ Auswertung $\rightarrow$ Identifikation $\rightarrow$ Anpassung $\rightarrow$ Validierung) und Konvergenz-Kriterien. Dieser Prozess ermöglicht eine schrittweise Optimierung der Architektur.
+  
+  \item \textbf{Validierungs-Benchmarks}: Standardisierte Test-Cases (Minimal-, Typische-, Maximale-Architektur) mit dokumentierten Benchmark-Ergebnissen für die kontinuierliche Validierung.
+\end{itemize}
+
+Die Validierung und Iteration bilden zusammen einen geschlossenen Regelkreis, der es ermöglicht, die Architektur kontinuierlich zu verbessern und sicherzustellen, dass sie die Anforderungen erfüllt. Dieser Ansatz ist besonders wertvoll in frühen Entwicklungsphasen, wo Änderungen noch kostengünstig durchgeführt werden können, und trägt dazu bei, dass die finale Architektur optimal dimensioniert und robust ist.

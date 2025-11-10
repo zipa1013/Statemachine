@@ -1,4 +1,612 @@
 \chapter{Szenarien und Use-Cases}\label{chap:szenarien}
-Nominal-, Stress- und Fehlerszenarien (Stau, Wetter, ECU-/Link-Ausfall, Switch-Queue-Überlauf, Clock-Drift). Designvarianten (Redundanz, Bandbreite, Scheduling) werden systematisch variiert.
 
+\noindent
+Dieses Kapitel beschreibt die verschiedenen Szenarien und Use-Cases, die für die Simulation und Bewertung der E/E-Architektur verwendet werden. Die Szenarien umfassen nominale Betriebsbedingungen, Stress-Szenarien, Fehlerszenarien und Design-Varianten. Eine umfassende Szenario-Abdeckung ist essentiell, um die Robustheit und Zuverlässigkeit der Architektur unter verschiedenen Bedingungen zu bewerten \cite{simulation_automotive, validation_verification}.
 
+Die Definition und Durchführung von Szenarien folgt etablierten Methoden der Fahrzeugentwicklung \cite{automated_driving_systems} und berücksichtigt die spezifischen Anforderungen von Nutzfahrzeugen \cite{reif_ee_architektur}. Jedes Szenario wird detailliert beschrieben, parametriert und mit erwarteten Ergebnissen versehen.
+
+\section{Nominal-Szenarien}
+
+Nominal-Szenarien beschreiben den normalen Betrieb der Architektur unter typischen Bedingungen. Diese Szenarien dienen als Baseline für die Bewertung der Architektur-Performance und bilden die Grundlage für den Vergleich mit Stress- und Fehlerszenarien.
+
+\subsection{Standard-Betrieb}
+
+Nominal-Szenarien beschreiben den normalen Betrieb der Architektur unter typischen Bedingungen:
+
+\begin{itemize}
+  \item \textbf{Lastverteilung}: Normale CPU/GPU/Netzwerk-Auslastung
+    \begin{itemize}
+      \item CPU-Auslastung: 40-60\% für typische ECUs
+      \item GPU-Auslastung: 30-50\% für Perzeptions-Tasks
+      \item Netzwerk-Auslastung: 30-50\% für Ethernet-Links
+      \item Keine Überlastung, ausreichend Reserve für Spitzenlasten
+    \end{itemize}
+  
+  \item \textbf{Timing}: Alle Frames und Tasks innerhalb ihrer Periodizitäten
+    \begin{itemize}
+      \item Alle Tasks erfüllen ihre Deadlines
+      \item E2E-Latenzen innerhalb der Budgets
+      \item Jitter innerhalb akzeptabler Grenzen (< 10\% der Periodizität)
+      \item Keine Deadline-Misses
+    \end{itemize}
+  
+  \item \textbf{Kommunikation}: Keine Paketverluste, normale Latenzen
+    \begin{itemize}
+      \item Paketverlustrate: < $10^{-6}$ für sicherheitskritische Frames
+      \item Netzwerk-Latenzen: Innerhalb der Budgets (typisch 1-5 ms für TSN)
+      \item Keine Queue-Überläufe
+      \item Stabile Kommunikation ohne Retransmissions
+    \end{itemize}
+  
+  \item \textbf{Energie}: Standard-Energieverbrauch
+    \begin{itemize}
+      \item Energieverbrauch entsprechend Lastprofil
+      \item Power-States entsprechend Aktivität
+      \item Keine unerwarteten Power-Spikes
+    \end{itemize}
+\end{itemize}
+
+\subsection{Typische Fahrzyklen}
+
+Verschiedene Fahrzyklen werden modelliert, um unterschiedliche Betriebsbedingungen abzudecken. Jeder Fahrzyklus hat charakteristische Lastprofile und Timing-Anforderungen:
+
+\begin{itemize}
+  \item \textbf{Stadtverkehr}: Häufige Starts/Stopps, niedrige Geschwindigkeiten
+    \begin{itemize}
+      \item \textbf{Charakteristik}: Viele Brems- und Beschleunigungsvorgänge, häufige Spurwechsel
+      \item \textbf{Sensoren (Bosch)}:
+        \begin{itemize}
+          \item 8x Bosch 8MP Multifunktionskameras: Hohe Auflösung für präzise Objekterkennung in komplexen Szenen
+          \item 8x Bosch Long-Range-Radar: Für Geschwindigkeits- und Abstandsmessung
+          \item 4x Bosch High-Resolution-LiDAR: Für präzise 3D-Umgebungserfassung
+          \item 16x Ultraschall-Sensoren: Für Nahbereichserkennung
+        \end{itemize}
+      \item \textbf{Rechenplattform (NVIDIA DRIVE Thor)}:
+        \begin{itemize}
+          \item GPU-Last: 60-70\% für Perzeptions-Tasks (YOLOv8 auf 8MP Kameras)
+          \item CPU-Last: 40-50\% für Planung und Regelung
+          \item Echtzeit-Verarbeitung von bis zu 12 Kameras gleichzeitig
+        \end{itemize}
+      \item \textbf{Lastprofil}: 
+        \begin{itemize}
+          \item Perzeption: Hohe Aktivität (viele Objekte, Fußgänger, Radfahrer)
+          \item Planung: Häufige Replanung erforderlich
+          \item Regelung: Häufige Lenk- und Bremskommandos
+        \end{itemize}
+      \item \textbf{Netzwerk}: Moderate bis hohe Last durch viele Sensor-Updates (Ethernet 2.5G für Kameras, 10G für LiDAR)
+      \item \textbf{Energie}: Variabler Verbrauch durch häufige Beschleunigungen, DRIVE Thor: 80-120 W
+      \item \textbf{Beispiel-Dauer}: 30 Minuten simulierter Stadtverkehr
+    \end{itemize}
+  
+  \item \textbf{Autobahn}: Hohe Geschwindigkeiten, konstante Last
+    \begin{itemize}
+      \item \textbf{Charakteristik}: Hohe konstante Geschwindigkeit, wenig Spurwechsel
+      \item \textbf{Lastprofil}:
+        \begin{itemize}
+          \item Perzeption: Moderate Aktivität (weniger Objekte, aber höhere Geschwindigkeit)
+          \item Planung: Weniger Replanung erforderlich
+          \item Regelung: Konstante Lenkkommandos für Spurhaltung
+        \end{itemize}
+      \item \textbf{Netzwerk}: Stabile Last, weniger Variationen
+      \item \textbf{Energie}: Relativ konstanter Verbrauch
+      \item \textbf{Beispiel-Dauer}: 60 Minuten simulierter Autobahnfahrt
+    \end{itemize}
+  
+  \item \textbf{Landstraße}: Variable Geschwindigkeiten, moderate Last
+    \begin{itemize}
+      \item \textbf{Charakteristik}: Variable Geschwindigkeiten, Kurven, Überholvorgänge
+      \item \textbf{Lastprofil}:
+        \begin{itemize}
+          \item Perzeption: Moderate bis hohe Aktivität
+          \item Planung: Periodische Replanung
+          \item Regelung: Variable Lenk- und Bremskommandos
+        \end{itemize}
+      \item \textbf{Netzwerk}: Variable Last
+      \item \textbf{Energie}: Variabler Verbrauch
+    \end{itemize}
+  
+  \item \textbf{Parkplatz}: Niedrige Last, viele Sensoren aktiv
+    \begin{itemize}
+      \item \textbf{Charakteristik}: Niedrige Geschwindigkeit, viele Objekte, enge Räume
+      \item \textbf{Lastprofil}:
+        \begin{itemize}
+          \item Perzeption: Sehr hohe Aktivität (viele Objekte, enge Räume)
+          \item Planung: Häufige Replanung für enge Manöver
+          \item Regelung: Präzise Lenk- und Bremskommandos
+        \end{itemize}
+      \item \textbf{Netzwerk}: Hohe Last durch viele Sensor-Updates (Ultraschall, Kameras)
+      \item \textbf{Energie}: Niedriger Verbrauch (niedrige Geschwindigkeit), aber hohe Rechenlast
+    \end{itemize}
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Vergleich typischer Fahrzyklen}
+  \begin{tabular}{lllll}
+    \toprule
+    Fahrzyklus & CPU-Last & Netzwerk-Last & E2E-Latenz & Energie \\
+    \midrule
+    Stadtverkehr & 55-65\% & 40-50\% & 80-95 ms & Variabel \\
+    Autobahn & 45-55\% & 30-40\% & 70-85 ms & Konstant \\
+    Landstraße & 50-60\% & 35-45\% & 75-90 ms & Variabel \\
+    Parkplatz & 60-70\% & 50-60\% & 85-100 ms & Niedrig \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:fahrzyklen_vergleich}
+\end{table}
+
+\section{Stress-Szenarien}
+
+\subsection{Stau-Szenario}
+
+Ein Stau-Szenario simuliert hohe Last durch viele Objekte:
+
+\begin{itemize}
+  \item \textbf{Perzeption}: Viele Objekte in der Szene (50+ Fahrzeuge, Fußgänger)
+  \item \textbf{Netzwerk}: Hohe Datenraten durch viele Sensor-Streams
+  \item \textbf{CPU}: Hohe Auslastung durch komplexe Objekterkennung
+  \item \textbf{Ziel}: Prüfung, ob Deadlines auch unter hoher Last eingehalten werden
+\end{itemize}
+
+\subsection{Wetter-Szenario}
+
+Schlechte Wetterbedingungen erhöhen die Verarbeitungslast:
+
+\begin{itemize}
+  \item \textbf{Regen/Schnee}: Reduzierte Sicht, mehr Bildverarbeitung erforderlich
+  \item \textbf{Nebel}: Zusätzliche Filterung und Fusion erforderlich
+  \item \textbf{Starke Sonne}: Blendung, erhöhte Bildverarbeitung
+  \item \textbf{Ziel}: Prüfung der Robustheit unter schwierigen Bedingungen
+\end{itemize}
+
+\subsection{Extreme Last-Szenarien}
+
+\begin{itemize}
+  \item \textbf{Maximale Datenrate}: Alle Sensoren mit maximaler Framerate
+  \item \textbf{Maximale CPU-Last}: Alle Tasks gleichzeitig aktiv
+  \item \textbf{Maximale Netzwerk-Auslastung}: Alle Links nahe 100\% Auslastung
+  \item \textbf{Ziel}: Identifikation von Bottlenecks und Grenzen
+\end{itemize}
+
+\section{Fehlerszenarien}
+
+\subsection{ECU-Ausfall}
+
+\subsubsection{Einzelner ECU-Ausfall}
+
+\begin{itemize}
+  \item \textbf{Ausfallzeitpunkt}: Zufällig während der Simulation
+  \item \textbf{Ausfallmodus}: Sofortiger Ausfall oder Graduelle Degradation
+  \item \textbf{Auswirkungen}: 
+    \begin{itemize}
+      \item Verlust von Funktionen auf dem ausgefallenen ECU
+      \item Erhöhte Last auf anderen ECUs (falls Redundanz vorhanden)
+      \item Kommunikationsausfälle
+    \end{itemize}
+  \item \textbf{Ziel}: Prüfung der Fehlertoleranz und Redundanz-Mechanismen
+\end{itemize}
+
+\subsubsection{Mehrfach-Ausfälle}
+
+\begin{itemize}
+  \item \textbf{Simultane Ausfälle}: Mehrere ECUs fallen gleichzeitig aus
+  \item \textbf{Kaskadierende Ausfälle}: Ein Ausfall führt zu weiteren Ausfällen
+  \item \textbf{Ziel}: Prüfung der System-Robustheit
+\end{itemize}
+
+\subsection{Link-Ausfall}
+
+\subsubsection{Einzelner Link-Ausfall}
+
+\begin{itemize}
+  \item \textbf{Link-Typen}: Ethernet, CAN, LIN
+  \item \textbf{Ausfallmodi}: 
+    \begin{itemize}
+      \item Kompletter Ausfall (Kabelbruch)
+      \item Degradierte Bandbreite (Störung)
+      \item Erhöhte Latenz (Überlastung)
+    \end{itemize}
+  \item \textbf{Auswirkungen}: 
+    \begin{itemize}
+      \item Kommunikationsausfälle
+      \item Erhöhte Latenzen über alternative Routen
+      \item Paketverluste
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Redundante Pfade}
+
+\begin{itemize}
+  \item \textbf{PRP/HSR}: Parallel Redundancy Protocol / High-availability Seamless Redundancy
+  \item \textbf{Dual-Path}: Zwei unabhängige Kommunikationspfade
+  \item \textbf{Ziel}: Prüfung der Redundanz-Mechanismen
+\end{itemize}
+
+\subsection{Switch-Queue-Überlauf}
+
+\subsubsection{Überlastung}
+
+\begin{itemize}
+  \item \textbf{Ursache}: Zu viele Frames für verfügbare Bandbreite
+  \item \textbf{Auswirkung}: Queue-Überlauf, Paketverluste
+  \item \textbf{Ziel}: Identifikation von Bandbreiten-Bottlenecks
+\end{itemize}
+
+\subsubsection{Priorisierung}
+
+\begin{itemize}
+  \item \textbf{TSN-Prioritäten}: Prüfung, ob Priorisierung funktioniert
+  \item \textbf{Deadline-Misses}: Prüfung, ob kritische Frames bevorzugt werden
+\end{itemize}
+
+\subsection{Clock-Drift}
+
+\subsubsection{Zeitsynchronisation}
+
+\begin{itemize}
+  \item \textbf{TSN-Synchronisation}: gPTP (IEEE 802.1AS) Clock-Drift
+  \item \textbf{Auswirkung}: Timing-Fehler, Jitter-Erhöhung
+  \item \textbf{Ziel}: Prüfung der Robustheit gegen Synchronisations-Fehler
+\end{itemize}
+
+\section{Design-Varianten}
+
+\subsection{Redundanz-Varianten}
+
+\subsubsection{Verschiedene Redundanz-Grade}
+
+\begin{itemize}
+  \item \textbf{Keine Redundanz}: Single-Point-of-Failure
+  \item \textbf{2-fach Redundanz}: 1-out-of-2 Voting
+  \item \textbf{3-fach Redundanz}: 2-out-of-3 Voting
+  \item \textbf{Ziel}: Vergleich von Verfügbarkeit vs. Kosten
+\end{itemize}
+
+\subsubsection{Redundanz-Platzierung}
+
+\begin{itemize}
+  \item \textbf{ECU-Redundanz}: Redundante ECUs
+  \item \textbf{Link-Redundanz}: Redundante Kommunikationspfade
+  \item \textbf{Software-Redundanz}: Redundante Software-Komponenten
+\end{itemize}
+
+\subsection{Bandbreiten-Varianten}
+
+\subsubsection{Verschiedene Ethernet-Geschwindigkeiten}
+
+\begin{itemize}
+  \item \textbf{1 GbE}: Standard-Geschwindigkeit
+  \item \textbf{2.5 GbE}: Erhöhte Geschwindigkeit
+  \item \textbf{10 GbE}: Hohe Geschwindigkeit
+  \item \textbf{Ziel}: Kosten-Nutzen-Analyse
+\end{itemize}
+
+\subsubsection{Bandbreiten-Allokation}
+
+\begin{itemize}
+  \item \textbf{Gleichmäßige Verteilung}: Alle Links gleiche Bandbreite
+  \item \textbf{Priorisierte Allokation}: Kritische Links erhalten mehr Bandbreite
+  \item \textbf{Dynamische Allokation}: Bandbreite wird dynamisch zugewiesen
+\end{itemize}
+
+\subsection{Scheduling-Varianten}
+
+\subsubsection{Verschiedene Scheduling-Policies}
+
+\begin{itemize}
+  \item \textbf{Fixed Priority}: Feste Prioritäten
+  \item \textbf{Earliest Deadline First}: Dynamische Prioritäten
+  \item \textbf{Time-Triggered}: Zeitgesteuertes Scheduling
+  \item \textbf{Ziel}: Vergleich von Scheduling-Strategien
+\end{itemize}
+
+\subsubsection{Prioritäts-Zuordnung}
+
+\begin{itemize}
+  \item \textbf{Deadline-basiert}: Priorität basierend auf Deadline
+  \item \textbf{ASIL-basiert}: Priorität basierend auf Safety-Level
+  \item \textbf{Hybrid}: Kombination verschiedener Kriterien
+\end{itemize}
+
+\section{Systematische Variation}
+
+\subsection{Parameter-Sweeps}
+
+Systematische Variation von Parametern:
+
+\begin{itemize}
+  \item \textbf{Framegröße}: $\pm 20\%$ Variation
+  \item \textbf{Periodizität}: $\pm 10\%$ Variation
+  \item \textbf{WCET}: $\pm 15\%$ Variation
+  \item \textbf{Bandbreite}: $\pm 25\%$ Variation
+\end{itemize}
+
+\subsection{Design-Space-Exploration}
+
+\begin{itemize}
+  \item \textbf{Multi-Objective-Optimierung}: Trade-offs zwischen Latenz, Kosten, Energie
+  \item \textbf{Pareto-Front}: Identifikation optimaler Design-Punkte
+  \item \textbf{Sensitivitäts-Analyse}: Identifikation kritischer Parameter
+\end{itemize}
+
+\section{Use-Case-spezifische Szenarien}
+
+\subsection{Autonomes Fahren (L3/L4)}
+
+\begin{itemize}
+  \item \textbf{Highway-Pilot}: Autobahn-Autopilot
+  \item \textbf{Urban-Pilot}: Stadt-Autopilot
+  \item \textbf{Parking}: Automatisches Einparken
+  \item \textbf{Anforderungen}: 
+    \begin{itemize}
+      \item E2E-Latenz < 100 ms
+      \item ASIL D für kritische Funktionen
+      \item Hohe Verfügbarkeit
+    \end{itemize}
+\end{itemize}
+
+\subsection{Fahrerassistenz (L2)}
+
+\begin{itemize}
+  \item \textbf{ACC}: Adaptive Cruise Control
+  \item \textbf{LKA}: Lane Keeping Assist
+  \item \textbf{AEB}: Automatic Emergency Braking
+  \item \textbf{Anforderungen}: 
+    \begin{itemize}
+      \item E2E-Latenz < 150 ms
+      \item ASIL B/C für kritische Funktionen
+    \end{itemize}
+\end{itemize}
+
+\subsection{Fracht-/Laderaum-Management}
+
+\begin{itemize}
+  \item \textbf{Temperatur-Überwachung}: Kühlung für Fracht
+  \item \textbf{Tür-Überwachung}: Sicherheit für Ladung
+  \item \textbf{Gewichts-Überwachung}: Lastverteilung
+  \item \textbf{Anforderungen}: 
+    \begin{itemize}
+      \item Kontinuierliche Überwachung
+      \item Niedrige Latenz für Alarme
+      \item Energieeffizienz
+    \end{itemize}
+\end{itemize}
+
+\section{Erweiterte Szenario-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Beispiele für komplexe Szenarien, die in der Simulation verwendet werden.
+
+\subsection{Beispiel: Vollständiger Stadtverkehr-Zyklus}
+
+Dieses Beispiel zeigt einen vollständigen Stadtverkehr-Zyklus mit allen Phasen und Übergängen.
+
+\subsubsection{Phasen des Zyklus}
+
+Der Zyklus umfasst mehrere Phasen:
+
+\begin{enumerate}
+  \item \textbf{Startphase} (0-5 min):
+    \begin{itemize}
+      \item Fahrzeugstart, Systeminitialisierung
+      \item Alle Sensoren aktivieren
+      \item Kalibrierung der Sensoren
+      \item Netzwerk-Synchronisation (gPTP)
+      \item Last: Niedrig (Initialisierung)
+    \end{itemize}
+  
+  \item \textbf{Fahrphase} (5-25 min):
+    \begin{itemize}
+      \item Normale Fahrt durch Stadt
+      \item Viele Objekte (Fahrzeuge, Fußgänger, Radfahrer)
+      \item Häufige Brems- und Beschleunigungsvorgänge
+      \item Spurwechsel und Abbiegen
+      \item Last: Hoch (viele Objekte, komplexe Szenen)
+    \end{itemize}
+  
+  \item \textbf{Stauphase} (25-35 min):
+    \begin{itemize}
+      \item Stau auf Autobahn
+      \item Sehr viele Objekte (50-100)
+      \item Niedrige Geschwindigkeit (0-20 km/h)
+      \item Häufige Stopps und Starts
+      \item Last: Sehr hoch (extreme Objektdichte)
+    \end{itemize}
+  
+  \item \textbf{Parkphase} (35-40 min):
+    \begin{itemize}
+      \item Einparken auf Parkplatz
+      \item Viele Objekte, enge Räume
+      \item Präzise Manöver erforderlich
+      \item Alle Sensoren aktiv (Ultraschall, Kameras)
+      \item Last: Sehr hoch (viele Objekte, enge Räume)
+    \end{itemize}
+  
+  \item \textbf{Endphase} (40-45 min):
+    \begin{itemize}
+      \item Fahrzeug abstellen
+      \item System-Shutdown
+      \item Daten-Speicherung
+      \item Last: Niedrig (Shutdown)
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Lastprofile}
+
+Die Lastprofile für jede Phase:
+
+\begin{table}[h]
+  \centering
+  \caption{Lastprofile: Stadtverkehr-Zyklus}
+  \begin{tabular}{lllll}
+    \toprule
+    Phase & CPU-Last & GPU-Last & Netzwerk-Last & Objektdichte \\
+    \midrule
+    Start & 20\% & 10\% & 15\% & 0-5 \\
+    Fahrt & 60\% & 55\% & 45\% & 20-40 \\
+    Stau & 85\% & 75\% & 70\% & 50-100 \\
+    Park & 80\% & 70\% & 65\% & 30-60 \\
+    Ende & 15\% & 5\% & 10\% & 0-5 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:stadtverkehr_phasen}
+\end{table}
+
+\subsection{Beispiel: Wetter-Szenarien}
+
+Dieses Beispiel zeigt verschiedene Wetter-Szenarien und deren Auswirkungen auf die Architektur.
+
+\subsubsection{Regen-Szenario}
+
+Regen beeinflusst die Perzeption erheblich:
+
+\begin{itemize}
+  \item \textbf{Kamera}:
+    \begin{itemize}
+      \item Reduzierte Sichtweite (50-70\%)
+      \item Reflexionen auf der Straße
+      \item Wassertropfen auf der Scheibe
+      \item Erhöhte Bildverarbeitung erforderlich (Filter, Entrauschung)
+      \item CPU-Last: +15-20\%
+    \end{itemize}
+  
+  \item \textbf{Radar}:
+    \begin{itemize}
+      \item Weniger beeinflusst durch Regen
+      \item Leichte Reduzierung der Reichweite
+      \item Wichtig für Sensorfusion
+    \end{itemize}
+  
+  \item \textbf{LiDAR}:
+    \begin{itemize}
+      \item Stärker beeinflusst durch Regen
+      \item Wassertropfen reflektieren Laser
+      \item Reduzierte Punktwolken-Qualität
+      \item Erhöhte Filterung erforderlich
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Nebel-Szenario}
+
+Nebel ist besonders herausfordernd:
+
+\begin{itemize}
+  \item \textbf{Kamera}:
+    \begin{itemize}
+      \item Sehr reduzierte Sichtweite (20-40\%)
+      \item Kontrastverlust
+      \item Erhöhte Bildverarbeitung (Entnebelung, Kontrastverstärkung)
+      \item CPU-Last: +25-30\%
+    \end{itemize}
+  
+  \item \textbf{Radar}:
+    \begin{itemize}
+      \item Weniger beeinflusst
+      \item Wird zur primären Perzeptionsquelle
+      \item Sensorfusion wird kritisch
+    \end{itemize}
+  
+  \item \textbf{LiDAR}:
+    \begin{itemize}
+      \item Stark beeinflusst
+      \item Nebelpartikel reflektieren Laser
+      \item Viele Fehldetektionen
+      \item Erhöhte Filterung erforderlich
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Schnee-Szenario}
+
+Schnee stellt besondere Herausforderungen:
+
+\begin{itemize}
+  \item \textbf{Kamera}:
+    \begin{itemize}
+      \item Blendung durch Schnee
+      \item Kontrastprobleme (weiß auf weiß)
+      \item Schneeflocken vor der Kamera
+      \item Erhöhte Bildverarbeitung (Entblendung, Kontrastanpassung)
+      \item CPU-Last: +20-25\%
+    \end{itemize}
+  
+  \item \textbf{Radar}:
+    \begin{itemize}
+      \item Schneeflocken können reflektieren
+      \item Aber weniger beeinflusst als Kamera/LiDAR
+    \end{itemize}
+  
+  \item \textbf{LiDAR}:
+    \begin{itemize}
+      \item Stark beeinflusst
+      \item Schneeflocken reflektieren Laser
+      \item Viele Fehldetektionen
+    \end{itemize}
+\end{itemize}
+
+\section{Erweiterte Szenario-Definitionen}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Definition von Szenarien.
+
+\subsection{Parametrisierte Szenarien}
+
+Szenarien können parametrisiert werden für verschiedene Konfigurationen:
+
+\begin{itemize}
+  \item \textbf{Umgebungs-Parameter}: Wetter, Verkehrsdichte, Straßentyp
+  \item \textbf{Fahrzeug-Parameter}: Geschwindigkeit, Beschleunigung, Last
+  \item \textbf{System-Parameter}: CPU-Frequenz, Netzwerk-Bandbreite, Sensor-Framerate
+  \item \textbf{Fehler-Parameter}: Fehlerrate, Fehlertyp, Fehlerzeitpunkt
+\end{itemize}
+
+\subsection{Szenario-Kombinationen}
+
+Komplexe Szenarien können aus einfachen Szenarien kombiniert werden:
+
+\begin{itemize}
+  \item \textbf{Sequenzielle Kombination}: Mehrere Szenarien nacheinander
+  \item \textbf{Parallele Kombination}: Mehrere Szenarien gleichzeitig
+  \item \textbf{Bedingte Kombination}: Szenarien basierend auf Bedingungen
+  \item \textbf{Probabilistische Kombination}: Zufällige Kombinationen
+\end{itemize}
+
+\subsection{Szenario-Templates}
+
+Wiederverwendbare Szenario-Templates:
+
+\begin{verbatim}
+{
+  "scenario_template": {
+    "name": "urban_driving",
+    "parameters": {
+      "traffic_density": "high|medium|low",
+      "weather": "sunny|rain|fog|snow",
+      "speed": "0-50 km/h"
+    },
+    "phases": [
+      {
+        "name": "start",
+        "duration": "5 min",
+        "load": "low"
+      },
+      {
+        "name": "driving",
+        "duration": "20 min",
+        "load": "high"
+      }
+    ]
+  }
+}
+\end{verbatim}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat verschiedene Szenarien und Use-Cases für die Simulation beschrieben:
+
+\begin{itemize}
+  \item \textbf{Nominal-Szenarien}: Standard-Betriebsbedingungen
+  \item \textbf{Stress-Szenarien}: Stau, Wetter, extreme Last
+  \item \textbf{Fehlerszenarien}: ECU-/Link-Ausfälle, Queue-Überlauf, Clock-Drift
+  \item \textbf{Design-Varianten}: Redundanz, Bandbreite, Scheduling
+  \item \textbf{Use-Case-spezifische Szenarien}: Autonomes Fahren, Fahrerassistenz, Fracht-Management
+\end{itemize}
+
+Diese Szenarien ermöglichen eine umfassende Bewertung der Architektur unter verschiedenen Bedingungen und helfen, Schwachstellen und Optimierungspotenziale zu identifizieren.

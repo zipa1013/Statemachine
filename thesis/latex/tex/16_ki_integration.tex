@@ -1,0 +1,418 @@
+\chapter{KI-Integration in E/E-Architekturen}\label{chap:ki_integration}
+
+\noindent
+Dieses Kapitel beschreibt die Integration von KI/ML-Modellen in E/E-Architekturen und deren Modellierung in der Simulation. Die Integration von KI-Modellen stellt neue Anforderungen an die Architektur und die Simulation, die in diesem Kapitel detailliert behandelt werden.
+
+\section{KI-Modelle in E/E-Architekturen}
+
+KI-Modelle werden zunehmend in modernen E/E-Architekturen eingesetzt, insbesondere für:
+
+\begin{itemize}
+  \item \textbf{Perzeption}: Objekterkennung, Klassifikation, Tracking
+  \item \textbf{Prädiktion}: Verhalten-Prädiktion, Trajektorien-Prädiktion
+  \item \textbf{Planung}: Pfadplanung, Manöverplanung
+  \item \textbf{Regelung}: Adaptive Regelung, Reinforcement Learning
+  \item \textbf{Diagnose}: Fehlererkennung, Predictive Maintenance
+\end{itemize}
+
+\subsection{Modellierung von KI-Modellen}
+
+KI-Modelle werden in PREEvision als spezielle SWCs modelliert:
+
+\begin{itemize}
+  \item \textbf{Modell-Typ}: CNN, Transformer, RNN, etc.
+  \item \textbf{Modell-Größe}: Anzahl Parameter, Modell-Größe (MB)
+  \item \textbf{Inferenz-Zeit}: WCET/BCET für Inferenz
+  \item \textbf{Speicher-Anforderungen}: RAM, Storage
+  \item \textbf{Rechen-Anforderungen}: TOPS, FLOPS
+  \item \textbf{Deployment-Target}: CPU, GPU, NPU, Edge
+\end{itemize}
+
+\subsection{Inferenz-Pipeline}
+
+Die Inferenz-Pipeline umfasst mehrere Schritte:
+
+\begin{enumerate}
+  \item \textbf{Preprocessing}: Datenvorverarbeitung (Normalisierung, Resizing, etc.)
+  \item \textbf{Inferenz}: Ausführung des KI-Modells
+  \item \textbf{Postprocessing}: Nachverarbeitung (NMS, Filtering, etc.)
+  \item \textbf{Integration}: Integration in Funktionsketten
+\end{enumerate}
+
+\section{Simulation von KI-Modellen}
+
+Die Simulation von KI-Modellen erfordert spezielle Ansätze:
+
+\subsection{Modellierung der Inferenz-Zeit}
+
+Die Inferenz-Zeit hängt von mehreren Faktoren ab:
+
+\begin{equation}
+T_{inference} = T_{preprocessing} + T_{model} + T_{postprocessing}
+\end{equation}
+
+wobei $T_{model}$ die Modell-Inferenz-Zeit ist, die abhängig ist von:
+
+\begin{itemize}
+  \item \textbf{Modell-Komplexität}: Anzahl Layer, Parameter
+  \item \textbf{Input-Größe}: Auflösung, Anzahl Kanäle
+  \item \textbf{Hardware}: CPU/GPU/NPU-Performance
+  \item \textbf{Optimierungen}: Quantisierung, Pruning, etc.
+\end{itemize}
+
+\subsection{Modellierung der Last}
+
+Die Last für KI-Inferenz:
+
+\begin{equation}
+L_{AI} = \frac{FLOPS_{model} \times FPS}{P_{hardware}}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $FLOPS_{model}$: FLOPS pro Inferenz
+  \item $FPS$: Frames pro Sekunde
+  \item $P_{hardware}$: Hardware-Performance (FLOPS/s)
+\end{itemize}
+
+\subsection{Modellierung der Genauigkeit}
+
+Die Genauigkeit von KI-Modellen kann in der Simulation berücksichtigt werden:
+
+\begin{itemize}
+  \item \textbf{Confidence-Scores}: Modellierung von Confidence-Scores
+  \item \textbf{Fehlerraten}: Modellierung von False-Positive/Negative-Raten
+  \item \textbf{Unsicherheit}: Modellierung von Unsicherheit in Prädiktionen
+\end{itemize}
+
+\section{Edge-AI und Cloud-AI}
+
+Moderne E/E-Architekturen kombinieren Edge-AI und Cloud-AI:
+
+\subsection{Edge-AI}
+
+Edge-AI läuft direkt im Fahrzeug:
+
+\begin{itemize}
+  \item \textbf{Vorteile}: Niedrige Latenz, keine Abhängigkeit von Konnektivität
+  \item \textbf{Nachteile}: Begrenzte Rechenleistung, begrenzte Modell-Größe
+  \item \textbf{Einsatz}: Echtzeit-Perzeption, kritische Funktionen
+\end{itemize}
+
+\subsection{Cloud-AI}
+
+Cloud-AI läuft in der Cloud:
+
+\begin{itemize}
+  \item \textbf{Vorteile}: Hohe Rechenleistung, große Modelle, kontinuierliche Updates
+  \item \textbf{Nachteile}: Latenz, Abhängigkeit von Konnektivität
+  \item \textbf{Einsatz}: Komplexe Analysen, Training, Updates
+\end{itemize}
+
+\subsection{Hybrid-Ansätze}
+
+Hybrid-Ansätze kombinieren Edge- und Cloud-AI:
+
+\begin{itemize}
+  \item \textbf{Edge für Echtzeit}: Kritische, latenz-sensitive Funktionen
+  \item \textbf{Cloud für Komplexität}: Komplexe Analysen, große Modelle
+  \item \textbf{Federated Learning}: Training auf Edge-Geräten, Aggregation in Cloud
+\end{itemize}
+
+\section{Modellierung in der Simulation}
+
+KI-Modelle werden in der Simulation wie folgt modelliert:
+
+\subsection{CPU/GPU/NPU-Modellierung}
+
+Die Hardware für KI-Inferenz wird detailliert modelliert:
+
+\begin{itemize}
+  \item \textbf{CPU}: Für einfache Modelle, Preprocessing
+  \item \textbf{GPU}: Für komplexe CNNs, Transformer
+  \item \textbf{NPU}: Für optimierte KI-Inferenz, spezielle Operationen
+\end{itemize}
+
+\subsection{NVIDIA DRIVE Thor - Neueste Generation}
+
+NVIDIA DRIVE Thor ist die neueste Generation der NVIDIA DRIVE Plattform für autonomes Fahren:
+
+\begin{itemize}
+  \item \textbf{GPU-Performance}: Bis zu 2000 TOPS (Tera Operations Per Second) für KI-Inferenz
+  \item \textbf{CPU}: Grace CPU mit ARM-Architektur, bis zu 12 Kerne
+  \item \textbf{Speicher}: Bis zu 512 GB LPDDR5X mit hoher Bandbreite
+  \item \textbf{ASIL}: ASIL-D zertifiziert für sicherheitskritische Anwendungen
+  \item \textbf{Multi-Domain}: Unterstützung für mehrere Domänen (AD, Infotainment, Body)
+  \item \textbf{Software}: NVIDIA DRIVE OS mit vollständigem Software-Stack
+  \item \textbf{Sensor-Integration}: Unterstützung für bis zu 12 Kameras, 9 Radare, 12 Ultraschall, 1 LiDAR
+\end{itemize}
+
+\subsection{NVIDIA DRIVE AGX Hyperion}
+
+Die NVIDIA DRIVE AGX Hyperion Plattform bietet eine vollständige Referenzarchitektur:
+
+\begin{itemize}
+  \item \textbf{Hardware}: DRIVE AGX Pegasus/Orin/Thor mit vorvalidierter Sensorsuite
+  \item \textbf{Sensoren}: Kameras, Radar, LiDAR von verschiedenen Herstellern (inkl. Bosch)
+  \item \textbf{Software}: Vollständiger Software-Stack für autonomes Fahren
+  \item \textbf{Entwicklung}: Schnelles Prototyping und Deployment
+\end{itemize}
+
+\subsection{Modell-Performance auf NVIDIA DRIVE Thor}
+
+Die Modell-Performance wird basierend auf Benchmarks mit NVIDIA DRIVE Thor modelliert:
+
+\begin{table}[h]
+  \centering
+  \caption{KI-Modell-Performance auf NVIDIA DRIVE Thor}
+  \begin{tabular}{lllll}
+    \toprule
+    Modell & Hardware & Input & Inferenz-Zeit & TOPS \\
+    \midrule
+    YOLOv8 (8MP) & DRIVE Thor GPU & 3840x2160 & 15 ms & 2000 \\
+    YOLOv8 (Standard) & DRIVE Thor GPU & 640x640 & 3 ms & 2000 \\
+    ResNet-50 & DRIVE Thor GPU & 224x224 & 2 ms & 2000 \\
+    Transformer (Large) & DRIVE Thor GPU & 512 tokens & 8 ms & 2000 \\
+    Occupancy Network & DRIVE Thor GPU & 256x256 & 12 ms & 2000 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:ki_model_performance}
+\end{table}
+
+\subsection{Integration von Bosch-Sensoren mit NVIDIA DRIVE Thor}
+
+Die Integration von Bosch-Sensoren mit NVIDIA DRIVE Thor ermöglicht hochperformante Perzeption:
+
+\begin{itemize}
+  \item \textbf{Bosch 8MP Kamera}: Direkte Anbindung an DRIVE Thor über Ethernet 2.5G
+  \item \textbf{Bosch Radar}: Integration über CAN-FD oder Ethernet
+  \item \textbf{Bosch LiDAR}: Direkte Anbindung über Ethernet 10G
+  \item \textbf{Sensorfusion}: Zentrale Sensorfusion auf DRIVE Thor GPU
+  \item \textbf{Performance}: Echtzeit-Verarbeitung von bis zu 12 Kameras gleichzeitig
+\end{itemize}
+
+\section{Erweiterte KI-Integration-Aspekte}
+
+Dieser Abschnitt beschreibt erweiterte Aspekte der KI-Integration.
+
+\subsection{Training und Deployment}
+
+KI-Modelle müssen trainiert und deployed werden:
+
+\begin{itemize}
+  \item \textbf{Training}: Training in der Cloud mit großen Datensätzen
+  \item \textbf{Optimierung}: Quantisierung, Pruning, Distillation für Edge-Deployment
+  \item \textbf{Deployment}: Deployment auf Edge-Geräten (NPU, GPU)
+  \item \textbf{Updates}: OTA-Updates für KI-Modelle
+\end{itemize}
+
+\subsection{Modell-Versionierung}
+
+KI-Modelle müssen versioniert werden:
+
+\begin{itemize}
+  \item \textbf{Versionierung}: Semantic Versioning für KI-Modelle
+  \item \textbf{A/B-Testing}: A/B-Testing verschiedener Modell-Versionen
+  \item \textbf{Rollback}: Rollback-Mechanismen bei Problemen
+  \item \textbf{Monitoring}: Monitoring der Modell-Performance
+\end{itemize}
+
+\subsection{Federated Learning}
+
+Federated Learning ermöglicht Training auf Edge-Geräten:
+
+\begin{itemize}
+  \item \textbf{Lokales Training}: Training auf einzelnen Fahrzeugen
+  \item \textbf{Aggregation}: Aggregation der Modelle in der Cloud
+  \item \textbf{Privacy}: Datenschutz durch lokales Training
+  \item \textbf{Efficiency}: Effizienz durch verteiltes Training
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Integration von KI/ML-Modellen in E/E-Architekturen beschrieben. Die wichtigsten Aspekte umfassen:
+
+\begin{itemize}
+  \item \textbf{Modellierung}: KI-Modelle als spezielle SWCs in PREEvision
+  \item \textbf{Simulation}: Spezielle Ansätze für die Simulation von KI-Modellen
+  \item \textbf{Edge-Cloud-Hybrid}: Kombination von Edge- und Cloud-AI
+  \item \textbf{Performance-Modellierung}: Detaillierte Modellierung der KI-Performance
+  \item \textbf{Training und Deployment}: Methoden für Training und Deployment von KI-Modellen
+\end{itemize}
+
+Die Integration von KI-Modellen stellt neue Anforderungen an die Architektur und die Simulation, die durch die entwickelte Methodik adressiert werden.
+
+\section{Erweiterte KI-Modell-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Beispiele für verschiedene KI-Modelle in E/E-Architekturen.
+
+\subsection{Beispiel: Objekterkennung mit YOLOv8}
+
+\subsubsection{Modell-Spezifikation}
+
+\begin{table}[h]
+  \centering
+  \caption{YOLOv8 Modell-Spezifikation}
+  \begin{tabular}{llll}
+    \toprule
+    Parameter & Wert & Einheit & Anmerkung \\
+    \midrule
+    Input-Größe & 640x640 & Pixel & RGB \\
+    Modell-Größe & 22 & MB & FP32 \\
+    Parameter & 11.2 & M & -- \\
+    FLOPS & 28.5 & G & pro Inferenz \\
+    Inferenz-Zeit (NPU) & 8 & ms & NVIDIA Orin \\
+    Inferenz-Zeit (GPU) & 15 & ms & NVIDIA Orin \\
+    Inferenz-Zeit (CPU) & 120 & ms & ARM Cortex-A78 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:yolov8_spec}
+\end{table}
+
+\subsubsection{Inferenz-Pipeline}
+
+Die Inferenz-Pipeline für YOLOv8:
+
+\begin{enumerate}
+  \item \textbf{Preprocessing} (2 ms):
+    \begin{itemize}
+      \item Bild-Resizing auf 640x640
+      \item Normalisierung (0-1)
+      \item Tensor-Konvertierung
+    \end{itemize}
+  \item \textbf{Inferenz} (8 ms auf NPU):
+    \begin{itemize}
+      \item Feature-Extraction (Backbone)
+      \item Feature-Pyramid (Neck)
+      \item Detection-Head
+    \end{itemize}
+  \item \textbf{Postprocessing} (3 ms):
+    \begin{itemize}
+      \item Non-Maximum Suppression (NMS)
+      \item Confidence-Filtering
+      \item Bounding-Box-Konvertierung
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Energieverbrauch}
+
+Der Energieverbrauch für YOLOv8-Inferenz:
+
+\begin{equation}
+E_{YOLOv8} = P_{NPU} \times T_{inference} = 15W \times 0.008s = 0.12J
+\end{equation}
+
+\subsection{Beispiel: Trajektorien-Prädiktion mit Transformer}
+
+\subsubsection{Modell-Spezifikation}
+
+\begin{table}[h]
+  \centering
+  \caption{Transformer Modell-Spezifikation}
+  \begin{tabular}{llll}
+    \toprule
+    Parameter & Wert & Einheit & Anmerkung \\
+    \midrule
+    Input-Tokens & 512 & -- & -- \\
+    Hidden-Size & 256 & -- & -- \\
+    Layers & 6 & -- & -- \\
+    Attention-Heads & 8 & -- & -- \\
+    Modell-Größe & 45 & MB & FP32 \\
+    Parameter & 12.5 & M & -- \\
+    FLOPS & 15.2 & G & pro Inferenz \\
+    Inferenz-Zeit (GPU) & 25 & ms & NVIDIA Orin \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:transformer_spec}
+\end{table}
+
+\subsubsection{Attention-Mechanismus}
+
+Der Attention-Mechanismus berechnet:
+
+\begin{equation}
+Attention(Q, K, V) = softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $Q$: Query-Matrix
+  \item $K$: Key-Matrix
+  \item $V$: Value-Matrix
+  \item $d_k$: Dimension der Keys
+\end{itemize}
+
+\section{Erweiterte KI-Performance-Analyse}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Analyse der KI-Performance.
+
+\subsection{Latency-Analyse}
+
+Die Latenz für KI-Inferenz setzt sich zusammen aus:
+
+\begin{equation}
+L_{total} = L_{preprocessing} + L_{inference} + L_{postprocessing} + L_{communication}
+\end{equation}
+
+\subsection{Throughput-Analyse}
+
+Der Throughput für KI-Inferenz:
+
+\begin{equation}
+Throughput = \frac{1}{L_{total}} = \frac{FPS}{1}
+\end{equation}
+
+\subsection{Accuracy-vs-Latency-Trade-off}
+
+Es gibt einen Trade-off zwischen Genauigkeit und Latenz:
+
+\begin{itemize}
+  \item \textbf{Höhere Genauigkeit}: Größere Modelle, längere Inferenz-Zeit
+  \item \textbf{Niedrigere Latenz}: Kleinere Modelle, kürzere Inferenz-Zeit
+  \item \textbf{Optimierung}: Quantisierung, Pruning, Distillation
+\end{itemize}
+
+\section{Erweiterte KI-Deployment-Strategien}
+
+Dieser Abschnitt beschreibt erweiterte Strategien für das Deployment von KI-Modellen.
+
+\subsection{Model-Compression}
+
+Model-Compression reduziert Modell-Größe und Inferenz-Zeit:
+
+\begin{itemize}
+  \item \textbf{Quantisierung}: FP32 $\rightarrow$ INT8 (4x kleiner, 2-4x schneller)
+  \item \textbf{Pruning}: Entfernung unwichtiger Neuronen (50-90\% Reduktion)
+  \item \textbf{Distillation}: Wissen von großem zu kleinem Modell übertragen
+  \item \textbf{Knowledge-Distillation}: Training eines kleineren Modells mit großem Modell als Teacher
+\end{itemize}
+
+\subsection{Multi-Model-Deployment}
+
+Verschiedene Modelle für verschiedene Anwendungsfälle:
+
+\begin{table}[h]
+  \centering
+  \caption{Multi-Model-Deployment-Strategie}
+  \begin{tabular}{lllll}
+    \toprule
+    Anwendung & Modell & Hardware & Latenz & Genauigkeit \\
+    \midrule
+    Echtzeit-Perzeption & YOLOv8-nano & NPU & 5 ms & 85\% \\
+    High-Accuracy-Perzeption & YOLOv8-large & GPU & 20 ms & 95\% \\
+    Trajektorien-Prädiktion & Transformer-small & GPU & 15 ms & 88\% \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:multi_model_deployment}
+\end{table}
+
+\subsection{Dynamic-Model-Switching}
+
+Dynamisches Wechseln zwischen Modellen basierend auf Kontext:
+
+\begin{itemize}
+  \item \textbf{Stadtverkehr}: Kleines, schnelles Modell
+  \item \textbf{Autobahn}: Größeres, genaueres Modell
+  \item \textbf{Schlechte Sicht}: Robustes Modell mit höherer Latenz
+\end{itemize}
+

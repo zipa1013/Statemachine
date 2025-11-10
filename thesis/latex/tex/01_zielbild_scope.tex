@@ -1,14 +1,158 @@
 \chapter{Zielbild, Scope und Anforderungen}\label{chap:zielbild}
+
 \section{Zielbild}
-Eingebettete Simulation innerhalb der Architekturentwicklungsumgebung zur Bewertung von Designvarianten, Aufdeckung von Bottlenecks und quantitativer Bewertung nichtfunktionaler Anforderungen (Timing, Bandbreite, Verfügbarkeit, Energie).
+
+Eingebettete Simulation innerhalb der Architekturentwicklungsumgebung zur Bewertung von Designvarianten, Aufdeckung von Bottlenecks und quantitativer Bewertung nichtfunktionaler Anforderungen (Timing, Bandbreite, Verfügbarkeit, Energie). Dieses Zielbild entspricht modernen Ansätzen der modellbasierten Entwicklung \cite{model_based_development} und den Anforderungen an die Validierung komplexer E/E-Architekturen \cite{validation_verification, simulation_automotive}.
+
+Die Simulation ermöglicht es, Architekturentscheidungen frühzeitig zu validieren, bevor kostspielige Hardware-Prototypen erstellt werden. Dies ist besonders wichtig in der modernen Fahrzeugentwicklung, wo die Komplexität der E/E-Architekturen kontinuierlich zunimmt \cite{reif_ee_architektur, automotive_software}.
 
 \section{Scope}
-Funktionsdomänen: Perzeption, Sensorfusion, Lokalisierung, Planung, Fahrzeugführung; Ebenen: Sensorik, Rechenknoten (ECUs), Aktorik, Kommunikation; Reifegrade: Konzept bis Vorserie.
+
+Funktionsdomänen: Perzeption, Sensorfusion, Lokalisierung, Planung, Fahrzeugführung \cite{automated_driving_systems, automotive_ai}; Ebenen: Sensorik \cite{automotive_sensors}, Rechenknoten (ECUs), Aktorik, Kommunikation \cite{embedded_systems_automotive, vehicle_networking}; Reifegrade: Konzept bis Vorserie.
+
+Der Scope umfasst die gesamte Kette von der Architekturmodellierung bis zur Simulation, einschließlich moderner Kommunikationstechnologien wie TSN \cite{tsn_automotive} und serviceorientierter Architekturen \cite{autosar_adaptive}.
 
 \section{Anforderungen und KPIs}
-E2E-Latenz, Jitter, Deadline-Misses, Busauslastung, CPU/GPU-Last, Energie, ASIL; Randbedingungen: Hardware-Budgets, Kosten, Packaging, Temperaturbereiche.
+
+Nichtfunktionale Anforderungen umfassen: E2E-Latenz, Jitter, Deadline-Misses, Busauslastung, CPU/GPU-Last, Energie, ASIL-Level \cite{iso26262_practice}; Randbedingungen: Hardware-Budgets, Kosten, Packaging, Temperaturbereiche \cite{braess_seiffen_handbuch}.
+
+Diese Anforderungen müssen unter Berücksichtigung von Echtzeit-Anforderungen \cite{real_time_systems} und funktionaler Sicherheit \cite{iso26262} erfüllt werden.
 
 \section{Abnahmekriterien}
-Grenzwerte pro Use-Case (z.\,B. E2E < 100 ms für L2/L3), TSN-Jitterbudgets, Paketverlustraten in sicherheitskritischen Pfaden.
+
+Grenzwerte pro Use-Case (z.\,B. E2E < 100 ms für L2/L3 \cite{automated_driving_systems}), TSN-Jitterbudgets \cite{tsn_automotive}, Paketverlustraten in sicherheitskritischen Pfaden \cite{iso26262_practice}. Diese Kriterien orientieren sich an etablierten Standards und Best Practices der Automobilindustrie \cite{validation_verification}.
+
+\section{Stand der Technik und Literaturübersicht}
+
+Dieser Abschnitt gibt einen Überblick über den aktuellen Stand der Technik im Bereich E/E-Architektur-Simulation und stellt die Arbeit in den Kontext aktueller Forschung, insbesondere aus KIT und TUM.
+
+\subsection{Forschung an KIT}
+
+Das Karlsruher Institut für Technologie (KIT) leistet bedeutende Beiträge zur Fahrzeugtechnik und E/E-Architektur-Entwicklung. Die Forschung am KIT umfasst insbesondere:
+
+\begin{itemize}
+  \item \textbf{Fahrdynamik und Regelung}: Grundlagenforschung zur Fahrzeugdynamik \cite{mitschke_wallentowitz_dynamik, kit_fahrzeugtechnik_script}, die für die Simulation von Fahrzeugfunktionen essentiell ist.
+  
+  \item \textbf{Fahrzeugsystemtechnik}: Entwicklung von Methoden zur modellbasierten Entwicklung von Fahrzeugsystemen \cite{kit_scriptum_fahrzeugtechnik}, die eng mit der in dieser Arbeit entwickelten Transformationsmethodik verwandt ist.
+  
+  \item \textbf{Energieeffizienz}: Forschung zur Optimierung des Energieverbrauchs in Fahrzeugen \cite{automotive_thermal_management}, was für die Energie-Modellierung in der Synthese-Metrik relevant ist.
+\end{itemize}
+
+Die Vorlesungen "Grundlagen der Fahrzeugtechnik I" und "Grundlagen der Fahrzeugtechnik II" am KIT \cite{kit_fahrzeugtechnik_script, kit_fahrzeugtechnik_script_ii} vermitteln fundierte Kenntnisse zu Antriebssystemen, Radaufhängungen, Lenkung und Bremsen, die für die Modellierung von Aktorik-Komponenten in E/E-Architekturen wichtig sind.
+
+\subsection{Forschung an TUM}
+
+Die Technische Universität München (TUM) ist führend in der Forschung zu Automotive Software Engineering und modellbasierter Entwicklung:
+
+\begin{itemize}
+  \item \textbf{Automotive Software Engineering}: Pionierarbeit zu Software-Architekturen für Fahrzeuge \cite{tum_ee_architecture, automotive_software_architecture}, die die Grundlage für moderne E/E-Architekturen bildet.
+  
+  \item \textbf{Modellbasierte Entwicklung}: Entwicklung der SPES 2020 Methodik \cite{automotive_model_based_development}, die einen systematischen Ansatz zur modellbasierten Entwicklung eingebetteter Systeme bietet.
+  
+  \item \textbf{Simulation und Validierung}: Forschung zu Simulationsmethoden für Automotive-Systeme \cite{tum_simulation_automotive}, die direkt mit dem Thema dieser Arbeit zusammenhängt.
+\end{itemize}
+
+\subsection{Aktuelle Entwicklungen in der Industrie}
+
+Die Automobilindustrie entwickelt sich rasant in Richtung Software-Defined Vehicles (SDV) \cite{automotive_software}:
+
+\begin{itemize}
+  \item \textbf{Zonale Architekturen}: Zunehmende Verbreitung zonaler E/E-Architekturen mit zentralen Rechenplattformen, wie sie in dieser Arbeit modelliert werden.
+  
+  \item \textbf{TSN-Netzwerke}: Time-Sensitive Networking wird zum Standard für deterministische Kommunikation in Fahrzeugen \cite{tsn_automotive, automotive_networking_advanced}.
+  
+  \item \textbf{KI-Integration}: Integration von KI/ML-Modellen in E/E-Architekturen \cite{automotive_ai_advanced}, was neue Anforderungen an die Simulation stellt.
+  
+  \item \textbf{Cybersecurity}: Zunehmende Bedeutung von Cybersecurity in vernetzten Fahrzeugen \cite{automotive_cybersecurity}, die auch in Simulationsmodellen berücksichtigt werden muss.
+\end{itemize}
+
+\subsection{Beitrag dieser Arbeit}
+
+Diese Arbeit leistet einen Beitrag zur Forschung, indem sie:
+
+\begin{itemize}
+  \item \textbf{Methodik}: Eine systematische Methodik zur Transformation von Architekturmodellen in Simulationsmodelle entwickelt, die auf etablierten Ansätzen der modellbasierten Entwicklung \cite{automotive_model_based_development} aufbaut.
+  
+  \item \textbf{Synthese-Metrik}: Eine erweiterte Synthese-Metrik entwickelt, die automatisch Simulationsparameter aus Architekturmerkmalen ableitet, was die Effizienz der Architektur-Evaluierung erheblich verbessert.
+  
+  \item \textbf{Validierung}: Eine systematische Validierungsmethodik entwickelt, die Simulationsergebnisse mit analytischen Modellen vergleicht \cite{automotive_validation_testing}.
+  
+  \item \textbf{Praktische Anwendung}: Die Methodik anhand konkreter Fallstudien demonstriert, die auf realen Anforderungen basieren.
+\end{itemize}
+
+Die Arbeit baut auf den Erkenntnissen aus KIT und TUM auf und erweitert diese um spezifische Aspekte der Simulation von E/E-Architekturen, insbesondere im Kontext moderner zonaler Architekturen und TSN-Netzwerke.
+
+\section{Erweiterte Anforderungsanalyse}
+
+Dieser Abschnitt beschreibt eine detaillierte Analyse der Anforderungen an das Transformations-Framework.
+
+\subsection{Funktionale Anforderungen}
+
+\subsubsection{Transformation-Anforderungen}
+
+\begin{itemize}
+  \item \textbf{Unterstützte Formate}: PREEvision (JSON, XML, CSV), AUTOSAR XML, Custom-Formate
+  \item \textbf{Zielplattformen}: OMNeT++, Simulink, NS-3, Modelica, ROS 2, FMI
+  \item \textbf{Transformations-Genauigkeit}: Abweichung < 5\% von analytischen Modellen
+  \item \textbf{Performance}: Transformation < 2 Stunden für Architekturen mit 1000+ Knoten
+  \item \textbf{Skalierbarkeit}: Unterstützung für Architekturen mit bis zu 10.000 Knoten
+\end{itemize}
+
+\subsubsection{Validierungs-Anforderungen}
+
+\begin{itemize}
+  \item \textbf{Schema-Validierung}: Vollständige Validierung gegen Metamodell-Schema
+  \item \textbf{Constraint-Validierung}: Validierung von Constraints und Randbedingungen
+  \item \textbf{Konsistenz-Prüfung}: Prüfung auf Konsistenz zwischen verschiedenen Modell-Ebenen
+  \item \textbf{Vollständigkeits-Prüfung}: Prüfung auf Vollständigkeit der Modell-Daten
+\end{itemize}
+
+\subsection{Nichtfunktionale Anforderungen}
+
+\subsubsection{Performance-Anforderungen}
+
+\begin{table}[h]
+  \centering
+  \caption{Performance-Anforderungen}
+  \begin{tabular}{llll}
+    \toprule
+    Metrik & Klein (< 100) & Mittel (100-1000) & Groß (> 1000) \\
+    \midrule
+    Transformationszeit & < 5 min & < 30 min & < 2 h \\
+    Speicherverbrauch & < 1 GB & < 8 GB & < 32 GB \\
+    Simulationszeit (1h Fahrzeit) & < 10 min & < 1 h & < 4 h \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:performance_anforderungen}
+\end{table}
+
+\subsubsection{Qualitäts-Anforderungen}
+
+\begin{itemize}
+  \item \textbf{Genauigkeit}: Simulationsergebnisse mit Abweichung < 5\% von analytischen Modellen
+  \item \textbf{Reproduzierbarkeit}: Gleiche Eingabe führt zu gleicher Ausgabe
+  \item \textbf{Wartbarkeit}: Code-Coverage > 80\%, umfassende Dokumentation
+  \item \textbf{Erweiterbarkeit}: Plugin-Architektur für neue Formate und Plattformen
+\end{itemize}
+
+\subsection{Anwender-Anforderungen}
+
+\subsubsection{Benutzerfreundlichkeit}
+
+\begin{itemize}
+  \item \textbf{Command-Line-Interface}: Einfache CLI für Standard-Operationen
+  \item \textbf{API}: RESTful API für Integration in andere Tools
+  \item \textbf{Konfiguration}: YAML-basierte Konfiguration für Flexibilität
+  \item \textbf{Dokumentation}: Umfassende Dokumentation mit Beispielen
+\end{itemize}
+
+\subsubsection{Integration-Anforderungen}
+
+\begin{itemize}
+  \item \textbf{CI/CD-Integration}: Integration in GitHub Actions, GitLab CI, Jenkins
+  \item \textbf{Tool-Integration}: Integration in PREEvision, MATLAB/Simulink, etc.
+  \item \textbf{Cloud-Integration}: Unterstützung für Cloud-Deployment (AWS, Azure, GCP)
+  \item \textbf{Versionierung}: Unterstützung für Git, SVN, etc.
+\end{itemize}
 
 

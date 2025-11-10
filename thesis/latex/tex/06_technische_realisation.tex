@@ -1,11 +1,812 @@
 \chapter{Technische Realisierung der Transformation}\label{chap:realisation}
+
+\noindent
+Dieses Kapitel beschreibt die technische Realisierung der Transformation von PREEvision-Architekturmodellen in Simulationsmodelle. Die Implementierung umfasst Datenaufnahme, Normalisierung, Regel-Engine, Code-Generierung und automatisierte Validierung.
+
 \section{Datenaufnahme und Normalisierung}
-Strukturierte, versionierte Exporte; Parser/Adapter nach IM.
+
+\subsection{Strukturierte Exporte}
+
+\subsubsection{Export-Konfiguration}
+
+Die Datenaufnahme beginnt mit der Konfiguration strukturierter Exporte aus PREEvision:
+
+\begin{itemize}
+  \item \textbf{Export-Profil}: Definiert, welche Modell-Elemente exportiert werden sollen
+  \item \textbf{Format-Auswahl}: REST API, CSV, AUTOSAR XML oder XMI/JSON
+  \item \textbf{Filter-Kriterien}: Optional Filterung nach Komponententypen, Domänen oder ASIL-Leveln
+  \item \textbf{Versionierung}: Export-Versionen werden mit Timestamps und Modell-Versionen versehen
+\end{itemize}
+
+\subsubsection{Versionierung}
+
+Jeder Export wird versioniert, um Änderungen nachverfolgen zu können:
+
+\begin{itemize}
+  \item \textbf{Modell-Version}: Version des PREEvision-Modells
+  \item \textbf{Export-Timestamp}: Zeitpunkt des Exports
+  \item \textbf{Export-Hash}: Hash-Wert zur Integritätsprüfung
+  \item \textbf{Änderungs-Historie}: Nachverfolgung von Änderungen zwischen Versionen
+\end{itemize}
+
+\subsection{Parser und Adapter}
+
+\subsubsection{Moderne Format-Parser}
+
+Verschiedene Parser werden für moderne Exportformate implementiert:
+
+\begin{itemize}
+  \item \textbf{JSON-Parser}: Für REST API und JSON-Exporte mit Unterstützung für:
+    \begin{itemize}
+      \item JSON Schema Validierung (jsonschema)
+      \item Streaming-Parsing für große Dateien (ijson)
+      \item JSON-LD für semantische Daten
+    \end{itemize}
+  
+  \item \textbf{CSV-Parser}: Für tabellarische Exporte mit:
+    \begin{itemize}
+      \item Pandas für effiziente Datenverarbeitung
+      \item Streaming-Parsing für große CSV-Dateien
+      \item Automatische Typ-Inferenz
+    \end{itemize}
+  
+  \item \textbf{XML-Parser}: Für AUTOSAR XML und XMI-Exporte mit:
+    \begin{itemize}
+      \item lxml für performantes Parsing
+      \item XPath für komplexe Abfragen
+      \item Namespace-Unterstützung
+    \end{itemize}
+  
+  \item \textbf{GraphQL-Parser}: Für moderne GraphQL-APIs (falls PREEvision GraphQL unterstützt)
+  
+  \item \textbf{gRPC-Parser}: Für gRPC-basierte Exporte (falls verfügbar)
+  
+  \item \textbf{Parquet/Arrow-Parser}: Für effiziente binäre Datenformate
+\end{itemize}
+
+\subsubsection{Adapter-Pattern}
+
+Das Adapter-Pattern ermöglicht die einheitliche Verarbeitung verschiedener Formate:
+
+\begin{verbatim}
+class ExportAdapter:
+    def parse(self, source: str) -> IntermediateModel:
+        """Parse export format to IM"""
+        pass
+
+class JSONAdapter(ExportAdapter):
+    def parse(self, source: str) -> IntermediateModel:
+        # Parse JSON export
+        pass
+
+class CSVAdapter(ExportAdapter):
+    def parse(self, source: str) -> IntermediateModel:
+        # Parse CSV export
+        pass
+\end{verbatim}
+
+\subsubsection{Normalisierung}
+
+Die Normalisierung stellt sicher, dass Daten aus verschiedenen Quellen in ein einheitliches Format überführt werden:
+
+\begin{itemize}
+  \item \textbf{Einheitliche Bezeichnungen}: Standardisierung von Namen und IDs
+  \item \textbf{Einheitliche Einheiten}: Konvertierung in SI-Einheiten (ms, Byte, bit/s)
+  \item \textbf{Datenbereinigung}: Entfernung von Duplikaten, Korrektur von Inkonsistenzen
+  \item \textbf{Vervollständigung}: Ergänzung fehlender Werte mit Defaults oder Schätzungen
+\end{itemize}
+
+\subsection{Validierung der Eingabedaten}
+
+\subsubsection{Schema-Validierung}
+
+Die Eingabedaten werden gegen ein Schema validiert:
+
+\begin{itemize}
+  \item \textbf{Struktur-Validierung}: Prüfung auf korrekte JSON/XML-Struktur
+  \item \textbf{Typ-Validierung}: Prüfung auf korrekte Datentypen
+  \item \textbf{Referenz-Validierung}: Prüfung, ob alle Referenzen aufgelöst werden können
+  \item \textbf{Constraint-Validierung}: Prüfung von Randbedingungen (z.\,B. positive Werte)
+\end{itemize}
+
+\subsubsection{Konsistenz-Checks}
+
+Konsistenz-Checks prüfen die logische Korrektheit:
+
+\begin{itemize}
+  \item \textbf{Referenz-Integrität}: Alle referenzierten Elemente existieren
+  \item \textbf{Zyklus-Erkennung}: Erkennung von Zyklen in Abhängigkeiten
+  \item \textbf{Werte-Konsistenz}: Prüfung auf widersprüchliche Werte
+  \item \textbf{Vollständigkeit}: Prüfung, ob alle erforderlichen Informationen vorhanden sind
+\end{itemize}
 
 \section{Regel-Engine und Generator}
-Regelkatalog (YAML) für Mapping; Code- und Konfigurationsgenerator (z.\,B. Python + Jinja2).
+
+Die Regel-Engine ist das Herzstück des Transformations-Frameworks. Sie interpretiert die Mapping-Regeln und führt die Transformation von PREEvision-Elementen in Simulations-Elemente durch. Die Engine ist so designed, dass sie flexibel, erweiterbar und wartbar ist.
+
+\subsection{Regelkatalog}
+
+Der Regelkatalog enthält alle Mapping-Regeln, die für die Transformation verwendet werden. Jede Regel definiert, wie ein bestimmter Typ von PREEvision-Element in ein entsprechendes Simulations-Element transformiert wird. Der Katalog wird in strukturierter Form (YAML) gespeichert, um sowohl maschinenlesbar als auch menschenlesbar zu sein.
+
+\subsubsection{YAML-basierte Konfiguration}
+
+Mapping-Regeln werden in YAML-Dateien definiert, was eine klare, strukturierte und leicht verständliche Darstellung ermöglicht. YAML bietet mehrere Vorteile:
+
+\begin{itemize}
+  \item \textbf{Lesbarkeit}: YAML ist sehr lesbar und erfordert keine speziellen Programmierkenntnisse
+  \item \textbf{Strukturierung}: YAML unterstützt hierarchische Strukturen, die gut zu den Mapping-Regeln passen
+  \item \textbf{Erweiterbarkeit}: Neue Regeln können einfach hinzugefügt werden, ohne bestehende Regeln zu ändern
+  \item \textbf{Versionierung}: YAML-Dateien können einfach in Versionskontrollsystemen verwaltet werden
+\end{itemize}
+
+\begin{verbatim}
+# mapping_rules.yaml
+transformations:
+  - name: ecu_to_node
+    source: ECU
+    target: Node
+    mappings:
+      - from: ecu.id
+        to: node.id
+      - from: ecu.cpu_cores
+        to: node.cpu.cores
+      - from: ecu.ram_size
+        to: node.memory.size
+    validations:
+      - check: cpu_cores > 0
+        error: "CPU cores must be positive"
+  
+  - name: frame_to_traffic_flow
+    source: Frame
+    target: TrafficFlow
+    mappings:
+      - from: frame.id
+        to: flow.id
+      - from: frame.period
+        to: flow.period
+      - from: frame.size
+        to: flow.size
+    calculations:
+      - name: bandwidth
+        formula: "size * 8 / period"
+        unit: "bit/s"
+\end{verbatim}
+
+\subsubsection{Regel-Typen}
+
+Verschiedene Regel-Typen werden unterstützt:
+
+\begin{itemize}
+  \item \textbf{Direct Mapping}: Direkte Zuordnung von Attributen
+  \item \textbf{Transformation}: Berechnung neuer Werte aus vorhandenen
+  \item \textbf{Aggregation}: Zusammenfassung mehrerer Elemente
+  \item \textbf{Conditional Mapping}: Bedingte Zuordnungen basierend auf Bedingungen
+  \item \textbf{Default Values}: Standardwerte für fehlende Informationen
+\end{itemize}
+
+\subsection{Code-Generator}
+
+\subsubsection{Template-basierte Generierung}
+
+Code wird mit Template-Engines (z.\,B. Jinja2) generiert:
+
+\begin{verbatim}
+# Template: omnetpp_network.ned.j2
+network {{ network_name }} {
+    types:
+{% for node in nodes %}
+    node {{ node.id }} {
+        parameters:
+            cpu.cores = {{ node.cpu_cores }};
+            memory.size = {{ node.ram_size }}MB;
+{% endfor %}
+    }
+    
+    connections:
+{% for link in links %}
+        {{ link.source }}.port <--> {{ link.bandwidth }}bps <--> {{ link.destination }}.port;
+{% endfor %}
+}
+\end{verbatim}
+
+\subsubsection{Generator-Architektur}
+
+Die Generator-Architektur besteht aus:
+
+\begin{itemize}
+  \item \textbf{Template-Loader}: Lädt Templates aus Dateien
+  \item \textbf{Context-Builder}: Erstellt Kontext-Daten aus IM
+  \item \textbf{Renderer}: Rendert Templates zu Code
+  \item \textbf{Post-Processor}: Bearbeitet generierten Code (Formatierung, Validierung)
+\end{itemize}
+
+\subsubsection{Plattform-spezifische Generatoren}
+
+Für jede Zielplattform wird ein spezifischer Generator implementiert:
+
+\begin{itemize}
+  \item \textbf{OMNeT++ Generator}: Generiert .ned-Dateien und .ini-Konfigurationen
+  \item \textbf{Simulink Generator}: Generiert Simulink-Modelle und TrueTime-Konfigurationen
+  \item \textbf{NS-3 Generator}: Generiert C++-Code für NS-3
+  \item \textbf{Modelica Generator}: Generiert Modelica-Modelle
+\end{itemize}
+
+\subsection{Konfigurationsgenerator}
+
+\subsubsection{Simulations-Konfiguration}
+
+Zusätzlich zum Modell-Code werden Simulations-Konfigurationen generiert:
+
+\begin{verbatim}
+# omnetpp.ini
+[General]
+network = {{ network_name }}
+sim-time-limit = {{ simulation_time }}s
+
+[Config {{ scenario_name }}]
+**.cpu.scheduler = "fixedPriority"
+{% for task in tasks %}
+**.{{ task.node }}.task[{{ task.id }}].period = {{ task.period }}ms
+**.{{ task.node }}.task[{{ task.id }}].wcet = {{ task.wcet }}ms
+{% endfor %}
+\end{verbatim}
+
+\subsubsection{Szenario-Konfigurationen}
+
+Verschiedene Szenarien werden als separate Konfigurationen generiert:
+
+\begin{itemize}
+  \item \textbf{Nominal-Szenario}: Standard-Betriebsbedingungen
+  \item \textbf{Stress-Szenario}: Hohe Last, Grenzfälle
+  \item \textbf{Fehler-Szenario}: Ausfälle, Degradation
+  \item \textbf{Variante-Szenarien}: Verschiedene Design-Varianten
+\end{itemize}
 
 \section{Automatisierte Validierung und CI}
-Schema-Validierung, Konsistenzchecks und reproduzierbare Build-Pipelines der Simulation.
 
+\subsection{Schema-Validierung}
 
+\subsubsection{IM-Schema}
+
+Das Intermediate Model wird gegen ein Schema validiert:
+
+\begin{verbatim}
+# im_schema.json
+{
+  "type": "object",
+  "properties": {
+    "topology": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "type"],
+            "properties": {
+              "id": {"type": "string"},
+              "type": {"type": "string"},
+              "cpu_cores": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
+      }
+    }
+  }
+}
+\end{verbatim}
+
+\subsubsection{Validierungs-Framework}
+
+Ein Validierungs-Framework prüft das IM:
+
+\begin{itemize}
+  \item \textbf{JSON Schema Validator}: Prüfung gegen JSON Schema
+  \item \textbf{Custom Validators}: Zusätzliche benutzerdefinierte Prüfungen
+  \item \textbf{Error Reporting}: Detaillierte Fehlermeldungen mit Kontext
+\end{itemize}
+
+\subsection{Konsistenzchecks}
+
+\subsubsection{Cross-Reference Checks}
+
+Konsistenzchecks prüfen Referenzen zwischen Modell-Elementen:
+
+\begin{itemize}
+  \item \textbf{Link-Validierung}: Alle Links referenzieren existierende Knoten
+  \item \textbf{Frame-Validierung}: Alle Frames haben gültige Quellen und Ziele
+  \item \textbf{Task-Validierung}: Alle Tasks sind auf existierenden ECUs deployed
+  \item \textbf{Chain-Validierung}: Alle Chains haben vollständige Pfade
+\end{itemize}
+
+\subsubsection{Constraint-Validierung}
+
+Constraints werden geprüft:
+
+\begin{itemize}
+  \item \textbf{Timing-Constraints}: Deadlines sind größer als Periodizitäten
+  \item \textbf{Ressourcen-Constraints}: CPU-Auslastung $\leq$ 100\%
+  \item \textbf{Bandbreiten-Constraints}: Netzwerk-Auslastung $\leq$ 100\%
+  \item \textbf{Safety-Constraints}: ASIL-Anforderungen werden eingehalten
+\end{itemize}
+
+\subsection{Reproduzierbare Build-Pipelines}
+
+\subsubsection{Moderne CI/CD-Integration}
+
+Die Transformation wird in moderne CI/CD-Pipelines integriert, die Containerisierung, Cloud-Deployment und automatisierte Tests unterstützen:
+
+\begin{verbatim}
+# .github/workflows/transform.yml (GitHub Actions v4)
+name: Transform Architecture Model
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      architecture:
+        description: 'Architecture model to transform'
+        required: true
+        type: string
+
+jobs:
+  transform:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/org/transformer:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run transformation
+        run: |
+          python transform.py \
+            --input ${{ inputs.architecture || 'default' }}.json \
+            --output simulation/ \
+            --format omnetpp \
+            --validate
+        env:
+          TRANSFORM_CACHE: ${{ runner.temp }}/cache
+      
+      - name: Validate output
+        run: |
+          python validate.py \
+            --input simulation/ \
+            --schema im_schema.json \
+            --strict
+      
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --cov=transform --cov-report=xml
+      
+      - name: Run integration tests
+        run: pytest tests/integration/ -v
+      
+      - name: Build Docker image for simulation
+        run: |
+          docker build -t simulation:latest -f Dockerfile.simulation .
+      
+      - name: Run simulation in container
+        run: |
+          docker run --rm \
+            -v $(pwd)/simulation:/simulation \
+            -v $(pwd)/results:/results \
+            simulation:latest \
+            ./run_simulation.sh
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-results
+          path: results/
+          retention-days: 30
+      
+      - name: Publish to container registry
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag simulation:latest ghcr.io/${{ github.repository }}/simulation:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}/simulation:${{ github.sha }}
+\end{verbatim}
+
+\subsubsection{Containerisierung mit Docker}
+
+Containerisierung ermöglicht reproduzierbare Umgebungen und einfaches Deployment:
+
+\begin{verbatim}
+# Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV TRANSFORM_CACHE=/cache
+
+# Create cache directory
+RUN mkdir -p /cache
+
+# Run transformation
+CMD ["python", "transform.py"]
+\end{verbatim}
+
+\subsubsection{Kubernetes für Skalierung}
+
+Für große Simulationsläufe kann Kubernetes für parallele Ausführung verwendet werden:
+
+\begin{verbatim}
+# k8s/job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: simulation-batch
+spec:
+  parallelism: 10
+  completions: 100
+  template:
+    spec:
+      containers:
+      - name: transformer
+        image: ghcr.io/org/transformer:latest
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+        env:
+        - name: ARCHITECTURE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: results
+          mountPath: /results
+      volumes:
+      - name: results
+        persistentVolumeClaim:
+          claimName: simulation-results
+      restartPolicy: Never
+  backoffLimit: 3
+\end{verbatim}
+
+\subsubsection{Moderne Versionierung und Artifact-Management}
+
+Alle Artefakte werden mit modernen Versionierungs- und Artifact-Management-Systemen verwaltet:
+
+\begin{itemize}
+  \item \textbf{Semantic Versioning}: Versionen folgen Semantic Versioning (MAJOR.MINOR.PATCH)
+  \item \textbf{Git-Tags}: Versionen werden mit Git-Tags markiert und automatisch durch CI/CD erstellt
+  \item \textbf{Container-Registry}: Docker-Images werden in Container-Registries (GitHub Container Registry, Docker Hub, GitLab Registry) gespeichert
+  \item \textbf{Artifact-Storage}: Generierte Simulationen werden in Artifact-Stores (GitHub Artifacts, S3, MinIO) gespeichert
+  \item \textbf{Change-Log}: Automatische Generierung von Change-Logs aus Git-Commits (Conventional Commits)
+  \item \textbf{SBOM (Software Bill of Materials)}: Automatische Generierung von SBOMs für Sicherheits-Compliance
+\end{itemize}
+
+\subsubsection{Reproduzierbarkeit und Determinismus}
+
+Reproduzierbarkeit wird durch moderne Techniken sichergestellt:
+
+\begin{itemize}
+  \item \textbf{Deterministische Generierung}: Gleiche Eingabe führt zu gleicher Ausgabe durch:
+    \begin{itemize}
+      \item Fixierte Zufalls-Seeds
+      \item Sortierte Datenstrukturen
+      \item Deterministische Hash-Funktionen
+    \end{itemize}
+  
+  \item \textbf{Dependency-Pinning}: 
+    \begin{itemize}
+      \item \texttt{requirements.txt} mit exakten Versionen
+      \item \texttt{poetry.lock} oder \texttt{Pipfile.lock} für Python
+      \item \texttt{package-lock.json} für Node.js-Abhängigkeiten
+      \item Container-Images mit spezifischen Tags (nicht \texttt{latest})
+    \end{itemize}
+  
+  \item \textbf{Environment-Dokumentation}: 
+    \begin{itemize}
+      \item \texttt{Dockerfile} für Container-Umgebung
+      \item \texttt{environment.yml} für Conda-Umgebungen
+      \item \texttt{devcontainer.json} für VS Code Dev Containers
+      \item CI/CD-Umgebungen werden dokumentiert und versioniert
+    \end{itemize}
+  
+  \item \textbf{Seed-Management}: 
+    \begin{itemize}
+      \item Zufalls-Seeds werden in Konfigurationsdateien gespeichert
+      \item Seed-Generierung basiert auf deterministischen Hash-Funktionen
+      \item Seeds werden versioniert und dokumentiert
+    \end{itemize}
+  
+  \item \textbf{Container-Reproduzierbarkeit}: 
+    \begin{itemize}
+      \item Multi-Stage Builds für optimierte Images
+      \item Layer-Caching für schnelle Rebuilds
+      \item Content-Addressable Storage für Images
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Cloud-native Deployment}
+
+Moderne Cloud-native Ansätze für Skalierung und Effizienz:
+
+\begin{itemize}
+  \item \textbf{Serverless Functions}: AWS Lambda, Azure Functions, Google Cloud Functions für kleine Transformationen
+  \item \textbf{Container Orchestration}: Kubernetes für komplexe Workflows
+  \item \textbf{Distributed Computing}: Dask, Ray für parallele Verarbeitung großer Modelle
+  \item \textbf{Cloud Storage}: S3, Azure Blob, Google Cloud Storage für Artefakt-Speicherung
+  \item \textbf{Message Queues}: RabbitMQ, Apache Kafka für asynchrone Verarbeitung
+\end{itemize}
+
+\section{Erweiterte Implementierungsdetails}
+
+Dieser Abschnitt beschreibt erweiterte Implementierungsdetails, die für eine produktive Nutzung des Transformations-Frameworks wichtig sind.
+
+\subsection{Performance-Optimierung}
+
+Die Performance-Optimierung ist entscheidend für die praktische Nutzbarkeit des Frameworks, insbesondere bei großen Architekturen.
+
+\subsubsection{Parsing-Optimierung}
+
+Große PREEvision-Exporte können mehrere Gigabyte groß sein. Effizientes Parsing ist daher essentiell:
+
+\begin{itemize}
+  \item \textbf{Streaming-Parsing}: Verwendung von Streaming-Parsern (ijson für JSON, iterparse für XML), die Dateien nicht vollständig in den Speicher laden
+  \item \textbf{Inkrementelle Verarbeitung}: Verarbeitung von Daten in Chunks, um Speicherverbrauch zu reduzieren
+  \item \textbf{Parallelisierung}: Parallele Verarbeitung unabhängiger Datenstrukturen mit Multiprocessing
+  \item \textbf{Caching}: Intelligentes Caching von häufig verwendeten Datenstrukturen
+  \item \textbf{Lazy Loading}: Lazy Loading von Daten, die nicht sofort benötigt werden
+\end{itemize}
+
+\subsubsection{Transformation-Optimierung}
+
+Die Transformation kann für große Modelle zeitaufwändig sein:
+
+\begin{itemize}
+  \item \textbf{Inkrementelle Transformation}: Nur geänderte Teile werden transformiert
+  \item \textbf{Parallelisierung}: Parallele Transformation unabhängiger Komponenten
+  \item \textbf{Caching}: Caching von Transformationsergebnissen
+  \item \textbf{Optimierte Datenstrukturen}: Verwendung effizienter Datenstrukturen (z.\,B. Sets statt Listen für Lookups)
+\end{itemize}
+
+\subsubsection{Code-Generierung-Optimierung}
+
+Die Code-Generierung kann für große Modelle langsam sein:
+
+\begin{itemize}
+  \item \textbf{Template-Caching}: Caching von kompilierten Templates
+  \item \textbf{Inkrementelle Generierung}: Nur geänderte Teile werden neu generiert
+  \item \textbf{Parallelisierung}: Parallele Generierung unabhängiger Komponenten
+  \item \textbf{Optimierte String-Operationen}: Verwendung von String-Buildern statt String-Konkatenation
+\end{itemize}
+
+\subsection{Fehlerbehandlung und Robustheit}
+
+Robuste Fehlerbehandlung ist essentiell für die praktische Nutzbarkeit:
+
+\subsubsection{Fehlerklassifikation}
+
+Fehler werden klassifiziert nach Schweregrad:
+
+\begin{itemize}
+  \item \textbf{Kritische Fehler}: Verhindern die Transformation (z.\,B. fehlende erforderliche Attribute)
+  \item \textbf{Warnungen}: Beeinträchtigen die Qualität, aber erlauben die Transformation (z.\,B. fehlende optionale Attribute)
+  \item \textbf{Informationen}: Hinweise auf potenzielle Probleme (z.\,B. ungewöhnliche Werte)
+\end{itemize}
+
+\subsubsection{Fehlerbehandlung-Strategien}
+
+Verschiedene Strategien für verschiedene Fehlertypen:
+
+\begin{itemize}
+  \item \textbf{Default-Werte}: Verwendung von Default-Werten für fehlende optionale Attribute
+  \item \textbf{Schätzungen}: Intelligente Schätzungen basierend auf ähnlichen Komponenten
+  \item \textbf{Fehler-Propagierung}: Strukturierte Fehler-Propagierung mit Kontext-Informationen
+  \item \textbf{Fehler-Logging}: Detailliertes Logging für Debugging und Analyse
+\end{itemize}
+
+\subsection{Erweiterbarkeit und Wartbarkeit}
+
+Das Framework ist so designed, dass es einfach erweitert und gewartet werden kann:
+
+\subsubsection{Plugin-Architektur}
+
+Eine Plugin-Architektur ermöglicht die einfache Erweiterung:
+
+\begin{itemize}
+  \item \textbf{Adapter-Plugins}: Neue Export-Formate können als Plugins hinzugefügt werden
+  \item \textbf{Generator-Plugins}: Neue Zielplattformen können als Plugins hinzugefügt werden
+  \item \textbf{Validator-Plugins}: Neue Validierungsregeln können als Plugins hinzugefügt werden
+  \item \textbf{Metrik-Plugins}: Neue Synthese-Metriken können als Plugins hinzugefügt werden
+\end{itemize}
+
+\subsubsection{Modularität}
+
+Das Framework ist modular aufgebaut:
+
+\begin{itemize}
+  \item \textbf{Klare Schnittstellen}: Wohldefinierte Schnittstellen zwischen Modulen
+  \item \textbf{Lose Kopplung}: Module sind lose gekoppelt und können unabhängig entwickelt werden
+  \item \textbf{Hohe Kohäsion}: Module haben hohe Kohäsion und erfüllen klar definierte Aufgaben
+  \item \textbf{Dependency Injection}: Dependency Injection ermöglicht einfaches Testen und Erweitern
+\end{itemize}
+
+\section{Erweiterte Implementierungs-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Code-Beispiele für die Implementierung.
+
+\subsection{Beispiel: Parser-Implementierung}
+
+\subsubsection{JSON-Parser mit Streaming}
+
+\begin{verbatim}
+import ijson
+
+def parse_preevision_export_streaming(file_path):
+    """Parser mit Streaming für große Dateien"""
+    with open(file_path, 'rb') as f:
+        parser = ijson.parse(f)
+        
+        current_ecu = None
+        ecus = []
+        
+        for prefix, event, value in parser:
+            if prefix == 'ecus.item.name':
+                current_ecu = {'name': value, 'interfaces': []}
+            elif prefix == 'ecus.item.interfaces.item':
+                if current_ecu:
+                    current_ecu['interfaces'].append(value)
+            elif prefix == 'ecus.item' and event == 'end_map':
+                if current_ecu:
+                    ecus.append(current_ecu)
+                    current_ecu = None
+        
+        return ecus
+\end{verbatim}
+
+\subsubsection{XML-Parser mit iterparse}
+
+\begin{verbatim}
+from xml.etree.ElementTree import iterparse
+
+def parse_preevision_export_xml(file_path):
+    """XML-Parser mit iterparse für große Dateien"""
+    ecus = []
+    current_ecu = None
+    
+    for event, elem in iterparse(file_path, events=('start', 'end')):
+        if event == 'start' and elem.tag == 'ECU':
+            current_ecu = {'name': elem.get('name'), 'interfaces': []}
+        elif event == 'end' and elem.tag == 'Interface':
+            if current_ecu:
+                current_ecu['interfaces'].append({
+                    'name': elem.get('name'),
+                    'type': elem.get('type'),
+                    'bandwidth': float(elem.get('bandwidth', 0))
+                })
+        elif event == 'end' and elem.tag == 'ECU':
+            if current_ecu:
+                ecus.append(current_ecu)
+                current_ecu = None
+            elem.clear()  # Speicher freigeben
+    
+    return ecus
+\end{verbatim}
+
+\subsection{Beispiel: Regel-Engine-Implementierung}
+
+\subsubsection{YAML-Regel-Laden}
+
+\begin{verbatim}
+import yaml
+from typing import Dict, Any
+
+class RuleEngine:
+    def __init__(self, rules_file: str):
+        with open(rules_file, 'r') as f:
+            self.rules = yaml.safe_load(f)
+    
+    def transform(self, source_data: Dict[str, Any], 
+                  rule_name: str) -> Dict[str, Any]:
+        """Transformiert Daten basierend auf Regel"""
+        rule = self.rules['mappings'][rule_name]
+        target_data = {}
+        
+        for target_attr, source_mapping in rule['attributes'].items():
+            if isinstance(source_mapping, str):
+                # Direkte Attribut-Zuordnung
+                target_data[target_attr] = source_data.get(source_mapping)
+            elif callable(source_mapping):
+                # Transformations-Funktion
+                target_data[target_attr] = source_mapping(source_data)
+        
+        return target_data
+\end{verbatim}
+
+\subsection{Beispiel: Code-Generator-Implementierung}
+
+\subsubsection{Jinja2-Template-basierte Generierung}
+
+\begin{verbatim}
+from jinja2 import Template, Environment, FileSystemLoader
+
+class CodeGenerator:
+    def __init__(self, template_dir: str):
+        self.env = Environment(
+            loader=FileSystemLoader(template_dir),
+            trim_blocks=True,
+            lstrip_blocks=True
+        )
+    
+    def generate_omnet_config(self, architecture: Dict, 
+                              output_path: str):
+        """Generiert OMNeT++ Konfiguration"""
+        template = self.env.get_template('omnet_config.ini.j2')
+        
+        config = template.render(
+            network_name=architecture['name'],
+            nodes=architecture['nodes'],
+            links=architecture['links']
+        )
+        
+        with open(output_path, 'w') as f:
+            f.write(config)
+\end{verbatim}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die technische Realisierung der Transformation mit modernen Technologien und Best Practices beschrieben. Die wichtigsten Aspekte umfassen:
+
+\begin{itemize}
+  \item \textbf{Datenaufnahme und Normalisierung}: Strukturierte Exporte mit modernen Formaten (JSON, CSV, XML, GraphQL, gRPC, Parquet), intelligente Parser mit Streaming-Unterstützung, Adapter-Pattern für einheitliche Verarbeitung, und Normalisierung mit automatischer Typ-Inferenz und Datenbereinigung.
+  
+  \item \textbf{Regel-Engine und Generator}: YAML-basierte Mapping-Regeln mit Validierung, Template-basierte Code-Generierung (Jinja2), plattform-spezifische Generatoren für verschiedene Simulationsplattformen, und Konfigurationsgeneratoren für verschiedene Szenarien.
+  
+  \item \textbf{Automatisierte Validierung und CI/CD}: 
+    \begin{itemize}
+      \item Schema-Validierung mit JSON Schema und Custom Validators
+      \item Konsistenzchecks für Cross-References und Constraints
+      \item Moderne CI/CD-Pipelines (GitHub Actions v4, GitLab CI)
+      \item Containerisierung mit Docker für reproduzierbare Umgebungen
+      \item Kubernetes für skalierbare parallele Ausführung
+      \item Cloud-native Deployment (Serverless, Container Orchestration)
+    \end{itemize}
+  
+  \item \textbf{Versionierung und Reproduzierbarkeit}: 
+    \begin{itemize}
+      \item Semantic Versioning und automatische Tag-Generierung
+      \item Container-Registries für Image-Management
+      \item Artifact-Storage für Simulations-Ergebnisse
+      \item Deterministische Generierung und Dependency-Pinning
+      \item Environment-Dokumentation mit Container-Files
+    \end{itemize}
+\end{itemize}
+
+Die technische Realisierung nutzt moderne DevOps-Praktiken, Containerisierung und Cloud-native Ansätze, um eine automatisierte, validierte, skalierbare und reproduzierbare Transformation von Architekturmodellen in Simulationsmodelle zu ermöglichen. Dies ermöglicht es, große Modelle effizient zu verarbeiten, Simulationen parallel auszuführen und die Ergebnisse zuverlässig zu reproduzieren.

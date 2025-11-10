@@ -1,0 +1,288 @@
+\chapter{Bosch-Sensorik und NVIDIA DRIVE Thor Integration}\label{chap:bosch_nvidia}
+
+\noindent
+Dieses Kapitel beschreibt detailliert die Integration von Bosch-Sensorik und NVIDIA DRIVE Thor in moderne E/E-Architekturen. Die Kombination dieser Technologien ermöglicht hochperformante, zuverlässige Systeme für automatisiertes Fahren.
+
+\section{Bosch-Sensorik Portfolio}
+
+Bosch bietet ein umfassendes Portfolio an Sensoren für automatisiertes Fahren, das kontinuierlich weiterentwickelt wird.
+
+\subsection{Bosch 8MP Multifunktionskamera}
+
+Die Bosch 8MP Multifunktionskamera ist die neueste Generation von Kameras für automatisiertes Fahren:
+
+\subsubsection{Technische Spezifikationen}
+
+\begin{table}[h]
+  \centering
+  \caption{Technische Spezifikationen: Bosch 8MP Multifunktionskamera}
+  \begin{tabular}{ll}
+    \toprule
+    Parameter & Wert \\
+    \midrule
+    Auflösung & 3840 × 2160 Pixel (8 Megapixel) \\
+    Horizontales Sichtfeld & 120 Grad \\
+    Vertikales Sichtfeld & 65 Grad \\
+    Erkennungsreichweite & Bis zu 300 Meter \\
+    Framerate & 30 fps (33.3 ms Periodizität) \\
+    Interface & Ethernet 2.5 Gbps \\
+    Kompression & H.264/H.265, optional RAW \\
+    ASIL-Level & ASIL-B (ADAS), ASIL-D möglich \\
+    Power-Verbrauch & 8 W typisch, 12 W maximal \\
+    Betriebstemperatur & -40°C bis +85°C \\
+    Serienproduktion & Geplant für 2026 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bosch_8mp_specs}
+\end{table}
+
+\subsubsection{Funktionen}
+
+Die Bosch 8MP Multifunktionskamera unterstützt verschiedene ADAS-Funktionen:
+
+\begin{itemize}
+  \item \textbf{Adaptive Geschwindigkeits- und Abstandsregelung (ACC)}:
+    \begin{itemize}
+      \item Automatische Anpassung der Geschwindigkeit an vorausfahrende Fahrzeuge
+      \item Abstandsmessung mit hoher Präzision durch 8MP Auflösung
+      \item Erkennung bis zu 300 m Reichweite
+    \end{itemize}
+  
+  \item \textbf{Notbremsungen innerhalb der eigenen Spur (AEB)}:
+    \begin{itemize}
+      \item Automatische Notbremsung bei erkannten Hindernissen
+      \item Früherkennung durch hohe Auflösung und lange Reichweite
+      \item ASIL-D für sicherheitskritische Anwendungen
+    \end{itemize}
+  
+  \item \textbf{Spurhalten in städtischen Gebieten (LKA)}:
+    \begin{itemize}
+      \item Automatisches Spurhalten durch Markierungserkennung
+      \item Breites Sichtfeld (120°) für enge Kurven
+      \item Funktion auch bei schlechten Sichtverhältnissen
+    \end{itemize}
+  
+  \item \textbf{Erkennung und Anhalten an roten Ampeln (TSR)}:
+    \begin{itemize}
+      \item Automatische Erkennung von Verkehrszeichen und Ampeln
+      \item Präzise Erkennung durch hohe Auflösung
+      \item Integration in Navigationssysteme
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Integration in E/E-Architekturen}
+
+Die Bosch 8MP Multifunktionskamera wird in E/E-Architekturen wie folgt integriert:
+
+\begin{itemize}
+  \item \textbf{Netzwerk-Integration}:
+    \begin{itemize}
+      \item Direkte Anbindung an Zonen-Controller oder Central Compute über Ethernet 2.5G
+      \item TSN-Unterstützung für deterministische Übertragung
+      \item Priorität P6 für sicherheitskritische Daten
+    \end{itemize}
+  
+  \item \textbf{Software-Integration}:
+    \begin{itemize}
+      \item Standardisierte APIs für Kamera-Zugriff
+      \item Unterstützung für verschiedene Bildverarbeitungsalgorithmen
+      \item Integration in Sensorfusion-Systeme
+    \end{itemize}
+  
+  \item \textbf{Power-Management}:
+    \begin{itemize}
+      \item Niedriger Power-Verbrauch für Energieeffizienz
+      \item Wake-up-Mechanismen für schnelle Aktivierung
+      \item Power-State-Management für optimale Energieverteilung
+    \end{itemize}
+\end{itemize}
+
+\subsection{Bosch Radar-Sensoren}
+
+Bosch bietet ein umfassendes Portfolio an Radar-Sensoren für verschiedene Anwendungen:
+
+\subsubsection{Long-Range-Radar}
+
+\begin{table}[h]
+  \centering
+  \caption{Technische Spezifikationen: Bosch Long-Range-Radar}
+  \begin{tabular}{ll}
+    \toprule
+    Parameter & Wert \\
+    \midrule
+    Reichweite & Bis zu 250 Meter \\
+    Geschwindigkeitsbereich & -200 km/h bis +200 km/h \\
+    Winkelbereich & ±60 Grad \\
+    Update-Rate & 20 Hz (50 ms) \\
+    Auflösung & 0.5 m (Radial), 1.5° (Azimut) \\
+    Interface & CAN-FD 2 Mbps oder Ethernet \\
+    ASIL-Level & ASIL-B bis ASIL-D \\
+    Power-Verbrauch & 3 W typisch, 5 W maximal \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bosch_lrr_specs}
+\end{table}
+
+\subsubsection{Mid-Range-Radar}
+
+\begin{table}[h]
+  \centering
+  \caption{Technische Spezifikationen: Bosch Mid-Range-Radar}
+  \begin{tabular}{ll}
+    \toprule
+    Parameter & Wert \\
+    \midrule
+    Reichweite & Bis zu 160 Meter \\
+    Geschwindigkeitsbereich & -150 km/h bis +150 km/h \\
+    Winkelbereich & ±75 Grad \\
+    Update-Rate & 25 Hz (40 ms) \\
+    Auflösung & 0.3 m (Radial), 1.0° (Azimut) \\
+    Interface & CAN-FD 2 Mbps oder Ethernet \\
+    ASIL-Level & ASIL-B \\
+    Power-Verbrauch & 2.5 W typisch, 4 W maximal \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bosch_mrr_specs}
+\end{table}
+
+\subsubsection{4D-Imaging-Radar}
+
+Das 4D-Imaging-Radar bietet zusätzlich zur 3D-Position auch Geschwindigkeitsinformationen:
+
+\begin{itemize}
+  \item \textbf{Reichweite}: Bis zu 200 Meter
+  \item \textbf{Auflösung}: Hohe Auflösung für präzise Objekterkennung
+  \item \textbf{Geschwindigkeit}: Präzise Geschwindigkeitsmessung
+  \item \textbf{Anwendung}: Für hochautomatisiertes Fahren (L4/L5)
+\end{itemize}
+
+\subsection{Bosch LiDAR-Sensoren}
+
+Bosch entwickelt High-Resolution-LiDAR-Sensoren für hochautomatisiertes Fahren:
+
+\subsubsection{Technische Spezifikationen}
+
+\begin{table}[h]
+  \centering
+  \caption{Technische Spezifikationen: Bosch High-Resolution-LiDAR}
+  \begin{tabular}{ll}
+    \toprule
+    Parameter & Wert \\
+    \midrule
+    Layer & Bis zu 64 Layer \\
+    Reichweite & Bis zu 200 Meter \\
+    Punktdichte & Hoch (für präzise Objekterkennung) \\
+    Winkelbereich & 360° (Rotating) oder 120° (Solid-State) \\
+    Update-Rate & 10-20 Hz \\
+    Interface & Ethernet 10 Gbps \\
+    ASIL-Level & ASIL-B \\
+    Power-Verbrauch & 15 W typisch, 25 W maximal \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bosch_lidar_specs}
+\end{table}
+
+\section{NVIDIA DRIVE Thor}
+
+NVIDIA DRIVE Thor ist die neueste Generation der NVIDIA DRIVE Plattform für autonomes Fahren.
+
+\subsection{Technische Spezifikationen}
+
+\begin{table}[h]
+  \centering
+  \caption{Technische Spezifikationen: NVIDIA DRIVE Thor}
+  \begin{tabular}{ll}
+    \toprule
+    Parameter & Wert \\
+    \midrule
+    GPU-Performance & 2000 TOPS (Tera Operations Per Second) \\
+    CPU & NVIDIA Grace CPU (ARM Neoverse V2) \\
+    CPU-Kerne & 12 Kerne @ 3.0 GHz \\
+    RAM & 512 GB LPDDR5X \\
+    Storage & 1 TB NVMe SSD \\
+    Ethernet-Ports & Multiple (2.5G, 10G) \\
+    CAN-FD-Ports & Multiple (2 Mbps) \\
+    ASIL-Level & ASIL-D zertifiziert \\
+    Power-Verbrauch & 80 W typisch, 150 W maximal \\
+    Betriebstemperatur & -40°C bis +85°C \\
+    Software & NVIDIA DRIVE OS \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:nvidia_drive_thor_specs}
+\end{table}
+
+\subsection{GPU-Architektur}
+
+Die NVIDIA DRIVE Thor GPU ist spezialisiert auf KI/ML-Workloads:
+
+\begin{itemize}
+  \item \textbf{Tensor-Cores}: Spezialisierte Einheiten für Tensor-Operationen
+  \item \textbf{RT-Cores}: Ray-Tracing-Cores für visuelle Anwendungen
+  \item \textbf{Multi-Instance-GPU (MIG)}: Partitionierung für Multi-Domain-Isolation
+  \item \textbf{Unified Memory}: Effiziente CPU-GPU-Zusammenarbeit
+\end{itemize}
+
+\subsection{Software-Stack}
+
+NVIDIA DRIVE OS bietet einen vollständigen Software-Stack:
+
+\begin{itemize}
+  \item \textbf{Betriebssystem}: Linux-basiert mit Echtzeit-Erweiterungen
+  \item \textbf{Middleware}: AUTOSAR Adaptive, DDS, SOME/IP
+  \item \textbf{KI-Frameworks}: TensorRT, CUDA, cuDNN
+  \item \textbf{Entwicklungstools}: NVIDIA DRIVE SDK, Simulator
+\end{itemize}
+
+\section{Integration von Bosch-Sensoren mit NVIDIA DRIVE Thor}
+
+Die Integration von Bosch-Sensoren mit NVIDIA DRIVE Thor ermöglicht hochperformante Perzeption:
+
+\subsection{Sensor-Integration}
+
+\begin{itemize}
+  \item \textbf{Bosch 8MP Kamera}:
+    \begin{itemize}
+      \item Direkte Anbindung über Ethernet 2.5G
+      \item Unterstützung für bis zu 12 Kameras gleichzeitig
+      \item Echtzeit-Verarbeitung auf DRIVE Thor GPU
+    \end{itemize}
+  
+  \item \textbf{Bosch Radar}:
+    \begin{itemize}
+      \item Integration über CAN-FD oder Ethernet
+      \item Unterstützung für bis zu 9 Radare
+      \item Sensorfusion auf DRIVE Thor
+    \end{itemize}
+  
+  \item \textbf{Bosch LiDAR}:
+    \begin{itemize}
+      \item Direkte Anbindung über Ethernet 10G
+      \item Unterstützung für bis zu 4 LiDAR-Sensoren
+      \item Punktwolken-Verarbeitung auf DRIVE Thor GPU
+    \end{itemize}
+\end{itemize}
+
+\subsection{Performance-Benchmarks}
+
+Die Kombination von Bosch-Sensoren mit NVIDIA DRIVE Thor bietet hervorragende Performance:
+
+\begin{table}[h]
+  \centering
+  \caption{Performance-Benchmarks: Bosch-Sensoren mit NVIDIA DRIVE Thor}
+  \begin{tabular}{llll}
+    \toprule
+    Sensor & Modell & Inferenz-Zeit & GPU-Last \\
+    \midrule
+    Bosch 8MP Kamera & YOLOv8 & 15 ms & 0.975\% \\
+    Bosch 8MP Kamera (8x) & YOLOv8 & 120 ms & 7.8\% \\
+    Bosch Radar & Radar-Fusion & 5 ms & 0.1\% \\
+    Bosch LiDAR & Point-Cloud-Processing & 20 ms & 1.5\% \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:bosch_nvidia_performance}
+\end{table}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Integration von Bosch-Sensorik und NVIDIA DRIVE Thor detailliert beschrieben. Die Kombination dieser Technologien ermöglicht hochperformante, zuverlässige Systeme für automatisiertes Fahren mit exzellenter Perzeptions-Performance und niedrigen Latenzen.
+

@@ -1,0 +1,2206 @@
+\chapter{Vollständiges E/E-Architektur-Regelwerk für MB Vans}\label{chap:regelwerk}
+
+\noindent
+Dieses Kapitel stellt ein umfassendes Regelwerk für die Entwicklung neuer E/E-Architekturen für Mercedes-Benz Vans bereit. Es systematisiert alle Aspekte von der Konzeption bis zum Betrieb und bietet eine vollständige Referenz für Architekten, Entwickler und Projektmanager.
+
+\section{Übersicht und Struktur des Regelwerks}
+
+Das E/E-Architektur-Regelwerk für MB Vans gliedert sich in folgende Hauptbereiche:
+
+\begin{itemize}
+  \item \textbf{Architektur-Entscheidungsrichtlinien (ADRs)}: Systematische Dokumentation von Architektur-Entscheidungen
+  \item \textbf{Design Patterns und Best Practices}: Bewährte Patterns für E/E-Architekturen
+  \item \textbf{MB.OS-Integrationsrichtlinien}: Detaillierte Richtlinien für MB.OS-Integration
+  \item \textbf{VAN.EA-Spezifikation}: Vollständige VAN.EA-Architektur-Spezifikation
+  \item \textbf{Entwicklungsprozess und Methoden}: V-Modell, Entwicklungsphasen, Meilensteine
+  \item \textbf{Qualitätssicherung und Testing}: Teststrategien, Testautomatisierung, Testpyramide
+  \item \textbf{Zertifizierung und Compliance}: ISO 26262, UN ECE, Homologation
+  \item \textbf{Migration und Legacy-Integration}: Migration von bestehenden Architekturen
+  \item \textbf{Toolchain und Werkzeuge}: Entwicklungs-Toolchain, CI/CD, Monitoring
+  \item \textbf{Deployment und Betrieb}: OTA-Updates, Monitoring, Wartung
+  \item \textbf{Kostenmodell und Wirtschaftlichkeit}: Kostenanalyse, ROI, Budget-Planung
+  \item \textbf{Dokumentationsrichtlinien}: Standardisierte Dokumentation, Templates
+\end{itemize}
+
+\section{Architecture Decision Records (ADRs)}
+
+Architecture Decision Records (ADRs) dokumentieren wichtige Architektur-Entscheidungen systematisch und nachvollziehbar.
+
+\subsection{ADR-Template}
+
+Jedes ADR folgt einem standardisierten Template:
+
+\begin{itemize}
+  \item \textbf{Title}: Kurzer, beschreibender Titel der Entscheidung
+  \item \textbf{Status}: Proposed, Accepted, Deprecated, Superseded
+  \item \textbf{Context}: Kontext und Problemstellung
+  \item \textbf{Decision}: Getroffene Entscheidung
+  \item \textbf{Consequences}: Positive und negative Konsequenzen
+  \item \textbf{Alternatives}: Betrachtete Alternativen und deren Bewertung
+  \item \textbf{Rationale}: Begründung der Entscheidung
+  \item \textbf{References}: Referenzen zu relevanten Dokumenten, Standards, etc.
+\end{itemize}
+
+\subsection{ADR-Katalog für MB Vans}
+
+\subsubsection{ADR-001: Zonale Architektur}
+
+\begin{itemize}
+  \item \textbf{Title}: Zonale Architektur für VAN.EA
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für die grundlegende Architektur-Struktur
+  \item \textbf{Decision}: Verwendung einer zonalen Architektur mit zentraler Rechenplattform
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Reduzierte Kabel-Längen, bessere Skalierbarkeit, vereinfachte Wartung
+      \item \textbf{Negativ}: Höhere Komplexität der zentralen Rechenplattform, Single Point of Failure
+    \end{itemize}
+  \item \textbf{Alternatives}: Domain-basierte Architektur, verteilte Architektur
+  \item \textbf{Rationale}: Zonale Architektur ermöglicht optimale Balance zwischen Performance, Kosten und Skalierbarkeit
+\end{itemize}
+
+\subsubsection{ADR-002: TSN für Backbone}
+
+\begin{itemize}
+  \item \textbf{Title}: Time-Sensitive Networking (TSN) für Ethernet-Backbone
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für das Kommunikationsprotokoll
+  \item \textbf{Decision}: Verwendung von TSN für deterministische Kommunikation
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Deterministische Latenzen, hohe Bandbreite, Redundanz-Unterstützung
+      \item \textbf{Negativ}: Höhere Komplexität, Anforderungen an Zeitsynchronisation
+    \end{itemize}
+  \item \textbf{Alternatives}: CAN-FD, FlexRay, Proprietäre Protokolle
+  \item \textbf{Rationale}: TSN bietet beste Balance zwischen Performance und Standardisierung
+\end{itemize}
+
+\subsubsection{ADR-003: NVIDIA DRIVE Thor als Central Compute}
+
+\begin{itemize}
+  \item \textbf{Title}: NVIDIA DRIVE Thor als zentrale Rechenplattform
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für die zentrale Rechenplattform
+  \item \textbf{Decision}: Verwendung von NVIDIA DRIVE Thor für zentrale Rechenplattform
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Hohe GPU-Performance (2000 TOPS), ASIL-D zertifiziert, Multi-Domain-Support
+      \item \textbf{Negativ}: Höhere Kosten, Abhängigkeit von NVIDIA
+    \end{itemize}
+  \item \textbf{Alternatives}: Qualcomm Snapdragon, Intel Mobileye, Proprietäre Lösungen
+  \item \textbf{Rationale}: NVIDIA DRIVE Thor bietet beste Performance für KI/ML-Workloads und ist ASIL-D zertifiziert
+\end{itemize}
+
+\subsubsection{ADR-004: MB.OS als Betriebssystem}
+
+\begin{itemize}
+  \item \textbf{Title}: MB.OS als Betriebssystem für VAN.EA
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für das Betriebssystem
+  \item \textbf{Decision}: Verwendung von MB.OS als zentrales Betriebssystem
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Konsistente Software-Plattform, OTA-Updates, Service-orientierte Architektur
+      \item \textbf{Negativ}: Abhängigkeit von MB.OS-Entwicklung, Migration von Legacy-Software
+    \end{itemize}
+  \item \textbf{Alternatives}: AUTOSAR Classic, AUTOSAR Adaptive, Proprietäre Lösungen
+  \item \textbf{Rationale}: MB.OS bietet optimale Integration mit Mercedes-Benz Ökosystem und ermöglicht Software-Defined Vehicles
+\end{itemize}
+
+\subsubsection{ADR-005: Bosch-Sensoren für Perzeption}
+
+\begin{itemize}
+  \item \textbf{Title}: Bosch-Sensoren für Perzeption
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für Sensor-Suite
+  \item \textbf{Decision}: Verwendung von Bosch-Sensoren (8MP Kamera, Radar, LiDAR)
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Hohe Qualität, bewährte Technologie, gute Integration
+      \item \textbf{Negativ}: Höhere Kosten, Abhängigkeit von Bosch
+    \end{itemize}
+  \item \textbf{Alternatives}: Continental, Valeo, Proprietäre Lösungen
+  \item \textbf{Rationale}: Bosch-Sensoren bieten beste Balance zwischen Qualität, Performance und Kosten
+\end{itemize}
+
+\subsubsection{ADR-006: Redundanz-Strategien}
+
+\begin{itemize}
+  \item \textbf{Title}: Redundanz-Strategien für sicherheitskritische Funktionen
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für Redundanz-Strategien zur Erfüllung von ASIL D Anforderungen
+  \item \textbf{Decision}: Verwendung von Hot-Standby-Redundanz für AD-DC, 2-out-of-2 Voting für Aktoren, PRP für Kommunikation
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Erfüllung von ASIL D Anforderungen, hohe Verfügbarkeit, Fehlertoleranz
+      \item \textbf{Negativ}: Höhere Kosten, höhere Komplexität, höherer Energieverbrauch
+    \end{itemize}
+  \item \textbf{Alternatives}: Cold-Standby, 1-out-of-2, Single-Channel
+  \item \textbf{Rationale}: Hot-Standby und Voting bieten beste Balance zwischen Sicherheit, Verfügbarkeit und Kosten
+\end{itemize}
+
+\subsubsection{ADR-007: Security-Architektur}
+
+\begin{itemize}
+  \item \textbf{Title}: Security-Architektur für vernetzte Fahrzeuge
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für Security-Architektur zur Absicherung gegen Cyber-Angriffe
+  \item \textbf{Decision}: Verwendung von Hardware Security Module (HSM), Secure Boot, Encryption, Firewall, Intrusion Detection System (IDS)
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Hohe Sicherheit, Absicherung gegen Angriffe, Compliance mit Security-Standards
+      \item \textbf{Negativ}: Höhere Kosten, höhere Komplexität, Performance-Overhead
+    \end{itemize}
+  \item \textbf{Alternatives}: Software-only Security, Minimal Security, Proprietäre Security
+  \item \textbf{Rationale}: Hardware-basierte Security bietet beste Sicherheit für vernetzte Fahrzeuge
+\end{itemize}
+
+\subsubsection{ADR-008: Energy-Management}
+
+\begin{itemize}
+  \item \textbf{Title}: Energy-Management-Strategie für elektrische Vans
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für Energy-Management-Strategie zur Optimierung des Energieverbrauchs
+  \item \textbf{Decision}: Verwendung von intelligenter Lastverteilung, Predictive Energy Management, V2G-Integration, regenerative Bremsung
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Optimierter Energieverbrauch, längere Reichweite, niedrigere Betriebskosten
+      \item \textbf{Negativ}: Höhere Komplexität, zusätzliche Hardware-Kosten
+    \end{itemize}
+  \item \textbf{Alternatives}: Passive Energy Management, Reactive Energy Management, No Energy Management
+  \item \textbf{Rationale}: Intelligentes Energy Management bietet beste Balance zwischen Energieeffizienz und Kosten
+\end{itemize}
+
+\subsubsection{ADR-009: OTA-Update-Strategie}
+
+\begin{itemize}
+  \item \textbf{Title}: Over-the-Air-Update-Strategie für VAN.EA
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für OTA-Update-Strategie zur Bereitstellung von Software-Updates
+  \item \textbf{Decision}: Verwendung von Delta-Updates, Rollback-Mechanismen, Staged Rollout, A/B Testing
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Schnelle Update-Bereitstellung, reduzierte Update-Kosten, verbesserte Funktionalität
+      \item \textbf{Negativ}: Höhere Komplexität, Sicherheitsrisiken, Anforderungen an Netzwerk-Bandbreite
+    \end{itemize}
+  \item \textbf{Alternatives}: Manual Updates, Full Updates only, No OTA Updates
+  \item \textbf{Rationale}: Delta-Updates mit Rollback bieten beste Balance zwischen Update-Effizienz und Sicherheit
+\end{itemize}
+
+\subsubsection{ADR-010: VAN.APPVERSE-Integration}
+
+\begin{itemize}
+  \item \textbf{Title}: VAN.APPVERSE-Integration in VAN.EA
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für VAN.APPVERSE-Integration zur Bereitstellung von offener Mobilitäts-Plattform
+  \item \textbf{Decision}: Verwendung von Microservices-Architektur, API-Gateway, Service-Mesh, Sandboxing, App Store
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Offene Plattform, Innovation durch Drittanbieter, neue Geschäftsmodelle
+      \item \textbf{Negativ}: Höhere Komplexität, Sicherheitsrisiken, Anforderungen an API-Management
+    \end{itemize}
+  \item \textbf{Alternatives}: Closed Platform, Proprietäre Apps only, No Third-Party Apps
+  \item \textbf{Rationale}: VAN.APPVERSE-Integration bietet beste Balance zwischen Offenheit und Sicherheit
+\end{itemize}
+
+\subsubsection{ADR-011: Edge-Cloud-Hybrid-Architektur}
+
+\begin{itemize}
+  \item \textbf{Title}: Edge-Cloud-Hybrid-Architektur für VAN.EA
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für Edge-Cloud-Hybrid-Architektur zur Optimierung von Datenverarbeitung
+  \item \textbf{Decision}: Verwendung von Edge Computing für Echtzeit-Verarbeitung, Cloud Computing für komplexe Analysen, Federated Learning
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Optimierte Datenverarbeitung, reduzierte Latenz, verbesserte Datenschutz
+      \item \textbf{Negativ}: Höhere Komplexität, Anforderungen an Netzwerk-Infrastruktur
+    \end{itemize}
+  \item \textbf{Alternatives}: Edge-only, Cloud-only, No Hybrid
+  \item \textbf{Rationale}: Edge-Cloud-Hybrid bietet beste Balance zwischen Performance und Skalierbarkeit
+\end{itemize}
+
+\subsubsection{ADR-012: Predictive Maintenance}
+
+\begin{itemize}
+  \item \textbf{Title}: Predictive Maintenance für VAN.EA
+  \item \textbf{Status}: Accepted
+  \item \textbf{Context}: Entscheidung für Predictive Maintenance zur Optimierung von Wartung
+  \item \textbf{Decision}: Verwendung von KI-basierten Modellen, Sensordaten-Analyse, Cloud-basierte Analysen, Wartungsplanung
+  \item \textbf{Consequences}:
+    \begin{itemize}
+      \item \textbf{Positiv}: Reduzierte Wartungskosten, erhöhte Verfügbarkeit, verbesserte Zuverlässigkeit
+      \item \textbf{Negativ}: Höhere Komplexität, Anforderungen an Datenanalyse, Initiale Investitionen
+    \end{itemize}
+  \item \textbf{Alternatives}: Reactive Maintenance, Preventive Maintenance, No Maintenance Strategy
+  \item \textbf{Rationale}: Predictive Maintenance bietet beste Balance zwischen Wartungskosten und Verfügbarkeit
+\end{itemize}
+
+\section{Design Patterns und Best Practices}
+
+Dieser Abschnitt beschreibt bewährte Design Patterns und Best Practices für E/E-Architekturen in Vans.
+
+\subsection{Architektur-Patterns}
+
+\subsubsection{Pattern: Zonale Architektur mit Central Compute}
+
+\textbf{Beschreibung}: Zonale Architektur mit zentraler Rechenplattform für hohe Performance und Skalierbarkeit.
+
+\textbf{Anwendung}:
+\begin{itemize}
+  \item Zonen-Controller für lokale Sensorik/Aktorik
+  \item Zentrale Rechenplattform für komplexe Funktionen
+  \item Ethernet-Backbone für Kommunikation
+  \item TSN für deterministische Kommunikation
+\end{itemize}
+
+\textbf{Vorteile}:
+\begin{itemize}
+  \item Reduzierte Kabel-Längen
+  \item Bessere Skalierbarkeit
+  \item Vereinfachte Wartung
+  \item Optimale Ressourcen-Nutzung
+\end{itemize}
+
+\textbf{Nachteile}:
+\begin{itemize}
+  \item Höhere Komplexität der zentralen Rechenplattform
+  \item Single Point of Failure (muss durch Redundanz abgesichert werden)
+  \item Höhere Anforderungen an Netzwerk-Bandbreite
+\end{itemize}
+
+\subsubsection{Pattern: Service-orientierte Architektur (SOA)}
+
+\textbf{Beschreibung}: Service-orientierte Architektur für lose gekoppelte, flexible Kommunikation.
+
+\textbf{Anwendung}:
+\begin{itemize}
+  \item DDS/SOME/IP für Service-Kommunikation
+  \item Service-Registry für Service-Discovery
+  \item Service-Versionierung für Backward-Kompatibilität
+  \item QoS-Parameter für Service-Qualität
+\end{itemize}
+
+\textbf{Vorteile}:
+\begin{itemize}
+  \item Lose gekoppelte Kommunikation
+  \item Flexible Service-Komposition
+  \item Einfache Erweiterbarkeit
+  \item Wiederverwendbare Services
+\end{itemize}
+
+\textbf{Nachteile}:
+\begin{itemize}
+  \item Höhere Latenz durch Middleware
+  \item Komplexere Debugging
+  \item Anforderungen an Service-Management
+\end{itemize}
+
+\subsubsection{Pattern: Redundante Architektur}
+
+\textbf{Beschreibung}: Redundante Architektur für hohe Verfügbarkeit und funktionale Sicherheit.
+
+\textbf{Anwendung}:
+\begin{itemize}
+  \item Redundante ECUs für sicherheitskritische Funktionen
+  \item Redundante Kommunikationspfade (PRP, HSR)
+  \item Redundante Sensoren für kritische Funktionen
+  \item Voting-Mechanismen für Konsens
+\end{itemize}
+
+\textbf{Vorteile}:
+\begin{itemize}
+  \item Hohe Verfügbarkeit
+  \item Funktionale Sicherheit (ASIL D)
+  \item Fehlertoleranz
+  \item Kontinuierlicher Betrieb bei Ausfällen
+\end{itemize}
+
+\textbf{Nachteile}:
+\begin{itemize}
+  \item Höhere Kosten
+  \item Höhere Komplexität
+  \item Höherer Energieverbrauch
+  \item Anforderungen an Switchover-Logik
+\end{itemize}
+
+\subsubsection{Pattern: Edge-Cloud-Hybrid-Architektur}
+
+\textbf{Beschreibung}: Edge-Cloud-Hybrid-Architektur für optimierte Datenverarbeitung.
+
+\textbf{Anwendung}:
+\begin{itemize}
+  \item Edge Computing für Echtzeit-Verarbeitung (NVIDIA DRIVE Thor)
+  \item Cloud Computing für komplexe Analysen
+  \item Federated Learning für KI-Modell-Training
+  \item 5G-Integration für schnelle Datenübertragung
+\end{itemize}
+
+\textbf{Vorteile}:
+\begin{itemize}
+  \item Optimierte Datenverarbeitung
+  \item Reduzierte Latenz für Echtzeit-Anwendungen
+  \item Verbesserter Datenschutz durch lokale Verarbeitung
+  \item Skalierbarkeit durch Cloud-Ressourcen
+\end{itemize}
+
+\textbf{Nachteile}:
+\begin{itemize}
+  \item Höhere Komplexität
+  \item Anforderungen an Netzwerk-Infrastruktur
+  \item Daten-Synchronisation zwischen Edge und Cloud
+  \item Höhere Kosten für Cloud-Services
+\end{itemize}
+
+\subsubsection{Pattern: Predictive Maintenance}
+
+\textbf{Beschreibung}: Predictive Maintenance für optimierte Wartung basierend auf KI-Modellen.
+
+\textbf{Anwendung}:
+\begin{itemize}
+  \item KI-basierte Modelle für Fehlervorhersage
+  \item Sensordaten-Analyse für System-Monitoring
+  \item Cloud-basierte Analysen für Flotten-Optimierung
+  \item Wartungsplanung basierend auf Vorhersagen
+\end{itemize}
+
+\textbf{Vorteile}:
+\begin{itemize}
+  \item Reduzierte Wartungskosten
+  \item Erhöhte Verfügbarkeit
+  \item Verbesserte Zuverlässigkeit
+  \item Optimierte Wartungsplanung
+\end{itemize}
+
+\textbf{Nachteile}:
+\begin{itemize}
+  \item Höhere Komplexität
+  \item Anforderungen an Datenanalyse
+  \item Initiale Investitionen
+  \item Anforderungen an Datenqualität
+\end{itemize}
+
+\subsubsection{Pattern: Fleet Management Integration}
+
+\textbf{Beschreibung}: Fleet Management Integration für optimierte Flotten-Verwaltung.
+
+\textbf{Anwendung}:
+\begin{itemize}
+  \item Echtzeit-Tracking von Fahrzeugen
+  \item Route-Optimierung für Flotten
+  \item Fahrzeug-Zuordnung zu Aufgaben
+  \item Flotten-Analytics und Reporting
+\end{itemize}
+
+\textbf{Vorteile}:
+\begin{itemize}
+  \item Optimierte Flotten-Verwaltung
+  \item Reduzierte Betriebskosten
+  \item Verbesserte Effizienz
+  \item Bessere Kundenbetreuung
+\end{itemize}
+
+\textbf{Nachteile}:
+\begin{itemize}
+  \item Höhere Komplexität
+  \item Anforderungen an Netzwerk-Infrastruktur
+  \item Daten-Sicherheit und Datenschutz
+  \item Anforderungen an Flotten-Management-Systeme
+\end{itemize}
+
+\subsection{Anti-Patterns}
+
+\subsubsection{Anti-Pattern: Monolithische Architektur}
+
+\textbf{Beschreibung}: Monolithische Architektur mit allen Funktionen in einer einzigen ECU.
+
+\textbf{Probleme}:
+\begin{itemize}
+  \item Keine Skalierbarkeit
+  \item Schwierige Wartung
+  \item Hohe Kabel-Komplexität
+  \item Single Point of Failure
+\end{itemize}
+
+\textbf{Lösung}: Migration zu zonaler Architektur mit Central Compute.
+
+\subsubsection{Anti-Pattern: Star-Topologie}
+
+\textbf{Beschreibung}: Star-Topologie mit allen ECUs direkt an zentraler ECU angeschlossen.
+
+\textbf{Probleme}:
+\begin{itemize}
+  \item Hohe Kabel-Komplexität
+  \item Single Point of Failure
+  \item Begrenzte Skalierbarkeit
+  \item Hohe Kosten
+\end{itemize}
+
+\textbf{Lösung}: Migration zu zonaler Architektur mit Ethernet-Backbone.
+
+\subsubsection{Anti-Pattern: Fehlende Redundanz}
+
+\textbf{Beschreibung}: Fehlende Redundanz für sicherheitskritische Funktionen.
+
+\textbf{Probleme}:
+\begin{itemize}
+  \item Keine Fehlertoleranz
+  \item Nicht erfüllbar für ASIL D
+  \item Hohes Sicherheitsrisiko
+  \item Keine Verfügbarkeits-Garantien
+\end{itemize}
+
+\textbf{Lösung}: Implementierung von Redundanz-Mechanismen für sicherheitskritische Funktionen.
+
+\section{MB.OS-Integrationsrichtlinien}
+
+Dieser Abschnitt beschreibt detaillierte Richtlinien für die Integration von MB.OS in VAN.EA-Architekturen.
+
+\subsection{MB.OS-Architektur}
+
+MB.OS ist das zentrale Betriebssystem für Mercedes-Benz Fahrzeuge und bietet:
+
+\begin{itemize}
+  \item \textbf{Vier-Domänen-Architektur}:
+    \begin{itemize}
+      \item \textbf{Infotainment}: HMI, Navigation, Entertainment
+      \item \textbf{Automated Driving}: ADAS, autonomes Fahren
+      \item \textbf{Body \& Comfort}: Komfort-Funktionen, Klima, Beleuchtung
+      \item \textbf{Driving \& Charging}: Antrieb, Bremsen, Laden
+    \end{itemize}
+  
+  \item \textbf{Middleware}: AUTOSAR Adaptive, DDS, SOME/IP
+  \item \textbf{Basic OS}: Linux-basiert mit Echtzeit-Erweiterungen
+  \item \textbf{Chip-to-Cloud}: Integration mit Cloud-Services
+  \item \textbf{OTA-Updates}: Over-the-Air-Updates für Software
+\end{itemize}
+
+\subsection{MB.OS-Services}
+
+MB.OS bietet verschiedene Services für VAN.EA:
+
+\begin{itemize}
+  \item \textbf{Sensor-Services}: Zugriff auf Sensordaten (Kameras, Radar, LiDAR)
+    \begin{itemize}
+      \item Camera Service: Zugriff auf Kamera-Datenströme
+      \item Radar Service: Zugriff auf Radar-Daten
+      \item LiDAR Service: Zugriff auf LiDAR-Daten
+      \item GNSS Service: Zugriff auf Positionsdaten
+      \item IMU Service: Zugriff auf Inertialdaten
+    \end{itemize}
+  
+  \item \textbf{Aktor-Services}: Steuerung von Aktoren (Lenkung, Bremse, Antrieb)
+    \begin{itemize}
+      \item Steering Service: Steuerung der Lenkung
+      \item Brake Service: Steuerung der Bremse
+      \item Throttle Service: Steuerung des Antriebs
+      \item Gear Service: Steuerung des Getriebes
+    \end{itemize}
+  
+  \item \textbf{Navigation-Services}: Routenplanung, Navigation, POIs
+    \begin{itemize}
+      \item Route Planning Service: Routenplanung
+      \item Navigation Service: Navigation während der Fahrt
+      \item POI Service: Points of Interest
+      \item Traffic Service: Verkehrsinformationen
+    \end{itemize}
+  
+  \item \textbf{Communication-Services}: V2X, Telematik, Cloud-Kommunikation
+    \begin{itemize}
+      \item V2X Service: Vehicle-to-Everything-Kommunikation
+      \item Telematics Service: Telematik-Kommunikation
+      \item Cloud Service: Cloud-Kommunikation
+      \item Message Service: Nachrichten-Kommunikation
+    \end{itemize}
+  
+  \item \textbf{Diagnostic-Services}: Diagnose, Fehlerbehandlung, Wartung
+    \begin{itemize}
+      \item Diagnostic Service: Fahrzeug-Diagnose
+      \item Error Handling Service: Fehlerbehandlung
+      \item Maintenance Service: Wartungs-Services
+      \item Health Monitoring Service: Gesundheits-Überwachung
+    \end{itemize}
+  
+  \item \textbf{Energy-Services}: Energiemanagement, Laden, V2G
+    \begin{itemize}
+      \item Energy Management Service: Energiemanagement
+      \item Charging Service: Lade-Services
+      \item V2G Service: Vehicle-to-Grid-Services
+      \item Battery Service: Batterie-Services
+    \end{itemize}
+  
+  \item \textbf{Infotainment-Services}: HMI, Entertainment, Connectivity
+    \begin{itemize}
+      \item HMI Service: Human-Machine-Interface
+      \item Media Service: Medien-Services
+      \item Connectivity Service: Konnektivitäts-Services
+      \item App Service: App-Management
+    \end{itemize}
+  
+  \item \textbf{Body-Services}: Komfort, Sicherheit, Laderaum
+    \begin{itemize}
+      \item Comfort Service: Komfort-Services
+      \item Security Service: Sicherheits-Services
+      \item Cargo Service: Laderaum-Services
+      \item Climate Service: Klima-Services
+    \end{itemize}
+\end{itemize}
+
+\subsection{MB.OS-API-Referenz}
+
+MB.OS bietet standardisierte APIs für alle Services:
+
+\subsubsection{Sensor-APIs}
+
+\begin{itemize}
+  \item \textbf{Camera API}: 
+    \begin{itemize}
+      \item \texttt{getCameraStream(cameraId, resolution, framerate)}: Abruf von Kamera-Datenströmen
+      \item \texttt{configureCamera(cameraId, settings)}: Konfiguration von Kameras
+      \item \texttt{getCameraStatus(cameraId)}: Status-Abfrage von Kameras
+    \end{itemize}
+  
+  \item \textbf{Radar API}:
+    \begin{itemize}
+      \item \texttt{getRadarData(radarId)}: Abruf von Radar-Daten
+      \item \texttt{configureRadar(radarId, settings)}: Konfiguration von Radaren
+      \item \texttt{getRadarStatus(radarId)}: Status-Abfrage von Radaren
+    \end{itemize}
+  
+  \item \textbf{LiDAR API}:
+    \begin{itemize}
+      \item \texttt{getLiDARData(lidarId)}: Abruf von LiDAR-Daten
+      \item \texttt{configureLiDAR(lidarId, settings)}: Konfiguration von LiDAR
+      \item \texttt{getLiDARStatus(lidarId)}: Status-Abfrage von LiDAR
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Aktor-APIs}
+
+\begin{itemize}
+  \item \textbf{Steering API}:
+    \begin{itemize}
+      \item \texttt{setSteeringAngle(angle)}: Setzen des Lenkwinkels
+      \item \texttt{getSteeringAngle()}: Abruf des Lenkwinkels
+      \item \texttt{getSteeringStatus()}: Status-Abfrage der Lenkung
+    \end{itemize}
+  
+  \item \textbf{Brake API}:
+    \begin{itemize}
+      \item \texttt{setBrakePressure(pressure)}: Setzen des Bremsdrucks
+      \item \texttt{getBrakePressure()}: Abruf des Bremsdrucks
+      \item \texttt{getBrakeStatus()}: Status-Abfrage der Bremse
+    \end{itemize}
+\end{itemize}
+
+\subsection{MB.OS-Entwicklungsrichtlinien}
+
+\subsubsection{Service-Entwicklung}
+
+\begin{itemize}
+  \item \textbf{Service-Definition}: Services müssen klar definiert sein mit Schnittstellen, QoS und Versionierung
+  \item \textbf{Service-Implementierung}: Services müssen MB.OS-Standards entsprechen
+  \item \textbf{Service-Testing}: Services müssen umfassend getestet werden
+  \item \textbf{Service-Dokumentation}: Services müssen dokumentiert sein
+\end{itemize}
+
+\subsubsection{App-Entwicklung}
+
+\begin{itemize}
+  \item \textbf{App-Architektur}: Apps müssen MB.OS-Architektur-Standards entsprechen
+  \item \textbf{App-Sicherheit}: Apps müssen Sicherheits-Standards entsprechen
+  \item \textbf{App-Testing}: Apps müssen umfassend getestet werden
+  \item \textbf{App-Dokumentation}: Apps müssen dokumentiert sein
+\end{itemize}
+
+\section{VAN.EA-Spezifikation}
+
+Dieser Abschnitt beschreibt die vollständige VAN.EA-Spezifikation für MB Vans.
+
+\subsection{VAN.EA-Hardware}
+
+\subsubsection{Zentrale Rechenplattform}
+
+\begin{itemize}
+  \item \textbf{NVIDIA DRIVE Thor}:
+    \begin{itemize}
+      \item GPU: 2000 TOPS für KI-Inferenz
+      \item CPU: 12 ARM-Kerne @ 3.0 GHz
+      \item RAM: 512 GB LPDDR5X
+      \item Storage: 1 TB NVMe SSD
+      \item ASIL: ASIL-D zertifiziert
+    \end{itemize}
+  
+  \item \textbf{Infotainment-Domain-Controller}:
+    \begin{itemize}
+      \item CPU: 8 Kerne
+      \item GPU: 10 TFLOPS
+      \item RAM: 16 GB
+      \item Storage: 256 GB
+    \end{itemize}
+  
+  \item \textbf{Body-Domain-Controller}:
+    \begin{itemize}
+      \item CPU: 4 Kerne
+      \item RAM: 4 GB
+      \item Storage: 32 GB
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Zonen-Controller}
+
+\begin{itemize}
+  \item \textbf{Front-Zone-Controller}:
+    \begin{itemize}
+      \item CPU: 4 Kerne @ 1.5 GHz
+      \item RAM: 2 GB
+      \item Interfaces: 2x Ethernet (1G), 2x CAN-FD, 1x LIN
+      \item ASIL: ASIL-B
+    \end{itemize}
+  
+  \item \textbf{Side-Zone-Controller} (Left/Right):
+    \begin{itemize}
+      \item CPU: 4 Kerne @ 1.5 GHz
+      \item RAM: 2 GB
+      \item Interfaces: 2x Ethernet (1G), 2x CAN-FD, 1x LIN
+      \item ASIL: ASIL-B
+    \end{itemize}
+  
+  \item \textbf{Rear-Zone-Controller}:
+    \begin{itemize}
+      \item CPU: 4 Kerne @ 1.5 GHz
+      \item RAM: 2 GB
+      \item Interfaces: 2x Ethernet (1G), 2x CAN-FD, 1x LIN
+      \item ASIL: ASIL-B
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Sensoren}
+
+\begin{itemize}
+  \item \textbf{Bosch 8MP Multifunktionskamera} (8x):
+    \begin{itemize}
+      \item Auflösung: 3840x2160 @ 30 fps
+      \item Interface: Ethernet 2.5G
+      \item ASIL: ASIL-B bis ASIL-D
+    \end{itemize}
+  
+  \item \textbf{Bosch Long-Range-Radar} (8x):
+    \begin{itemize}
+      \item Reichweite: 250 m
+      \item Interface: CAN-FD oder Ethernet
+      \item ASIL: ASIL-B
+    \end{itemize}
+  
+  \item \textbf{Bosch High-Resolution-LiDAR} (4x):
+    \begin{itemize}
+      \item Layer: 64 Layer
+      \item Reichweite: 200 m
+      \item Interface: Ethernet 10G
+      \item ASIL: ASIL-B
+    \end{itemize}
+\end{itemize}
+
+\subsection{VAN.EA-Software}
+
+\subsubsection{MB.OS-Integration}
+
+\begin{itemize}
+  \item \textbf{Betriebssystem}: MB.OS mit vier Domänen
+  \item \textbf{Middleware}: AUTOSAR Adaptive, DDS, SOME/IP
+  \item \textbf{Basic OS}: Linux-basiert mit Echtzeit-Erweiterungen
+  \item \textbf{Chip-to-Cloud}: Integration mit Cloud-Services
+  \item \textbf{OTA-Updates}: Over-the-Air-Updates für Software
+\end{itemize}
+
+\subsubsection{Software-Komponenten}
+
+\begin{itemize}
+  \item \textbf{AD-Domain}: 50+ SWCs (Perzeption, Sensorfusion, Planung, Regelung)
+    \begin{itemize}
+      \item Perzeption: Objekterkennung, Spurerkennung, Verkehrszeichen-Erkennung
+      \item Sensorfusion: Multi-Sensor-Fusion, Objekt-Tracking, Situationsanalyse
+      \item Planung: Routenplanung, Trajektorien-Planung, Manöver-Planung
+      \item Regelung: Längsregelung, Querregelung, Kombinierte Regelung
+    \end{itemize}
+  
+  \item \textbf{Body-Domain}: 30+ SWCs (Komfort, Sicherheit, Laderaum)
+    \begin{itemize}
+      \item Komfort: Klimasteuerung, Sitzheizung, Beleuchtung
+      \item Sicherheit: Airbag-Steuerung, Gurtstraffer, Notbremsassistenz
+      \item Laderaum: Laderaum-Überwachung, Temperatur-Überwachung, Zugangskontrolle
+    \end{itemize}
+  
+  \item \textbf{Infotainment-Domain}: 20+ SWCs (HMI, Navigation, Entertainment)
+    \begin{itemize}
+      \item HMI: Display-Steuerung, Touch-Interface, Sprachsteuerung
+      \item Navigation: Routenplanung, Navigation, POI-Verwaltung
+      \item Entertainment: Media-Player, Radio, Streaming
+    \end{itemize}
+  
+  \item \textbf{Flotten-Domain}: 10+ SWCs (Telematik, Tracking, Optimierung)
+    \begin{itemize}
+      \item Telematik: V2X-Kommunikation, Cloud-Kommunikation
+      \item Tracking: GPS-Tracking, Fahrzeug-Tracking
+      \item Optimierung: Route-Optimierung, Flotten-Optimierung
+    \end{itemize}
+\end{itemize}
+
+\subsection{Interface-Spezifikationen}
+
+\subsubsection{Hardware-Interfaces}
+
+\begin{itemize}
+  \item \textbf{Ethernet-Interfaces}: 
+    \begin{itemize}
+      \item 1 Gbps Ethernet für Zonen-Controller
+      \item 2.5 Gbps Ethernet für Kameras
+      \item 10 Gbps Ethernet für LiDAR
+      \item TSN-Konfiguration für deterministische Kommunikation
+    \end{itemize}
+  
+  \item \textbf{CAN-Interfaces}:
+    \begin{itemize}
+      \item CAN-FD 2 Mbps für Aktoren
+      \item CAN-FD 500 kbps für Legacy-Komponenten
+      \item Gateway-Funktionalität für CAN-to-Ethernet
+    \end{itemize}
+  
+  \item \textbf{LIN-Interfaces}:
+    \begin{itemize}
+      \item LIN 19.2 kbps für einfache Aktoren
+      \item Gateway-Funktionalität für LIN-to-CAN
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Software-Interfaces}
+
+\begin{itemize}
+  \item \textbf{DDS-Interfaces}:
+    \begin{itemize}
+      \item Publish-Subscribe für Echtzeit-Kommunikation
+      \item QoS-Parameter für Service-Qualität
+      \item Topic-Definitionen für verschiedene Daten-Typen
+    \end{itemize}
+  
+  \item \textbf{SOME/IP-Interfaces}:
+    \begin{itemize}
+      \item Service-basierte Kommunikation
+      \item Service-Discovery für dynamische Service-Findung
+      \item Service-Versionierung für Backward-Kompatibilität
+    \end{itemize}
+  
+  \item \textbf{REST-APIs}:
+    \begin{itemize}
+      \item REST-APIs für Cloud-Kommunikation
+      \item OAuth 2.0 für Authentifizierung
+      \item JSON für Daten-Format
+    \end{itemize}
+\end{itemize}
+
+\section{Entwicklungsprozess und Methoden}
+
+Dieser Abschnitt beschreibt den Entwicklungsprozess für E/E-Architekturen in MB Vans.
+
+\subsection{V-Modell für E/E-Architekturen}
+
+Das V-Modell gliedert sich in folgende Phasen:
+
+\begin{enumerate}
+  \item \textbf{Anforderungsanalyse}: Definition von Anforderungen und KPIs
+  \item \textbf{System-Design}: System-Architektur-Design
+  \item \textbf{Architektur-Design}: E/E-Architektur-Design
+  \item \textbf{Detail-Design}: Detail-Design von Komponenten
+  \item \textbf{Implementierung}: Implementierung von Komponenten
+  \item \textbf{Komponenten-Test}: Test von einzelnen Komponenten
+  \item \textbf{Integrations-Test}: Test von integrierten Komponenten
+  \item \textbf{System-Test}: Test des gesamten Systems
+  \item \textbf{Validierung}: Validierung gegen Anforderungen
+  \item \textbf{Verifikation}: Verifikation der Korrektheit
+\end{enumerate}
+
+\subsection{Meilenstein-Definitionen}
+
+\subsubsection{Meilenstein 1: Konzept-Review (Monat 6)}
+
+\textbf{Ziele}:
+\begin{itemize}
+  \item Vollständige Anforderungsanalyse
+  \item Architektur-Konzept definiert
+  \item Technologie-Auswahl getroffen
+  \item Proof-of-Concept erfolgreich
+\end{itemize}
+
+\textbf{Deliverables}:
+\begin{itemize}
+  \item Anforderungsdokument
+  \item Architektur-Konzept-Dokument
+  \item Technologie-Evaluierungs-Bericht
+  \item Proof-of-Concept-Bericht
+\end{itemize}
+
+\textbf{Review-Kriterien}:
+\begin{itemize}
+  \item Alle Anforderungen dokumentiert
+  \item Architektur-Konzept vollständig
+  \item Technologie-Auswahl begründet
+  \item Proof-of-Concept erfolgreich
+\end{itemize}
+
+\subsubsection{Meilenstein 2: Design-Review (Monat 18)}
+
+\textbf{Ziele}:
+\begin{itemize}
+  \item Detailliertes Architektur-Design
+  \item Komponenten-Spezifikationen
+  \item Interface-Definitionen
+  \item Sicherheits-Analyse
+\end{itemize}
+
+\textbf{Deliverables}:
+\begin{itemize}
+  \item Architektur-Spezifikation
+  \item Komponenten-Spezifikationen
+  \item Interface-Dokumente
+  \item Sicherheits-Analyse-Bericht
+\end{itemize}
+
+\textbf{Review-Kriterien}:
+\begin{itemize}
+  \item Architektur-Design vollständig
+  \item Komponenten-Spezifikationen detailliert
+  \item Interfaces definiert
+  \item Sicherheits-Anforderungen erfüllt
+\end{itemize}
+
+\subsubsection{Meilenstein 3: Integrations-Review (Monat 36)}
+
+\textbf{Ziele}:
+\begin{itemize}
+  \item Komponenten implementiert
+  \item Integration erfolgreich
+  \item Tests durchgeführt
+  \item Dokumentation vollständig
+\end{itemize}
+
+\textbf{Deliverables}:
+\begin{itemize}
+  \item Implementierte Komponenten
+  \item Integrations-Bericht
+  \item Test-Berichte
+  \item Dokumentation
+\end{itemize}
+
+\textbf{Review-Kriterien}:
+\begin{itemize}
+  \item Alle Komponenten implementiert
+  \item Integration erfolgreich
+  \item Tests bestanden
+  \item Dokumentation vollständig
+\end{itemize}
+
+\subsubsection{Meilenstein 4: Validierungs-Review (Monat 42)}
+
+\textbf{Ziele}:
+\begin{itemize}
+  \item System validiert
+  \item Anforderungen erfüllt
+  \item Zertifizierung vorbereitet
+  \item Produktionsreife erreicht
+\end{itemize}
+
+\textbf{Deliverables}:
+\begin{itemize}
+  \item Validierungs-Bericht
+  \item Verifikations-Bericht
+  \item Zertifizierungs-Dokumente
+  \item Produktions-Freigabe
+\end{itemize}
+
+\textbf{Review-Kriterien}:
+\begin{itemize}
+  \item Alle Anforderungen erfüllt
+  \item System validiert
+  \item Zertifizierung vorbereitet
+  \item Produktionsreife erreicht
+\end{itemize}
+
+\subsection{Review-Prozesse}
+
+\subsubsection{Architektur-Review}
+
+\textbf{Zweck}: Überprüfung der Architektur auf Vollständigkeit, Konsistenz und Einhaltung von Standards.
+
+\textbf{Teilnehmer}:
+\begin{itemize}
+  \item Architekten
+  \item System-Engineers
+  \item Safety-Engineers
+  \item Security-Engineers
+\end{itemize}
+
+\textbf{Prozess}:
+\begin{enumerate}
+  \item Architektur-Dokumentation vorbereiten
+  \item Review-Termin planen
+  \item Architektur präsentieren
+  \item Diskussion und Feedback
+  \item Review-Protokoll erstellen
+  \item Maßnahmen ableiten
+\end{enumerate}
+
+\subsubsection{Safety-Review}
+
+\textbf{Zweck}: Überprüfung der Safety-Architektur auf Einhaltung von ISO 26262.
+
+\textbf{Teilnehmer}:
+\begin{itemize}
+  \item Safety-Engineers
+  \item Architekten
+  \item System-Engineers
+  \item Zertifizierungs-Experten
+\end{itemize}
+
+\textbf{Prozess}:
+\begin{enumerate}
+  \item Safety-Dokumentation vorbereiten
+  \item Safety-Analyse durchführen
+  \item Safety-Review-Termin planen
+  \item Safety-Architektur präsentieren
+  \item Diskussion und Feedback
+  \item Review-Protokoll erstellen
+  \item Maßnahmen ableiten
+\end{enumerate}
+
+\subsection{Change-Management}
+
+\subsubsection{Change-Request-Prozess}
+
+\textbf{Prozess}:
+\begin{enumerate}
+  \item Change-Request erstellen
+  \item Impact-Analyse durchführen
+  \item Change-Board-Review
+  \item Entscheidung treffen
+  \item Änderung implementieren
+  \item Verifikation durchführen
+  \item Change-Request abschließen
+\end{enumerate}
+
+\subsubsection{Change-Request-Template}
+
+\begin{itemize}
+  \item \textbf{Title}: Titel der Änderung
+  \item \textbf{Description}: Beschreibung der Änderung
+  \item \textbf{Rationale}: Begründung der Änderung
+  \item \textbf{Impact}: Auswirkung der Änderung
+  \item \textbf{Alternatives}: Alternative Lösungen
+  \item \textbf{Cost}: Kosten der Änderung
+  \item \textbf{Schedule}: Zeitplan der Änderung
+  \item \textbf{Risk}: Risiken der Änderung
+\end{itemize}
+
+\subsection{Entwicklungsphasen}
+
+\subsubsection{Phase 1: Konzept (Monate 1-6)}
+
+\begin{itemize}
+  \item \textbf{Ziele}: Definition von Anforderungen, Architektur-Konzept, Technologie-Auswahl
+  \item \textbf{Aktivitäten}:
+    \begin{itemize}
+      \item Anforderungsanalyse
+      \item Architektur-Konzept-Entwicklung
+      \item Technologie-Evaluierung
+      \item Proof-of-Concept
+    \end{itemize}
+  \item \textbf{Deliverables}: Anforderungsdokument, Architektur-Konzept, Technologie-Evaluierung
+  \item \textbf{Meilensteine}: Konzept-Review, Technologie-Entscheidung
+\end{itemize}
+
+\subsubsection{Phase 2: Design (Monate 7-18)}
+
+\begin{itemize}
+  \item \textbf{Ziele}: Detailliertes Architektur-Design, Komponenten-Spezifikation
+  \item \textbf{Aktivitäten}:
+    \begin{itemize}
+      \item Detailliertes Architektur-Design
+      \item Komponenten-Spezifikation
+      \item Interface-Definition
+      \item Sicherheits-Analyse
+    \end{itemize}
+  \item \textbf{Deliverables}: Architektur-Spezifikation, Komponenten-Spezifikation, Interface-Dokumente
+  \item \textbf{Meilensteine}: Design-Review, Sicherheits-Review
+\end{itemize}
+
+\subsubsection{Phase 3: Implementierung (Monate 19-36)}
+
+\begin{itemize}
+  \item \textbf{Ziele}: Implementierung von Komponenten, Integration
+  \item \textbf{Aktivitäten}:
+    \begin{itemize}
+      \item Komponenten-Implementierung
+      \item Integration von Komponenten
+      \item Test-Implementierung
+      \item Dokumentation
+    \end{itemize}
+  \item \textbf{Deliverables}: Implementierte Komponenten, Test-Suite, Dokumentation
+  \item \textbf{Meilensteine}: Komponenten-Review, Integrations-Review
+\end{itemize}
+
+\subsubsection{Phase 4: Validierung (Monate 37-42)}
+
+\begin{itemize}
+  \item \textbf{Ziele}: Validierung gegen Anforderungen, Verifikation der Korrektheit
+  \item \textbf{Aktivitäten}:
+    \begin{itemize}
+      \item System-Tests
+      \item Validierungs-Tests
+      \item Verifikations-Tests
+      \item Performance-Tests
+    \end{itemize}
+  \item \textbf{Deliverables}: Test-Berichte, Validierungs-Berichte, Verifikations-Berichte
+  \item \textbf{Meilensteine}: Validierungs-Review, Verifikations-Review
+\end{itemize}
+
+\section{Qualitätssicherung und Testing}
+
+Dieser Abschnitt beschreibt Qualitätssicherung und Testing für E/E-Architekturen.
+
+\subsection{Test-Strategie}
+
+\subsubsection{Test-Pyramide}
+
+Die Test-Pyramide für E/E-Architekturen gliedert sich in:
+
+\begin{itemize}
+  \item \textbf{Unit-Tests} (Basis):
+    \begin{itemize}
+      \item Tests für einzelne Komponenten
+      \item Hohe Test-Coverage (> 80\%)
+      \item Schnelle Ausführung
+      \item Automatisierte Ausführung
+    \end{itemize}
+  
+  \item \textbf{Integration-Tests} (Mitte):
+    \begin{itemize}
+      \item Tests für integrierte Komponenten
+      \item Tests für Interfaces
+      \item Tests für Kommunikation
+      \item Automatisierte Ausführung
+    \end{itemize}
+  
+  \item \textbf{System-Tests} (Spitze):
+    \begin{itemize}
+      \item Tests für gesamtes System
+      \item Tests für End-to-End-Funktionen
+      \item Tests für Performance
+      \item Manuelle und automatisierte Ausführung
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Test-Typen}
+
+\begin{itemize}
+  \item \textbf{Funktionale Tests}: Tests für Funktionalität
+    \begin{itemize}
+      \item Unit-Tests für einzelne Komponenten
+      \item Integration-Tests für integrierte Komponenten
+      \item System-Tests für gesamtes System
+      \item Acceptance-Tests für Abnahmetests
+    \end{itemize}
+  
+  \item \textbf{Performance-Tests}: Tests für Performance
+    \begin{itemize}
+      \item Latenz-Tests für E2E-Latenzen
+      \item Throughput-Tests für Durchsatz
+      \item Load-Tests für Last-Tests
+      \item Stress-Tests für Stress-Tests
+    \end{itemize}
+  
+  \item \textbf{Sicherheits-Tests}: Tests für funktionale Sicherheit
+    \begin{itemize}
+      \item Safety-Tests für ASIL-Compliance
+      \item Fault-Injection-Tests für Fehlerbehandlung
+      \item Redundancy-Tests für Redundanz-Mechanismen
+      \item Failover-Tests für Failover-Mechanismen
+    \end{itemize}
+  
+  \item \textbf{Cybersecurity-Tests}: Tests für Cybersecurity
+    \begin{itemize}
+      \item Penetration-Tests für Sicherheits-Schwachstellen
+      \item Vulnerability-Scans für Sicherheits-Lücken
+      \item Encryption-Tests für Verschlüsselung
+      \item Authentication-Tests für Authentifizierung
+    \end{itemize}
+  
+  \item \textbf{Umgebungs-Tests}: Tests für Umgebungsbedingungen
+    \begin{itemize}
+      \item Temperatur-Tests für Temperatur-Bereiche
+      \item Feuchtigkeit-Tests für Feuchtigkeit
+      \item Vibration-Tests für Vibrationen
+      \item EMC-Tests für elektromagnetische Verträglichkeit
+    \end{itemize}
+  
+  \item \textbf{Lifecycle-Tests}: Tests für Lebensdauer
+    \begin{itemize}
+      \item Aging-Tests für Alterung
+      \item Endurance-Tests für Ausdauer
+      \item Reliability-Tests für Zuverlässigkeit
+      \item MTBF-Tests für Mean Time Between Failures
+    \end{itemize}
+\end{itemize}
+
+\subsection{Test-Szenarien}
+
+\subsubsection{Nominal-Szenarien}
+
+\begin{itemize}
+  \item \textbf{Standard-Betrieb}: Tests unter normalen Betriebsbedingungen
+    \begin{itemize}
+      \item Stadtverkehr: 50 km/h, gemischter Verkehr
+      \item Autobahn: 120 km/h, hohe Geschwindigkeit
+      \item Landstraße: 80 km/h, Kurvenfahrten
+      \item Parkplatz: Manöver, Einparken
+    \end{itemize}
+  
+  \item \textbf{Wetter-Bedingungen}:
+    \begin{itemize}
+      \item Sonnenschein: Optimale Sichtbedingungen
+      \item Regen: Reduzierte Sichtbarkeit
+      \item Nebel: Sehr reduzierte Sichtbarkeit
+      \item Schnee: Schlechte Sichtbarkeit, rutschige Straßen
+    \end{itemize}
+  
+  \item \textbf{Verkehrssituationen}:
+    \begin{itemize}
+      \item Stau: Stop-and-Go-Verkehr
+      \item Überholmanöver: Spurwechsel, Beschleunigung
+      \item Kreuzungen: Abbiegen, Vorfahrt
+      \item Kreisverkehre: Einfahrt, Ausfahrt
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Stress-Szenarien}
+
+\begin{itemize}
+  \item \textbf{Extreme Last}:
+    \begin{itemize}
+      \item Hohe CPU-Last: 90\%+ CPU-Auslastung
+      \item Hohe GPU-Last: 90\%+ GPU-Auslastung
+      \item Hohe Netzwerk-Last: 80\%+ Bandbreiten-Auslastung
+      \item Hohe Sensor-Daten-Rate: Maximale Sensor-Daten-Rate
+    \end{itemize}
+  
+  \item \textbf{Extreme Umgebungsbedingungen}:
+    \begin{itemize}
+      \item Extreme Temperaturen: -40°C bis +85°C
+      \item Hohe Feuchtigkeit: 95\%+ relative Feuchtigkeit
+      \item Starke Vibrationen: 10g+ Beschleunigung
+      \item Elektromagnetische Störungen: Hohe EMV-Belastung
+    \end{itemize}
+  
+  \item \textbf{Netzwerk-Stress}:
+    \begin{itemize}
+      \item Netzwerk-Überlastung: 90\%+ Bandbreiten-Auslastung
+      \item Paket-Verlust: 1\%+ Paket-Verlust
+      \item Hohe Latenz: 100ms+ Netzwerk-Latenz
+      \item Jitter: Hohe Latenz-Schwankungen
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Failure-Szenarien}
+
+\begin{itemize}
+  \item \textbf{ECU-Ausfälle}:
+    \begin{itemize}
+      \item AD-DC-Ausfall: Ausfall der zentralen Rechenplattform
+      \item Zonen-Controller-Ausfall: Ausfall eines Zonen-Controllers
+      \item Sensor-ECU-Ausfall: Ausfall einer Sensor-ECU
+      \item Aktor-ECU-Ausfall: Ausfall einer Aktor-ECU
+    \end{itemize}
+  
+  \item \textbf{Netzwerk-Ausfälle}:
+    \begin{itemize}
+      \item TSN-Switch-Ausfall: Ausfall eines TSN-Switches
+      \item Kabel-Bruch: Ausfall einer Netzwerk-Verbindung
+      \item Port-Ausfall: Ausfall eines Switch-Ports
+      \item Zeitsynchronisation-Ausfall: Ausfall von gPTP
+    \end{itemize}
+  
+  \item \textbf{Sensor-Ausfälle}:
+    \begin{itemize}
+      \item Kamera-Ausfall: Ausfall einer Kamera
+      \item Radar-Ausfall: Ausfall eines Radars
+      \item LiDAR-Ausfall: Ausfall eines LiDAR
+      \item GNSS-Ausfall: Ausfall des GNSS-Empfängers
+    \end{itemize}
+  
+  \item \textbf{Aktor-Ausfälle}:
+    \begin{itemize}
+      \item Lenkung-Ausfall: Ausfall der Lenkung
+      \item Bremse-Ausfall: Ausfall der Bremse
+      \item Antrieb-Ausfall: Ausfall des Antriebs
+      \item Getriebe-Ausfall: Ausfall des Getriebes
+    \end{itemize}
+\end{itemize}
+
+\subsection{Test-Daten-Management}
+
+\subsubsection{Test-Daten-Generierung}
+
+\begin{itemize}
+  \item \textbf{Synthetische Daten}:
+    \begin{itemize}
+      \item Simulation: Generierung von synthetischen Sensordaten
+      \item Synthese: Generierung von synthetischen Szenarien
+      \item Variation: Generierung von variierten Test-Daten
+      \item Edge-Cases: Generierung von Edge-Case-Daten
+    \end{itemize}
+  
+  \item \textbf{Real-World-Daten}:
+    \begin{itemize}
+      \item Datensammlung: Sammlung von Real-World-Daten
+      \item Aufzeichnung: Aufzeichnung von Fahrzeug-Daten
+      \item Annotation: Annotation von Daten
+      \item Validierung: Validierung von Daten
+    \end{itemize}
+  
+  \item \textbf{Test-Daten-Varianten}:
+    \begin{itemize}
+      \item Wetter-Varianten: Regen, Nebel, Schnee, Sonne
+      \item Verkehrs-Varianten: Stau, Stadtverkehr, Autobahn
+      \item Szenario-Varianten: Überholen, Abbiegen, Einparken
+      \item Fehler-Varianten: Sensor-Ausfall, Netzwerk-Ausfall
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Test-Daten-Verwaltung}
+
+\begin{itemize}
+  \item \textbf{Test-Daten-Repository}:
+    \begin{itemize}
+      \item Zentrale Speicherung: Zentrale Verwaltung von Test-Daten
+      \item Versionierung: Versionierung von Test-Daten
+      \item Katalogisierung: Katalogisierung von Test-Daten
+      \item Suche: Suche nach Test-Daten
+    \end{itemize}
+  
+  \item \textbf{Test-Daten-Qualität}:
+    \begin{itemize}
+      \item Validierung: Validierung von Test-Daten
+      \item Qualitäts-Metriken: Qualitäts-Metriken für Test-Daten
+      \item Daten-Profilierung: Profilierung von Test-Daten
+      \item Daten-Bereinigung: Bereinigung von Test-Daten
+    \end{itemize}
+  
+  \item \textbf{Test-Daten-Sicherheit}:
+    \begin{itemize}
+      \item Anonymisierung: Anonymisierung von Test-Daten
+      \item Verschlüsselung: Verschlüsselung von Test-Daten
+      \item Zugriffskontrolle: Zugriffskontrolle auf Test-Daten
+      \item Backup: Backup von Test-Daten
+    \end{itemize}
+\end{itemize}
+
+\subsection{Test-Environment-Management}
+
+\subsubsection{Test-Umgebungen}
+
+\begin{itemize}
+  \item \textbf{Development-Environment}:
+    \begin{itemize}
+      \item Entwicklungsumgebung: Entwicklungsumgebung für Entwickler
+      \item Lokale Tests: Lokale Tests auf Entwickler-Rechnern
+      \item Unit-Tests: Unit-Tests in Entwicklungsumgebung
+      \item Integration-Tests: Integration-Tests in Entwicklungsumgebung
+    \end{itemize}
+  
+  \item \textbf{Test-Environment}:
+    \begin{itemize}
+      \item Test-Umgebung: Dedizierte Test-Umgebung
+      \item System-Tests: System-Tests in Test-Umgebung
+      \item Performance-Tests: Performance-Tests in Test-Umgebung
+      \item Safety-Tests: Safety-Tests in Test-Umgebung
+    \end{itemize}
+  
+  \item \textbf{Staging-Environment}:
+    \begin{itemize}
+      \item Staging-Umgebung: Staging-Umgebung für Pre-Production-Tests
+      \item Acceptance-Tests: Acceptance-Tests in Staging-Umgebung
+      \item Integration-Tests: Integration-Tests in Staging-Umgebung
+      \item Performance-Tests: Performance-Tests in Staging-Umgebung
+    \end{itemize}
+  
+  \item \textbf{Production-Environment}:
+    \begin{itemize}
+      \item Produktions-Umgebung: Produktions-Umgebung für Live-Tests
+      \item Monitoring: Monitoring in Produktions-Umgebung
+      \item Canary-Deployment: Canary-Deployment in Produktions-Umgebung
+      \item A/B-Testing: A/B-Testing in Produktions-Umgebung
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Environment-Provisioning}
+
+\begin{itemize}
+  \item \textbf{Automated Provisioning}:
+    \begin{itemize}
+      \item Infrastructure-as-Code: Infrastructure-as-Code für Umgebungen
+      \item Automated Setup: Automatisiertes Setup von Umgebungen
+      \item Configuration Management: Konfigurations-Management für Umgebungen
+      \item Environment Templates: Templates für Umgebungen
+    \end{itemize}
+  
+  \item \textbf{Containerization}:
+    \begin{itemize}
+      \item Docker: Docker-Container für Umgebungen
+      \item Kubernetes: Kubernetes-Orchestrierung für Umgebungen
+      \item Container-Registry: Container-Registry für Umgebungen
+      \item Container-Monitoring: Monitoring von Containern
+    \end{itemize}
+  
+  \item \textbf{Orchestration}:
+    \begin{itemize}
+      \item Kubernetes: Kubernetes-Orchestrierung
+      \item Docker Swarm: Docker Swarm-Orchestrierung
+      \item Ansible: Ansible-Orchestrierung
+      \item Terraform: Terraform-Orchestrierung
+    \end{itemize}
+  
+  \item \textbf{Monitoring}:
+    \begin{itemize}
+      \item Health Monitoring: Health-Monitoring von Umgebungen
+      \item Performance Monitoring: Performance-Monitoring von Umgebungen
+      \item Resource Monitoring: Resource-Monitoring von Umgebungen
+      \item Alerting: Alerting bei Problemen
+    \end{itemize}
+\end{itemize}
+
+\subsection{Test-Automatisierung}
+
+\subsubsection{CI/CD-Pipeline}
+
+\begin{itemize}
+  \item \textbf{Continuous Integration}: Automatisierte Tests bei Code-Commit
+  \item \textbf{Continuous Testing}: Automatisierte Tests in verschiedenen Umgebungen
+  \item \textbf{Continuous Deployment}: Automatisierte Bereitstellung in Test-Umgebungen
+  \item \textbf{Test-Reporting}: Automatisierte Test-Berichte
+\end{itemize}
+
+\subsubsection{Test-Tools}
+
+\begin{itemize}
+  \item \textbf{Unit-Testing}: JUnit, pytest, Google Test
+  \item \textbf{Integration-Testing}: Testcontainers, Mocking-Frameworks
+  \item \textbf{System-Testing}: HiL (Hardware-in-the-Loop), SiL (Software-in-the-Loop)
+  \item \textbf{Performance-Testing}: JMeter, Gatling, Locust
+  \item \textbf{Security-Testing}: OWASP ZAP, Burp Suite
+\end{itemize}
+
+\section{Zertifizierung und Compliance}
+
+Dieser Abschnitt beschreibt Zertifizierung und Compliance für E/E-Architekturen.
+
+\subsection{ISO 26262}
+
+\subsubsection{Funktionale Sicherheit}
+
+\begin{itemize}
+  \item \textbf{ASIL-Klassifizierung}: Klassifizierung von Funktionen nach ASIL-Level
+  \item \textbf{Safety-Analyse}: Hazard Analysis, Risk Assessment
+  \item \textbf{Safety-Architektur}: Safety-Architektur-Design
+  \item \textbf{Safety-Tests}: Safety-Tests für ASIL-Compliance
+\end{itemize}
+
+\subsubsection{ISO 26262-Prozess}
+
+\begin{itemize}
+  \item \textbf{Phase 1: Konzept}: Safety-Konzept, Hazard Analysis
+  \item \textbf{Phase 2: Design}: Safety-Architektur, Safety-Mechanismen
+  \item \textbf{Phase 3: Implementierung}: Safety-Implementierung, Safety-Tests
+  \item \textbf{Phase 4: Validierung}: Safety-Validierung, Safety-Verifikation
+\end{itemize}
+
+\subsection{UN ECE}
+
+\subsubsection{Homologation}
+
+\begin{itemize}
+  \item \textbf{UN ECE R157}: Automatisiertes Fahren (ALKS)
+    \begin{itemize}
+      \item Anforderungen an automatisiertes Fahren
+      \item Sicherheits-Anforderungen
+      \item Test-Anforderungen
+      \item Zertifizierungs-Anforderungen
+    \end{itemize}
+  
+  \item \textbf{UN ECE R152}: Notbremsassistenz (AEBS)
+    \begin{itemize}
+      \item Anforderungen an Notbremsassistenz
+      \item Sicherheits-Anforderungen
+      \item Test-Anforderungen
+      \item Zertifizierungs-Anforderungen
+    \end{itemize}
+  
+  \item \textbf{UN ECE R130}: Spurhalteassistenz (LDWS)
+    \begin{itemize}
+      \item Anforderungen an Spurhalteassistenz
+      \item Sicherheits-Anforderungen
+      \item Test-Anforderungen
+      \item Zertifizierungs-Anforderungen
+    \end{itemize}
+  
+  \item \textbf{UN ECE R131}: Notbremsassistenz für Fußgänger (PAEB)
+    \begin{itemize}
+      \item Anforderungen an Notbremsassistenz für Fußgänger
+      \item Sicherheits-Anforderungen
+      \item Test-Anforderungen
+      \item Zertifizierungs-Anforderungen
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Homologations-Prozess}
+
+\begin{itemize}
+  \item \textbf{Vorbereitung}: Dokumentation, Tests, Validierung
+    \begin{itemize}
+      \item Erstellung von Homologations-Dokumentation
+      \item Durchführung von Homologations-Tests
+      \item Validierung von Homologations-Anforderungen
+      \item Vorbereitung von Homologations-Antrag
+    \end{itemize}
+  
+  \item \textbf{Antrag}: Antrag bei homologierender Behörde
+    \begin{itemize}
+      \item Einreichung von Homologations-Antrag
+      \item Bereitstellung von Dokumentation
+      \item Bereitstellung von Test-Ergebnissen
+      \item Zahlung von Gebühren
+    \end{itemize}
+  
+  \item \textbf{Prüfung}: Prüfung durch homologierende Behörde
+    \begin{itemize}
+      \item Prüfung von Dokumentation
+      \item Prüfung von Test-Ergebnissen
+      \item Prüfung von Fahrzeugen
+      \item Prüfung von Systemen
+    \end{itemize}
+  
+  \item \textbf{Zertifizierung}: Zertifizierung bei erfolgreicher Prüfung
+    \begin{itemize}
+      \item Ausstellung von Homologations-Zertifikat
+      \item Registrierung von Homologation
+      \item Bereitstellung von Homologations-Markierung
+      \item Validierung von Homologation
+    \end{itemize}
+\end{itemize}
+
+\subsection{Regionale Compliance}
+
+\subsubsection{USA (FMVSS)}
+
+\begin{itemize}
+  \item \textbf{FMVSS 126}: Electronic Stability Control (ESC)
+  \item \textbf{FMVSS 136}: Electronic Stability Control for Heavy Vehicles
+  \item \textbf{FMVSS 141}: Minimum Sound Requirements for Hybrid and Electric Vehicles
+  \item \textbf{FMVSS 150}: Vehicle-to-Vehicle (V2V) Communication
+\end{itemize}
+
+\subsubsection{China (GB Standards)}
+
+\begin{itemize}
+  \item \textbf{GB 14166}: Safety belts and restraint systems
+  \item \textbf{GB 14167}: Safety belts and restraint systems for buses
+  \item \textbf{GB 17675}: Steering systems
+  \item \textbf{GB 21670}: Electronic stability control systems
+\end{itemize}
+
+\subsubsection{Europa (ECE/EC)}
+
+\begin{itemize}
+  \item \textbf{ECE R13}: Braking systems
+  \item \textbf{ECE R79}: Steering systems
+  \item \textbf{ECE R152}: Advanced emergency braking systems
+  \item \textbf{ECE R157}: Automated Lane Keeping Systems (ALKS)
+\end{itemize}
+
+\section{Migration und Legacy-Integration}
+
+Dieser Abschnitt beschreibt Migration und Legacy-Integration für E/E-Architekturen.
+
+\subsection{Migrations-Strategie}
+
+\subsubsection{Big-Bang-Migration}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Komplette Migration auf einmal
+  \item \textbf{Vorteile}: Schnelle Migration, keine Parallel-Betrieb
+  \item \textbf{Nachteile}: Hohes Risiko, keine schrittweise Validierung
+  \item \textbf{Anwendung}: Nur bei kleinen Architekturen oder bei kompletter Neuentwicklung
+\end{itemize}
+
+\subsubsection{Inkrementelle Migration}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Schrittweise Migration von Komponenten
+  \item \textbf{Vorteile}: Niedriges Risiko, schrittweise Validierung
+  \item \textbf{Nachteile}: Längere Migrationszeit, Parallel-Betrieb erforderlich
+  \item \textbf{Anwendung}: Standard-Ansatz für große Architekturen
+\end{itemize}
+
+\subsection{Legacy-Integration}
+
+\subsubsection{Gateway-Ansatz}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Gateway für Integration von Legacy-Systemen
+  \item \textbf{Vorteile}: Einfache Integration, keine Änderungen an Legacy-Systemen
+  \item \textbf{Nachteile}: Zusätzliche Latenz, Single Point of Failure
+  \item \textbf{Anwendung}: Für Legacy-Systeme, die nicht migriert werden können
+\end{itemize}
+
+\subsubsection{Adapter-Ansatz}
+
+\begin{itemize}
+  \item \textbf{Beschreibung}: Adapter für Integration von Legacy-Systemen
+  \item \textbf{Vorteile}: Flexible Integration, Anpassung an Legacy-Systeme
+  \item \textbf{Nachteile}: Höhere Komplexität, Wartungsaufwand
+  \item \textbf{Anwendung}: Für Legacy-Systeme mit speziellen Anforderungen
+\end{itemize}
+
+\section{Toolchain und Werkzeuge}
+
+Dieser Abschnitt beschreibt die Toolchain und Werkzeuge für E/E-Architekturen.
+
+\subsection{Entwicklungs-Toolchain}
+
+\subsubsection{Architektur-Modellierung}
+
+\begin{itemize}
+  \item \textbf{PREEvision}: Architektur-Modellierung und -Design
+  \item \textbf{Enterprise Architect}: UML-Modellierung
+  \item \textbf{Vector CANoe}: Bus-Simulation und -Testing
+  \item \textbf{MathWorks Simulink}: Modellbasierte Entwicklung
+\end{itemize}
+
+\subsubsection{Software-Entwicklung}
+
+\begin{itemize}
+  \item \textbf{IDE}: Visual Studio Code, Eclipse, IntelliJ IDEA
+  \item \textbf{Versionierung}: Git, GitLab, GitHub
+  \item \textbf{Build-Tools}: CMake, Gradle, Maven
+  \item \textbf{Testing}: JUnit, pytest, Google Test
+\end{itemize}
+
+\subsection{CI/CD-Pipeline}
+
+\subsubsection{Continuous Integration}
+
+\begin{itemize}
+  \item \textbf{Source Control}: Git, GitLab, GitHub
+  \item \textbf{Build-Server}: Jenkins, GitLab CI, GitHub Actions
+  \item \textbf{Artifact-Repository}: Nexus, Artifactory
+  \item \textbf{Testing}: Automatisierte Tests in CI-Pipeline
+\end{itemize}
+
+\subsubsection{Continuous Deployment}
+
+\begin{itemize}
+  \item \textbf{Deployment-Tools}: Kubernetes, Docker, Ansible
+  \item \textbf{Monitoring}: Prometheus, Grafana, ELK Stack
+  \item \textbf{Logging}: ELK Stack, Splunk
+  \item \textbf{Alerting}: PagerDuty, Opsgenie
+\end{itemize}
+
+\section{Deployment und Betrieb}
+
+Dieser Abschnitt beschreibt Deployment und Betrieb für E/E-Architekturen.
+
+\subsection{OTA-Updates}
+
+\subsubsection{Update-Strategien}
+
+\begin{itemize}
+  \item \textbf{Full-Update}: Komplettes Update des Systems
+  \item \textbf{Delta-Update}: Nur Änderungen werden übertragen
+  \item \textbf{Incremental-Update}: Schrittweises Update von Komponenten
+  \item \textbf{Rolling-Update}: Update von Fahrzeugen in Gruppen
+\end{itemize}
+
+\subsubsection{Update-Prozess}
+
+\begin{itemize}
+  \item \textbf{Vorbereitung}: Update-Paket-Erstellung, Validierung
+  \item \textbf{Verteilung}: Übertragung an Fahrzeuge
+  \item \textbf{Installation}: Installation auf Fahrzeugen
+  \item \textbf{Verifikation}: Verifikation der Installation
+  \item \textbf{Rollback}: Rollback bei Problemen
+\end{itemize}
+
+\subsection{Monitoring}
+
+\subsubsection{System-Monitoring}
+
+\begin{itemize}
+  \item \textbf{Performance-Monitoring}: CPU, GPU, Memory, Network
+  \item \textbf{Health-Monitoring}: System-Health, Komponenten-Health
+  \item \textbf{Error-Monitoring}: Fehler-Erkennung, Fehler-Reporting
+  \item \textbf{Security-Monitoring}: Security-Events, Intrusion-Detection
+\end{itemize}
+
+\subsubsection{Monitoring-Tools}
+
+\begin{itemize}
+  \item \textbf{Prometheus}: Metriken-Sammlung
+  \item \textbf{Grafana}: Visualisierung
+  \item \textbf{ELK Stack}: Logging und Analyse
+  \item \textbf{Splunk}: Log-Analyse
+\end{itemize}
+
+\section{Kostenmodell und Wirtschaftlichkeit}
+
+Dieser Abschnitt beschreibt Kostenmodell und Wirtschaftlichkeit für E/E-Architekturen.
+
+\subsection{Kosten-Modell}
+
+\subsubsection{Hardware-Kosten}
+
+\begin{itemize}
+  \item \textbf{Central Compute}: NVIDIA DRIVE Thor, Infotainment-DC, Body-DC
+  \item \textbf{Zonen-Controller}: Front, Side, Rear Zone-Controller
+  \item \textbf{Sensoren}: Kameras, Radar, LiDAR, Ultraschall
+  \item \textbf{Aktoren}: Lenkung, Bremse, Antrieb
+  \item \textbf{Kommunikation}: TSN-Switches, Kabel, Stecker
+\end{itemize}
+
+\subsubsection{Software-Kosten}
+
+\begin{itemize}
+  \item \textbf{Entwicklung}:
+    \begin{itemize}
+      \item Entwicklungskosten: Entwicklungskosten für Software-Komponenten
+      \item Entwickler-Kosten: Kosten für Entwickler (Personalkosten)
+      \item Tool-Kosten: Kosten für Entwicklungstools
+      \item Infrastruktur-Kosten: Kosten für Entwicklungs-Infrastruktur
+    \end{itemize}
+  
+  \item \textbf{Licensing}:
+    \begin{itemize}
+      \item Betriebssystem-Lizenzen: Lizenzen für Betriebssysteme (MB.OS)
+      \item Middleware-Lizenzen: Lizenzen für Middleware (AUTOSAR, DDS)
+      \item Tool-Lizenzen: Lizenzen für Entwicklungstools
+      \item Third-Party-Lizenzen: Lizenzen für Third-Party-Software
+    \end{itemize}
+  
+  \item \textbf{Wartung}:
+    \begin{itemize}
+      \item Wartungskosten: Wartungskosten für Software
+      \item Bug-Fixing: Kosten für Bug-Fixes
+      \item Updates: Kosten für Software-Updates
+      \item Support: Kosten für Software-Support
+    \end{itemize}
+  
+  \item \textbf{Updates}:
+    \begin{itemize}
+      \item OTA-Updates: Kosten für OTA-Updates
+      \item Software-Updates: Kosten für Software-Updates
+      \item Firmware-Updates: Kosten für Firmware-Updates
+      \item Security-Updates: Kosten für Security-Updates
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Integration-Kosten}
+
+\begin{itemize}
+  \item \textbf{Hardware-Integration}:
+    \begin{itemize}
+      \item Integration: Kosten für Hardware-Integration
+      \item Testing: Kosten für Integration-Tests
+      \item Validierung: Kosten für Integration-Validierung
+      \item Zertifizierung: Kosten für Integration-Zertifizierung
+    \end{itemize}
+  
+  \item \textbf{Software-Integration}:
+    \begin{itemize}
+      \item Integration: Kosten für Software-Integration
+      \item Testing: Kosten für Software-Integration-Tests
+      \item Validierung: Kosten für Software-Integration-Validierung
+      \item Zertifizierung: Kosten für Software-Integration-Zertifizierung
+    \end{itemize}
+  
+  \item \textbf{System-Integration}:
+    \begin{itemize}
+      \item Integration: Kosten für System-Integration
+      \item Testing: Kosten für System-Integration-Tests
+      \item Validierung: Kosten für System-Integration-Validierung
+      \item Zertifizierung: Kosten für System-Integration-Zertifizierung
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Betriebs-Kosten}
+
+\begin{itemize}
+  \item \textbf{Wartung}:
+    \begin{itemize}
+      \item Preventive Maintenance: Kosten für vorbeugende Wartung
+      \item Corrective Maintenance: Kosten für korrektive Wartung
+      \item Predictive Maintenance: Kosten für prädiktive Wartung
+      \item Spare Parts: Kosten für Ersatzteile
+    \end{itemize}
+  
+  \item \textbf{Support}:
+    \begin{itemize}
+      \item Technical Support: Kosten für technischen Support
+      \item Customer Support: Kosten für Kunden-Support
+      \item Training: Kosten für Training
+      \item Documentation: Kosten für Dokumentation
+    \end{itemize}
+  
+  \item \textbf{Monitoring}:
+    \begin{itemize}
+      \item Monitoring-Infrastruktur: Kosten für Monitoring-Infrastruktur
+      \item Monitoring-Tools: Kosten für Monitoring-Tools
+      \item Alerting: Kosten für Alerting
+      \item Reporting: Kosten für Reporting
+    \end{itemize}
+\end{itemize}
+
+\subsection{Wirtschaftlichkeit}
+
+\subsubsection{ROI-Analyse}
+
+\begin{itemize}
+  \item \textbf{Investitionen}: Hardware, Software, Entwicklung
+  \item \textbf{Einsparungen}: Reduzierte Kabel-Kosten, vereinfachte Wartung
+  \item \textbf{Mehrwert}: Neue Funktionen, bessere Performance
+  \item \textbf{ROI-Berechnung}: Return on Investment über Lebensdauer
+\end{itemize}
+
+\subsubsection{ROI-Berechnung}
+
+\begin{itemize}
+  \item \textbf{ROI-Formel}:
+    \begin{equation}
+      ROI = \frac{Erträge - Investition}{Investition} \times 100\%
+    \end{equation}
+  
+  \item \textbf{Payback-Period}:
+    \begin{equation}
+      Payback-Period = \frac{Investition}{Jährliche Erträge}
+    \end{equation}
+  
+  \item \textbf{NPV (Net Present Value)}:
+    \begin{equation}
+      NPV = \sum_{t=0}^{n} \frac{Erträge_t - Kosten_t}{(1 + r)^t}
+    \end{equation}
+    wobei $r$ der Diskontierungs-Satz und $n$ die Anzahl der Jahre ist.
+  
+  \item \textbf{IRR (Internal Rate of Return)}:
+    \begin{equation}
+      NPV = \sum_{t=0}^{n} \frac{Erträge_t - Kosten_t}{(1 + IRR)^t} = 0
+    \end{equation}
+\end{itemize}
+
+\subsubsection{ROI-Szenarien}
+
+\begin{itemize}
+  \item \textbf{Konservatives Szenario}:
+    \begin{itemize}
+      \item ROI: 15-20\% nach 5 Jahren
+      \item Payback-Period: 3-4 Jahre
+      \item NPV: Positiv nach 5 Jahren
+      \item IRR: 10-15\%
+    \end{itemize}
+  
+  \item \textbf{Realistisches Szenario}:
+    \begin{itemize}
+      \item ROI: 25-30\% nach 5 Jahren
+      \item Payback-Period: 2-3 Jahre
+      \item NPV: Positiv nach 3 Jahren
+      \item IRR: 15-20\%
+    \end{itemize}
+  
+  \item \textbf{Optimistisches Szenario}:
+    \begin{itemize}
+      \item ROI: 35-40\% nach 5 Jahren
+      \item Payback-Period: 1-2 Jahre
+      \item NPV: Positiv nach 2 Jahren
+      \item IRR: 20-25\%
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Kosten-Optimierung}
+
+\begin{itemize}
+  \item \textbf{Hardware-Optimierung}: Optimierung von Hardware-Kosten
+    \begin{itemize}
+      \item Komponenten-Optimierung: Optimierung von Hardware-Komponenten
+      \item Redundanz-Optimierung: Optimierung von Redundanz-Mechanismen
+      \item Skalierung: Optimierung durch Skalierung
+      \item Bulk-Purchasing: Optimierung durch Bulk-Purchasing
+    \end{itemize}
+  
+  \item \textbf{Software-Optimierung}: Optimierung von Software-Kosten
+    \begin{itemize}
+      \item Code-Optimierung: Optimierung von Software-Code
+      \item Lizenzen-Optimierung: Optimierung von Software-Lizenzen
+      \item Wartungs-Optimierung: Optimierung von Software-Wartung
+      \item Open-Source: Verwendung von Open-Source-Software
+    \end{itemize}
+  
+  \item \textbf{Entwicklungs-Optimierung}: Optimierung von Entwicklungs-Kosten
+    \begin{itemize}
+      \item Prozess-Optimierung: Optimierung von Entwicklungs-Prozessen
+      \item Tool-Optimierung: Optimierung von Entwicklungs-Tools
+      \item Automatisierung: Automatisierung von Entwicklungs-Prozessen
+      \item Reusability: Wiederverwendung von Komponenten
+    \end{itemize}
+  
+  \item \textbf{Wartungs-Optimierung}: Optimierung von Wartungs-Kosten
+    \begin{itemize}
+      \item Predictive Maintenance: Optimierung durch Predictive Maintenance
+      \item Automatisierung: Automatisierung von Wartungs-Prozessen
+      \item Remote-Maintenance: Optimierung durch Remote-Maintenance
+      \item Self-Healing: Self-Healing-Systeme
+    \end{itemize}
+\end{itemize}
+
+\section{Troubleshooting und Problembehandlung}
+
+Dieser Abschnitt beschreibt Troubleshooting und Problembehandlung für E/E-Architekturen.
+
+\subsection{Häufige Probleme}
+
+\subsubsection{Kommunikations-Probleme}
+
+\begin{itemize}
+  \item \textbf{Netzwerk-Latenz}:
+    \begin{itemize}
+      \item Symptome: Hohe E2E-Latenzen, Jitter, Deadline-Misses
+      \item Ursachen: Netzwerk-Überlastung, TSN-Konfiguration, Switch-Konfiguration
+      \item Lösungen: TSN-Optimierung, Bandbreiten-Erhöhung, Priority-Configuration
+      \item Prävention: Netzwerk-Monitoring, Proaktive Optimierung
+    \end{itemize}
+  
+  \item \textbf{Paket-Verlust}:
+    \begin{itemize}
+      \item Symptome: Fehlende Daten, Timeouts, Fehler
+      \item Ursachen: Netzwerk-Überlastung, Kabel-Probleme, Switch-Probleme
+      \item Lösungen: Netzwerk-Diagnose, Kabel-Ersatz, Switch-Reparatur
+      \item Prävention: Netzwerk-Monitoring, Redundanz
+    \end{itemize}
+  
+  \item \textbf{Zeitsynchronisation}:
+    \begin{itemize}
+      \item Symptome: Zeit-Offset, Unsynchronisierte Daten, Fehler
+      \item Ursachen: gPTP-Ausfall, Netzwerk-Probleme, Clock-Drift
+      \item Lösungen: gPTP-Konfiguration, Netzwerk-Reparatur, Clock-Synchronisation
+      \item Prävention: Redundante gPTP-Master, Clock-Monitoring
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Performance-Probleme}
+
+\begin{itemize}
+  \item \textbf{CPU-Überlastung}:
+    \begin{itemize}
+      \item Symptome: Hohe CPU-Auslastung, Deadline-Misses, Langsame Reaktion
+      \item Ursachen: Zu viele Tasks, Ineffiziente Algorithmen, Hohe Last
+      \item Lösungen: Task-Optimierung, Algorithmus-Optimierung, Last-Reduzierung
+      \item Prävention: CPU-Monitoring, Proaktive Optimierung
+    \end{itemize}
+  
+  \item \textbf{GPU-Überlastung}:
+    \begin{itemize}
+      \item Symptome: Hohe GPU-Auslastung, Langsame Inferenz, Frame-Drops
+      \item Ursachen: Zu viele KI-Modelle, Große Modelle, Hohe Auflösung
+      \item Lösungen: Modell-Optimierung, Quantisierung, Auflösungs-Reduzierung
+      \item Prävention: GPU-Monitoring, Modell-Optimierung
+    \end{itemize}
+  
+  \item \textbf{Speicher-Probleme}:
+    \begin{itemize}
+      \item Symptome: Speicher-Überlauf, Out-of-Memory, System-Absturz
+      \item Ursachen: Memory-Leaks, Zu große Datenstrukturen, Hohe Last
+      \item Lösungen: Memory-Leak-Fixes, Datenstruktur-Optimierung, Last-Reduzierung
+      \item Prävention: Memory-Monitoring, Proaktive Optimierung
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Sicherheits-Probleme}
+
+\begin{itemize}
+  \item \textbf{Cybersecurity-Angriffe}:
+    \begin{itemize}
+      \item Symptome: Unautorisierte Zugriffe, Daten-Leaks, System-Kompromittierung
+      \item Ursachen: Schwachstellen, Fehlkonfiguration, Social Engineering
+      \item Lösungen: Patch-Installation, Konfiguration-Korrektur, Intrusion-Detection
+      \item Prävention: Security-Monitoring, Regelmäßige Updates, Security-Training
+    \end{itemize}
+  
+  \item \textbf{Safety-Verletzungen}:
+    \begin{itemize}
+      \item Symptome: Safety-Verletzungen, System-Ausfälle, Fehler
+      \item Ursachen: Fehlerhafte Safety-Mechanismen, Redundanz-Ausfälle, Design-Fehler
+      \item Lösungen: Safety-Mechanismen-Reparatur, Redundanz-Wiederherstellung, Design-Korrektur
+      \item Prävention: Safety-Monitoring, Regelmäßige Tests, Safety-Reviews
+    \end{itemize}
+\end{itemize}
+
+\subsection{Debugging-Strategien}
+
+\subsubsection{Logging und Monitoring}
+
+\begin{itemize}
+  \item \textbf{Strukturiertes Logging}:
+    \begin{itemize}
+      \item Log-Level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+      \item Log-Format: Strukturiertes Format (JSON, XML)
+      \item Log-Rotation: Automatische Log-Rotation
+      \item Log-Analyse: Automatische Log-Analyse
+    \end{itemize}
+  
+  \item \textbf{Monitoring}:
+    \begin{itemize}
+      \item Metriken: CPU, GPU, Memory, Network, Disk
+      \item Alerts: Automatische Alerts bei Problemen
+      \item Dashboards: Visualisierung von Metriken
+      \item Trends: Langfristige Trend-Analyse
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Fehler-Analyse}
+
+\begin{itemize}
+  \item \textbf{Fehler-Klassifizierung}:
+    \begin{itemize}
+      \item Kritisch: System-Ausfall, Safety-Verletzung
+      \item Hoch: Performance-Probleme, Funktionalitäts-Probleme
+      \item Mittel: Warnings, Informations-Meldungen
+      \item Niedrig: Verbesserungs-Vorschläge
+    \end{itemize}
+  
+  \item \textbf{Root-Cause-Analyse}:
+    \begin{itemize}
+      \item Problem-Identifikation: Identifikation des Problems
+      \item Ursachen-Analyse: Analyse der Ursachen
+      \item Lösung-Entwicklung: Entwicklung von Lösungen
+      \item Verifikation: Verifikation der Lösung
+    \end{itemize}
+\end{itemize}
+
+\section{Lessons Learned und Best Practices}
+
+Dieser Abschnitt beschreibt Lessons Learned und Best Practices aus der Praxis.
+
+\subsection{Lessons Learned}
+
+\subsubsection{Architektur-Design}
+
+\begin{itemize}
+  \item \textbf{Frühe Entscheidungen}:
+    \begin{itemize}
+      \item Wichtig: Frühe Entscheidungen für Architektur-Struktur
+      \item Begründung: Späte Änderungen sind teuer und zeitaufwändig
+      \item Best Practice: ADRs für wichtige Entscheidungen dokumentieren
+      \item Beispiel: Entscheidung für zonale Architektur früh treffen
+    \end{itemize}
+  
+  \item \textbf{Skalierbarkeit}:
+    \begin{itemize}
+      \item Wichtig: Skalierbarkeit von Anfang an berücksichtigen
+      \item Begründung: Nachträgliche Skalierung ist schwierig
+      \item Best Practice: Modulare Architektur, lose Kopplung
+      \item Beispiel: Verwendung von Microservices-Architektur
+    \end{itemize}
+  
+  \item \textbf{Redundanz}:
+    \begin{itemize}
+      \item Wichtig: Redundanz für sicherheitskritische Funktionen
+      \item Begründung: Redundanz erhöht Verfügbarkeit und Sicherheit
+      \item Best Practice: Hot-Standby-Redundanz, Voting-Mechanismen
+      \item Beispiel: Redundante AD-DC für ASIL-D-Funktionen
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Entwicklung}
+
+\begin{itemize}
+  \item \textbf{Test-Driven Development}:
+    \begin{itemize}
+      \item Wichtig: Tests früh und häufig schreiben
+      \item Begründung: Tests finden Fehler früh und reduzieren Kosten
+      \item Best Practice: Test-Driven Development, Continuous Testing
+      \item Beispiel: Unit-Tests für alle Komponenten
+    \end{itemize}
+  
+  \item \textbf{Code-Reviews}:
+    \begin{itemize}
+      \item Wichtig: Code-Reviews für alle Änderungen
+      \item Begründung: Code-Reviews finden Fehler und verbessern Qualität
+      \item Best Practice: Peer-Reviews, Checklisten, Automatisierung
+      \item Beispiel: Automatische Code-Reviews mit Tools
+    \end{itemize}
+  
+  \item \textbf{Dokumentation}:
+    \begin{itemize}
+      \item Wichtig: Dokumentation während der Entwicklung
+      \item Begründung: Dokumentation erleichtert Wartung und Verständnis
+      \item Best Practice: Living Documentation, Automatische Dokumentation
+      \item Beispiel: API-Dokumentation automatisch generieren
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Testing}
+
+\begin{itemize}
+  \item \textbf{Test-Automatisierung}:
+    \begin{itemize}
+      \item Wichtig: Automatisierung von Tests
+      \item Begründung: Automatisierung reduziert Zeit und Kosten
+      \item Best Practice: CI/CD-Pipeline, Automatische Tests
+      \item Beispiel: Automatische Tests bei jedem Commit
+    \end{itemize}
+  
+  \item \textbf{Test-Coverage}:
+    \begin{itemize}
+      \item Wichtig: Hohe Test-Coverage
+      \item Begründung: Hohe Test-Coverage findet mehr Fehler
+      \item Best Practice: > 80\% Code-Coverage, Branch-Coverage
+      \item Beispiel: Automatische Test-Coverage-Analyse
+    \end{itemize}
+  
+  \item \textbf{Real-World-Tests}:
+    \begin{itemize}
+      \item Wichtig: Tests mit Real-World-Daten
+      \item Begründung: Real-World-Tests finden Probleme, die Simulation nicht findet
+      \item Best Practice: Real-World-Daten-Sammlung, Edge-Case-Tests
+      \item Beispiel: Tests mit aufgezeichneten Fahrzeug-Daten
+    \end{itemize}
+\end{itemize}
+
+\subsection{Best Practices}
+
+\subsubsection{Architektur-Best-Practices}
+
+\begin{itemize}
+  \item \textbf{Modularität}:
+    \begin{itemize}
+      \item Prinzip: Modulare Architektur mit klaren Interfaces
+      \item Vorteile: Wartbarkeit, Skalierbarkeit, Testbarkeit
+      \item Implementierung: Microservices, Service-orientierte Architektur
+      \item Beispiel: VAN.APPVERSE mit Microservices
+    \end{itemize}
+  
+  \item \textbf{Lose Kopplung}:
+    \begin{itemize}
+      \item Prinzip: Lose Kopplung zwischen Komponenten
+      \item Vorteile: Unabhängige Entwicklung, einfache Wartung
+      \item Implementierung: Message-Bus, Event-driven Architektur
+      \item Beispiel: DDS für lose gekoppelte Kommunikation
+    \end{itemize}
+  
+  \item \textbf{Hohe Kohäsion}:
+    \begin{itemize}
+      \item Prinzip: Hohe Kohäsion innerhalb von Komponenten
+      \item Vorteile: Klare Verantwortlichkeiten, einfaches Verständnis
+      \item Implementierung: Single Responsibility Principle
+      \item Beispiel: Jede SWC hat eine klare Verantwortlichkeit
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Entwicklungs-Best-Practices}
+
+\begin{itemize}
+  \item \textbf{Versionierung}:
+    \begin{itemize}
+      \item Prinzip: Semantische Versionierung (Major.Minor.Patch)
+      \item Vorteile: Klare Versions-Verwaltung, Backward-Kompatibilität
+      \item Implementierung: Git-Tags, Version-Management
+      \item Beispiel: API-Versionierung für Backward-Kompatibilität
+    \end{itemize}
+  
+  \item \textbf{Continuous Integration}:
+    \begin{itemize}
+      \item Prinzip: Häufige Integration von Code-Änderungen
+      \item Vorteile: Frühe Fehler-Erkennung, kontinuierliche Validierung
+      \item Implementierung: CI/CD-Pipeline, Automatische Tests
+      \item Beispiel: Automatische Tests bei jedem Commit
+    \end{itemize}
+  
+  \item \textbf{Code-Qualität}:
+    \begin{itemize}
+      \item Prinzip: Hohe Code-Qualität durch Standards und Reviews
+      \item Vorteile: Wartbarkeit, Lesbarkeit, Fehler-Reduzierung
+      \item Implementierung: Coding-Standards, Code-Reviews, Linting
+      \item Beispiel: Automatische Code-Qualitäts-Checks
+    \end{itemize}
+\end{itemize}
+
+\section{Dokumentationsrichtlinien}
+
+Dieser Abschnitt beschreibt Dokumentationsrichtlinien für E/E-Architekturen.
+
+\subsection{Dokumentations-Standards}
+
+\subsubsection{Architektur-Dokumentation}
+
+\begin{itemize}
+  \item \textbf{Architektur-Übersicht}: High-Level-Architektur-Übersicht
+  \item \textbf{Architektur-Diagramme}: UML-Diagramme, Architektur-Diagramme
+  \item \textbf{Komponenten-Dokumentation}: Dokumentation von Komponenten
+  \item \textbf{Interface-Dokumentation}: Dokumentation von Interfaces
+\end{itemize}
+
+\subsubsection{Entwicklungs-Dokumentation}
+
+\begin{itemize}
+  \item \textbf{Anforderungen}: Anforderungsdokumente
+  \item \textbf{Design}: Design-Dokumente
+  \item \textbf{Implementierung}: Code-Dokumentation
+  \item \textbf{Testing}: Test-Dokumentation
+\end{itemize}
+
+\subsection{Dokumentations-Templates}
+
+\subsubsection{Architektur-Dokumentations-Template}
+
+\begin{itemize}
+  \item \textbf{Übersicht}: Architektur-Übersicht
+  \item \textbf{Komponenten}: Komponenten-Beschreibung
+  \item \textbf{Interfaces}: Interface-Beschreibung
+  \item \textbf{Deployment}: Deployment-Beschreibung
+\end{itemize}
+
+\subsubsection{ADR-Template}
+
+\begin{itemize}
+  \item \textbf{Title}: Titel der Entscheidung
+  \item \textbf{Status}: Status der Entscheidung
+  \item \textbf{Context}: Kontext und Problemstellung
+  \item \textbf{Decision}: Getroffene Entscheidung
+  \item \textbf{Consequences}: Konsequenzen
+  \item \textbf{Alternatives}: Alternativen
+  \item \textbf{Rationale}: Begründung
+\end{itemize}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat ein umfassendes E/E-Architektur-Regelwerk für MB Vans bereitgestellt. Das Regelwerk umfasst:
+
+\begin{itemize}
+  \item \textbf{Architecture Decision Records (ADRs)}: Systematische Dokumentation von Architektur-Entscheidungen
+  \item \textbf{Design Patterns und Best Practices}: Bewährte Patterns für E/E-Architekturen
+  \item \textbf{MB.OS-Integrationsrichtlinien}: Detaillierte Richtlinien für MB.OS-Integration
+  \item \textbf{VAN.EA-Spezifikation}: Vollständige VAN.EA-Architektur-Spezifikation
+  \item \textbf{Entwicklungsprozess und Methoden}: V-Modell, Entwicklungsphasen, Meilensteine
+  \item \textbf{Qualitätssicherung und Testing}: Teststrategien, Testautomatisierung, Testpyramide
+  \item \textbf{Zertifizierung und Compliance}: ISO 26262, UN ECE, Homologation
+  \item \textbf{Migration und Legacy-Integration}: Migration von bestehenden Architekturen
+  \item \textbf{Toolchain und Werkzeuge}: Entwicklungs-Toolchain, CI/CD, Monitoring
+  \item \textbf{Deployment und Betrieb}: OTA-Updates, Monitoring, Wartung
+  \item \textbf{Kostenmodell und Wirtschaftlichkeit}: Kostenanalyse, ROI, Budget-Planung
+  \item \textbf{Dokumentationsrichtlinien}: Standardisierte Dokumentation, Templates
+\end{itemize}
+
+Das Regelwerk bietet eine vollständige Referenz für die Entwicklung neuer E/E-Architekturen für MB Vans und stellt sicher, dass alle Aspekte von der Konzeption bis zum Betrieb abgedeckt sind.
+

@@ -1,0 +1,386 @@
+\chapter{Cybersecurity in E/E-Architekturen}\label{chap:cybersecurity}
+
+\noindent
+Dieses Kapitel beschreibt die Modellierung und Simulation von Cybersecurity-Aspekten in E/E-Architekturen. Cybersecurity wird zunehmend wichtig in vernetzten Fahrzeugen und muss bereits in der Architektur-Phase berücksichtigt werden.
+
+\section{Cybersecurity-Anforderungen}
+
+Moderne E/E-Architekturen müssen verschiedene Cybersecurity-Anforderungen erfüllen:
+
+\begin{itemize}
+  \item \textbf{Vertraulichkeit}: Schutz vor unberechtigtem Zugriff auf Daten
+  \item \textbf{Integrität}: Schutz vor Manipulation von Daten
+  \item \textbf{Verfügbarkeit}: Schutz vor Denial-of-Service-Angriffen
+  \item \textbf{Authentifizierung}: Verifizierung der Identität von Kommunikationspartnern
+  \item \textbf{Autorisierung}: Kontrolle des Zugriffs auf Ressourcen
+  \item \textbf{Non-Repudiation}: Nachweisbarkeit von Aktionen
+\end{itemize}
+
+\section{Modellierung von Cybersecurity}
+
+Cybersecurity-Aspekte werden in PREEvision wie folgt modelliert:
+
+\subsection{Sicherheitszonen}
+
+Sicherheitszonen definieren Bereiche mit unterschiedlichen Sicherheitsanforderungen:
+
+\begin{itemize}
+  \item \textbf{Trusted Zone}: Höchste Sicherheit (z.\,B. sicherheitskritische Funktionen)
+  \item \textbf{Secure Zone}: Hohe Sicherheit (z.\,B. Infotainment)
+  \item \textbf{Untrusted Zone}: Niedrige Sicherheit (z.\,B. externe Schnittstellen)
+\end{itemize}
+
+\subsection{Sicherheitsmechanismen}
+
+Verschiedene Sicherheitsmechanismen werden modelliert:
+
+\begin{itemize}
+  \item \textbf{Verschlüsselung}: AES, RSA, ECC
+  \item \textbf{Digitale Signaturen}: RSA, ECDSA
+  \item \textbf{Hash-Funktionen}: SHA-256, SHA-3
+  \item \textbf{Secure Boot}: Verifizierung beim Start
+  \item \textbf{Secure Update}: Sichere OTA-Updates
+  \item \textbf{Intrusion Detection}: Erkennung von Angriffen
+\end{itemize}
+
+\section{Simulation von Cybersecurity}
+
+Die Simulation von Cybersecurity-Aspekten ermöglicht die Bewertung von Sicherheitsmaßnahmen:
+
+\subsection{Angriffs-Szenarien}
+
+Verschiedene Angriffs-Szenarien werden simuliert:
+
+\begin{itemize}
+  \item \textbf{Man-in-the-Middle}: Abfangen und Manipulation von Kommunikation
+  \item \textbf{Denial-of-Service}: Überlastung von Systemen
+  \item \textbf{Replay-Angriffe}: Wiederverwendung von Nachrichten
+  \item \textbf{Privilege Escalation}: Erhöhung von Berechtigungen
+\end{itemize}
+
+\subsection{Sicherheits-Performance}
+
+Die Performance von Sicherheitsmechanismen wird modelliert:
+
+\begin{table}[h]
+  \centering
+  \caption{Performance von Sicherheitsmechanismen}
+  \begin{tabular}{llll}
+    \toprule
+    Mechanismus & Latenz & CPU-Last & Anwendung \\
+    \midrule
+    AES-128 (SW) & 0.5 ms & 5\% & Datenverschlüsselung \\
+    AES-128 (HW) & 0.1 ms & 1\% & Datenverschlüsselung \\
+    RSA-2048 & 10 ms & 15\% & Signatur-Verifizierung \\
+    ECDSA-256 & 2 ms & 8\% & Signatur-Verifizierung \\
+    SHA-256 & 0.2 ms & 2\% & Hash-Berechnung \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:security_performance}
+\end{table}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Modellierung und Simulation von Cybersecurity-Aspekten in E/E-Architekturen beschrieben. Die wichtigsten Aspekte umfassen:
+
+\begin{itemize}
+  \item \textbf{Anforderungen}: Vertraulichkeit, Integrität, Verfügbarkeit, etc.
+  \item \textbf{Modellierung}: Sicherheitszonen, Sicherheitsmechanismen
+  \item \textbf{Simulation}: Angriffs-Szenarien, Sicherheits-Performance
+\end{itemize}
+
+Cybersecurity muss bereits in der Architektur-Phase berücksichtigt werden, um sicherzustellen, dass die Architektur sicher ist.
+
+\section{Erweiterte Cybersecurity-Modellierung}
+
+Dieser Abschnitt beschreibt erweiterte Aspekte der Cybersecurity-Modellierung.
+
+\subsection{Threat-Modellierung}
+
+Threat-Modellierung identifiziert potenzielle Bedrohungen:
+
+\begin{itemize}
+  \item \textbf{STRIDE}: Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege
+  \item \textbf{Attack-Trees}: Hierarchische Darstellung von Angriffen
+  \item \textbf{Attack-Surfaces}: Identifikation von Angriffsflächen
+  \item \textbf{Risk-Assessment}: Bewertung von Risiken
+\end{itemize}
+
+\subsection{Security-by-Design}
+
+Security-by-Design integriert Sicherheit von Anfang an:
+
+\begin{itemize}
+  \item \textbf{Secure-Architecture}: Architektur mit Sicherheit im Fokus
+  \item \textbf{Defense-in-Depth}: Mehrschichtige Sicherheitsmaßnahmen
+  \item \textbf{Least-Privilege}: Minimale Berechtigungen
+  \item \textbf{Secure-Communication}: Verschlüsselte Kommunikation
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Mechanismen}
+
+Dieser Abschnitt beschreibt erweiterte Cybersecurity-Mechanismen.
+
+\subsection{Secure-Boot}
+
+Secure-Boot verifiziert die Integrität beim Start:
+
+\begin{enumerate}
+  \item \textbf{ROM-Code}: Verifiziert Bootloader-Signatur
+  \item \textbf{Bootloader}: Verifiziert OS-Signatur
+  \item \textbf{OS}: Verifiziert Anwendungs-Signaturen
+  \item \textbf{Chain-of-Trust}: Vertrauenskette von Hardware zu Software
+\end{enumerate}
+
+\subsection{Secure-Update}
+
+Secure-Update ermöglicht sichere OTA-Updates:
+
+\begin{itemize}
+  \item \textbf{Signatur-Verifizierung}: Verifizierung der Update-Signatur
+  \item \textbf{Rollback-Mechanismus}: Zurücksetzen bei Problemen
+  \item \textbf{Incremental-Updates}: Nur Änderungen übertragen
+  \item \textbf{Encrypted-Transport}: Verschlüsselte Übertragung
+\end{itemize}
+
+\subsection{Intrusion-Detection-System (IDS)}
+
+IDS erkennt Angriffe in Echtzeit:
+
+\begin{itemize}
+  \item \textbf{Signature-Based}: Erkennung bekannter Angriffsmuster
+  \item \textbf{Anomaly-Based}: Erkennung von Anomalien
+  \item \textbf{Behavior-Based}: Erkennung von Verhaltensänderungen
+  \item \textbf{Machine-Learning}: ML-basierte Erkennung
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Simulation}
+
+Dieser Abschnitt beschreibt erweiterte Methoden zur Simulation von Cybersecurity.
+
+\subsection{Attack-Scenario-Modellierung}
+
+Verschiedene Angriffs-Szenarien werden modelliert:
+
+\begin{table}[h]
+  \centering
+  \caption{Angriffs-Szenarien}
+  \begin{tabular}{llll}
+    \toprule
+    Szenario & Typ & Impact & Detection \\
+    \midrule
+    Man-in-the-Middle & Passiv & Hoch & Schwierig \\
+    Denial-of-Service & Aktiv & Mittel & Einfach \\
+    Replay-Angriff & Aktiv & Mittel & Mittel \\
+    Privilege Escalation & Aktiv & Sehr hoch & Schwierig \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:attack_scenarios}
+\end{table}
+
+\subsection{Security-Performance-Analyse}
+
+Die Performance von Sicherheitsmechanismen wird analysiert:
+
+\begin{equation}
+L_{security} = L_{encryption} + L_{signature} + L_{verification} + L_{overhead}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $L_{encryption}$: Verschlüsselungs-Latenz
+  \item $L_{signature}$: Signatur-Latenz
+  \item $L_{verification}$: Verifizierungs-Latenz
+  \item $L_{overhead}$: Overhead-Latenz
+\end{itemize}
+
+\subsection{Security-vs-Performance-Trade-off}
+
+Es gibt einen Trade-off zwischen Sicherheit und Performance:
+
+\begin{itemize}
+  \item \textbf{Höhere Sicherheit}: Mehr Verschlüsselung, höhere Latenz
+  \item \textbf{Niedrigere Latenz}: Weniger Verschlüsselung, niedrigere Sicherheit
+  \item \textbf{Optimierung}: Hardware-Beschleunigung, selektive Verschlüsselung
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Standards}
+
+Dieser Abschnitt beschreibt relevante Cybersecurity-Standards.
+
+\subsection{ISO 21434}
+
+ISO 21434 definiert Anforderungen für Cybersecurity:
+
+\begin{itemize}
+  \item \textbf{CSMS}: Cybersecurity Management System
+  \item \textbf{Threat-Analysis}: Systematische Bedrohungsanalyse
+  \item \textbf{Risk-Assessment}: Risikobewertung und -behandlung
+  \item \textbf{Security-by-Design}: Sicherheit durch Design
+\end{itemize}
+
+\subsection{UN R155}
+
+UN Regulation 155 definiert Anforderungen für Cybersecurity:
+
+\begin{itemize}
+  \item \textbf{CSMS}: Cybersecurity Management System
+  \item \textbf{Type-Approval}: Typgenehmigung für Cybersecurity
+  \item \textbf{Incident-Response}: Reaktion auf Sicherheitsvorfälle
+\end{itemize}
+
+\subsection{SAE J3061}
+
+SAE J3061 definiert Guidelines für Cybersecurity:
+
+\begin{itemize}
+  \item \textbf{Cybersecurity-Process}: Prozess für Cybersecurity
+  \item \textbf{Threat-Analysis}: Bedrohungsanalyse
+  \item \textbf{Risk-Assessment}: Risikobewertung
+  \item \textbf{Security-Testing}: Sicherheitstests
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Implementierung}
+
+Dieser Abschnitt beschreibt erweiterte Implementierungs-Aspekte der Cybersecurity.
+
+\subsection{HSM (Hardware Security Module)}
+
+HSM bietet hardware-basierte Sicherheit:
+
+\begin{itemize}
+  \item \textbf{Key-Management}: Sichere Schlüssel-Verwaltung
+  \item \textbf{Crypto-Acceleration}: Hardware-Beschleunigung für Kryptografie
+  \item \textbf{Secure-Storage}: Sichere Speicherung von Schlüsseln
+  \item \textbf{Tamper-Resistance}: Manipulations-Schutz
+\end{itemize}
+
+\subsection{Secure Communication}
+
+Sichere Kommunikation zwischen Komponenten:
+
+\begin{itemize}
+  \item \textbf{TLS/DTLS}: Transport Layer Security für Ethernet
+  \item \textbf{SecOC}: Secure Onboard Communication für CAN
+  \item \textbf{IPsec}: IP Security für IP-basierte Kommunikation
+  \item \textbf{MAC-Sec}: MAC Security für Ethernet
+\end{itemize}
+
+\subsection{Secure Gateway}
+
+Secure Gateway trennt sicherheitskritische Bereiche:
+
+\begin{itemize}
+  \item \textbf{Firewall}: Paket-Filterung
+  \item \textbf{Intrusion-Detection}: Erkennung von Angriffen
+  \item \textbf{VPN}: Virtuelle Private Networks
+  \item \textbf{Access-Control}: Zugriffskontrolle
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Simulation-Beispiele}
+
+Dieser Abschnitt beschreibt erweiterte Beispiele für Cybersecurity-Simulation.
+
+\subsection{Beispiel: Man-in-the-Middle-Angriff}
+
+Simulation eines Man-in-the-Middle-Angriffs:
+
+\begin{itemize}
+  \item \textbf{Szenario}: Angreifer fängt Kommunikation ab
+  \item \textbf{Impact}: Manipulation von Daten, Verlust von Vertraulichkeit
+  \item \textbf{Detection}: Erkennung durch Anomalie-Erkennung
+  \item \textbf{Mitigation}: Verschlüsselung, Authentifizierung
+\end{itemize}
+
+\subsection{Beispiel: Denial-of-Service-Angriff}
+
+Simulation eines Denial-of-Service-Angriffs:
+
+\begin{itemize}
+  \item \textbf{Szenario}: Angreifer überlastet System mit Anfragen
+  \item \textbf{Impact}: System-Unverfügbarkeit, Performance-Degradation
+  \item \textbf{Detection}: Erkennung durch Last-Monitoring
+  \item \textbf{Mitigation}: Rate-Limiting, Traffic-Filtering
+\end{itemize}
+
+\subsection{Beispiel: Privilege-Escalation}
+
+Simulation einer Privilege-Escalation:
+
+\begin{itemize}
+  \item \textbf{Szenario}: Angreifer erhöht Berechtigungen
+  \item \textbf{Impact}: Unautorisierter Zugriff, System-Kompromittierung
+  \item \textbf{Detection}: Erkennung durch Access-Control-Monitoring
+  \item \textbf{Mitigation}: Least-Privilege-Prinzip, Regular-Audits
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Metriken}
+
+Dieser Abschnitt beschreibt erweiterte Metriken für Cybersecurity.
+
+\subsection{Security-Metriken}
+
+Verschiedene Security-Metriken werden verwendet:
+
+\begin{itemize}
+  \item \textbf{Mean-Time-to-Detect (MTTD)}: Durchschnittliche Zeit bis zur Erkennung
+  \item \textbf{Mean-Time-to-Respond (MTTR)}: Durchschnittliche Zeit bis zur Reaktion
+  \item \textbf{Attack-Success-Rate}: Erfolgsrate von Angriffen
+  \item \textbf{False-Positive-Rate}: Rate von Fehlalarmen
+\end{itemize}
+
+\subsection{Security-Performance-Trade-off}
+
+Trade-off zwischen Sicherheit und Performance:
+
+\begin{equation}
+P_{secure} = P_{baseline} + P_{encryption} + P_{signature} + P_{verification} + P_{overhead}
+\end{equation}
+
+wobei:
+\begin{itemize}
+  \item $P_{secure}$: Performance mit Sicherheit
+  \item $P_{baseline}$: Baseline-Performance
+  \item $P_{encryption}$: Performance-Overhead durch Verschlüsselung
+  \item $P_{signature}$: Performance-Overhead durch Signaturen
+  \item $P_{verification}$: Performance-Overhead durch Verifizierung
+  \item $P_{overhead}$: Allgemeiner Overhead
+\end{itemize}
+
+\section{Erweiterte Cybersecurity-Best-Practices}
+
+Dieser Abschnitt beschreibt Best Practices für Cybersecurity.
+
+\subsection{Defense-in-Depth}
+
+Mehrschichtige Sicherheitsmaßnahmen:
+
+\begin{enumerate}
+  \item \textbf{Network-Security}: Firewalls, IDS, VPN
+  \item \textbf{Application-Security}: Secure Coding, Input-Validation
+  \item \textbf{Data-Security}: Encryption, Access-Control
+  \item \textbf{Device-Security}: Secure Boot, HSM, Tamper-Resistance
+\end{enumerate}
+
+\subsection{Security-Monitoring}
+
+Kontinuierliche Überwachung der Sicherheit:
+
+\begin{itemize}
+  \item \textbf{Log-Analysis}: Analyse von Log-Dateien
+  \item \textbf{Anomaly-Detection}: Erkennung von Anomalien
+  \item \textbf{Threat-Intelligence}: Bedrohungs-Intelligence
+  \item \textbf{Incident-Response}: Reaktion auf Vorfälle
+\end{itemize}
+
+\subsection{Security-Testing}
+
+Regelmäßige Sicherheitstests:
+
+\begin{itemize}
+  \item \textbf{Penetration-Testing}: Penetrationstests
+  \item \textbf{Vulnerability-Scanning}: Schwachstellen-Scans
+  \item \textbf{Code-Review}: Code-Reviews auf Sicherheitsprobleme
+  \item \textbf{Fuzz-Testing}: Fuzz-Tests für Eingabe-Validierung
+\end{itemize}
+

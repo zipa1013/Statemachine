@@ -1,4 +1,675 @@
 \chapter{Dokumentation und Deliverables}\label{chap:deliverables}
-Metamodell-Spezifikation, Transformationsregeln, Generator, Beispiel-Architekturen/Simulationen, Szenarienkatalog, KPI-Definitionen, Evaluationsbericht.
 
+\noindent
+Dieses Kapitel beschreibt die Dokumentation und die zu liefernden Artefakte (Deliverables) des Projekts. Diese umfassen Spezifikationen, Implementierungen, Beispiele und Evaluationsberichte. Eine umfassende und gut strukturierte Dokumentation ist essentiell für die Wiederverwendung, Wartung und Weiterentwicklung des Transformations-Frameworks. Die Deliverables ermöglichen es anderen Entwicklern und Forschern, das Framework zu verstehen, zu verwenden und zu erweitern.
 
+\section{Metamodell-Spezifikation}
+
+Die Metamodell-Spezifikation ist das zentrale Dokument, das die Struktur und Semantik des Intermediate Models (IM) definiert. Das IM dient als Abstraktionsebene zwischen PREEvision-Exporten und Simulationsmodellen und ermöglicht es, verschiedene Quell- und Zielformate zu unterstützen. Eine präzise und vollständige Spezifikation ist daher von entscheidender Bedeutung.
+
+\subsection{Intermediate Model (IM) Spezifikation}
+
+Das Intermediate Model ist ein strukturiertes Datenmodell, das alle relevanten Informationen einer E/E-Architektur in einer plattformunabhängigen Form repräsentiert. Die IM-Spezifikation definiert die exakte Struktur, Semantik und Constraints dieses Modells.
+
+\subsubsection{Struktur-Definition}
+
+Die IM-Spezifikation definiert die Struktur des Intermediate Models in mehreren Ebenen:
+
+\begin{itemize}
+  \item \textbf{Schema-Definition}: Eine formale Schema-Definition in JSON Schema oder XML Schema, die die Syntax und Struktur des IM definiert. Das Schema dient sowohl als Dokumentation als auch als Validierungsgrundlage für IM-Instanzen. Es definiert die erlaubten Elemente, ihre Attribute, Datentypen, Kardinalitäten und Constraints.
+  
+  \item \textbf{Klassen-Diagramm}: Ein UML-Klassen-Diagramm, das die Modell-Struktur visuell darstellt. Das Diagramm zeigt die Klassen (z.\,B. Node, Link, Task, Frame), ihre Attribute, Methoden und Beziehungen (Assoziationen, Vererbung, Komposition). Dies erleichtert das Verständnis der Modell-Struktur.
+  
+  \item \textbf{Attribut-Definitionen}: Eine detaillierte Beschreibung aller Attribute jeder Klasse, einschließlich:
+    \begin{itemize}
+      \item Name und Datentyp
+      \item Semantik und Bedeutung
+      \item Erlaubte Werte und Constraints
+      \item Default-Werte (falls vorhanden)
+      \item Einheiten (für physikalische Größen)
+      \item Beispiele
+    \end{itemize}
+  
+  \item \textbf{Beziehungen}: Definition aller Beziehungen zwischen Elementen, einschließlich:
+    \begin{itemize}
+      \item Assoziationen (z.\,B. Node hat Links)
+      \item Kompositionen (z.\,B. ECU enthält Tasks)
+      \item Vererbung (z.\,B. Sensor erbt von Node)
+      \item Kardinalitäten (1:1, 1:N, N:M)
+      \item Constraints und Invarianten
+    \end{itemize}
+  
+  \item \textbf{Metamodell-Hierarchie}: Die Hierarchie der Modell-Elemente, von abstrakten Basisklassen bis zu konkreten Instanzen. Dies zeigt, wie verschiedene Komponententypen (ECUs, Sensoren, Aktoren) in das gemeinsame Metamodell integriert sind.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: IM-Klassen-Hierarchie (Auszug)}
+  \begin{tabular}{llll}
+    \toprule
+    Klasse & Basisklasse & Attribute (Auszug) & Beschreibung \\
+    \midrule
+    Node & -- & id, name, type & Basisklasse für alle Knoten \\
+    ECU & Node & cpu\_cores, ram, asil & Rechenknoten \\
+    Sensor & Node & resolution, framerate & Sensor-Knoten \\
+    Actuator & Node & latency, accuracy & Aktor-Knoten \\
+    Link & -- & bandwidth, latency, protocol & Kommunikationsverbindung \\
+    Task & -- & wcet, period, priority & Software-Task \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:im_class_hierarchy}
+\end{table}
+
+\subsubsection{Dokumentations-Format}
+
+Die Spezifikation wird in verschiedenen Formaten bereitgestellt, um unterschiedliche Anwendungsfälle zu unterstützen:
+
+\begin{itemize}
+  \item \textbf{Markdown/LaTeX}: Lesbare Dokumentation für Menschen, die das IM verstehen und verwenden möchten. Diese Dokumentation enthält ausführliche Beschreibungen, Beispiele, Diagramme und Erklärungen. Sie dient als primäre Referenz für Entwickler.
+  
+  \item \textbf{JSON Schema}: Maschinenlesbare Schema-Definition für die automatische Validierung von IM-Instanzen. Das JSON Schema kann von Validierungs-Tools verwendet werden, um sicherzustellen, dass IM-Instanzen korrekt strukturiert sind.
+  
+  \item \textbf{XML Schema}: Alternative Schema-Definition für XML-basierte IM-Repräsentationen. XML Schema bietet ähnliche Funktionalität wie JSON Schema, ist aber für XML optimiert.
+  
+  \item \textbf{API-Dokumentation}: Dokumentation der Programmierschnittstelle (API) für Software-Bibliotheken, die das IM manipulieren. Diese Dokumentation beschreibt Klassen, Methoden, Parameter und Rückgabewerte und ermöglicht es Entwicklern, das IM programmatisch zu verwenden.
+  
+  \item \textbf{GraphQL Schema}: Optionales GraphQL Schema für API-basierte Zugriffe auf IM-Daten, falls das IM über eine GraphQL-API verfügbar gemacht wird.
+\end{itemize}
+
+Die verschiedenen Formate ergänzen sich gegenseitig: Die Markdown/LaTeX-Dokumentation dient als primäre Referenz für Menschen, während die Schema-Definitionen für maschinelle Validierung und Verarbeitung verwendet werden.
+
+\section{Transformationsregeln}
+
+Die Transformationsregeln definieren, wie Elemente aus dem PREEvision-Modell in das Intermediate Model und schließlich in Simulationsmodelle transformiert werden. Eine vollständige und präzise Dokumentation dieser Regeln ist essentiell, um die Transformation nachvollziehbar und wartbar zu machen.
+
+\subsection{Mapping-Regel-Dokumentation}
+
+Die Mapping-Regel-Dokumentation beschreibt jede Transformationsregel im Detail, einschließlich der Quell- und Zielelemente, der Transformationslogik und der Bedingungen, unter denen die Regel angewendet wird.
+
+\subsubsection{Regel-Katalog}
+
+Ein umfassender Katalog aller Mapping-Regeln wird bereitgestellt, der als Referenz für Entwickler und als Grundlage für die automatische Code-Generierung dient. Jede Regel wird strukturiert dokumentiert:
+
+\begin{itemize}
+  \item \textbf{Regel-ID}: Eindeutige Identifikation der Regel (z.\,B. \texttt{RULE\_ECU\_TO\_NODE\_001})
+  
+  \item \textbf{Quell-Elemente}: Die PREEvision-Elemente, die transformiert werden (z.\,B. ECU-Knoten, Links, Tasks, Frames). Für jedes Quell-Element werden die relevanten Attribute und ihre Bedeutung beschrieben.
+  
+  \item \textbf{Ziel-Elemente}: Die Simulations-Elemente, die erzeugt werden (z.\,B. OMNeT++ Nodes, Channels, Applications). Für jedes Ziel-Element werden die zu setzenden Attribute und ihre Quellen beschrieben.
+  
+  \item \textbf{Mapping-Logik}: Detaillierte Beschreibung der Transformation, einschließlich:
+    \begin{itemize}
+      \item Attribut-Mappings (wie werden Quell-Attribute auf Ziel-Attribute gemappt)
+      \item Berechnungen und Transformationen (z.\,B. Einheiten-Umrechnungen)
+      \item Default-Werte für fehlende Attribute
+      \item Bedingungen und Constraints
+    \end{itemize}
+  
+  \item \textbf{Beispiele}: Konkrete Beispiele für jede Regel, die zeigen, wie eine typische Transformation aussieht. Die Beispiele umfassen sowohl die Eingabe (PREEvision-Element) als auch die Ausgabe (Simulations-Element).
+  
+  \item \textbf{Abhängigkeiten}: Andere Regeln, die vor dieser Regel ausgeführt werden müssen, oder Regeln, die von dieser Regel abhängen.
+  
+  \item \textbf{Fehlerbehandlung}: Wie mit Fehlern oder fehlenden Daten umgegangen wird.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Beispiel: Mapping-Regel-Katalog (Auszug)}
+  \begin{tabular}{llll}
+    \toprule
+    Regel-ID & Quell-Element & Ziel-Element & Beschreibung \\
+    \midrule
+    RULE\_001 & PREEvision ECU & OMNeT++ Node & Transformation eines ECU-Knotens \\
+    RULE\_002 & PREEvision Link & OMNeT++ Channel & Transformation einer Verbindung \\
+    RULE\_003 & PREEvision Task & OMNeT++ Application & Transformation einer Software-Task \\
+    RULE\_004 & PREEvision Frame & OMNeT++ Traffic & Transformation eines Datenframes \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:rule_catalog}
+\end{table}
+
+\subsubsection{YAML-Konfiguration}
+
+Die Mapping-Regeln werden als strukturierte YAML-Dateien dokumentiert, die sowohl maschinenlesbar als auch menschenlesbar sind. YAML bietet eine gute Balance zwischen Lesbarkeit und Struktur:
+
+\begin{itemize}
+  \item \textbf{Regel-Dateien}: Strukturierte YAML-Dateien, die alle Informationen zu einer Regel enthalten. Die Dateien sind hierarchisch organisiert und folgen einem konsistenten Schema.
+  
+  \item \textbf{Dokumentation}: Kommentare und Beschreibungen direkt in den YAML-Dateien, die die Regel erklären und Kontext liefern. YAML unterstützt Kommentare mit \texttt{\#}, die für zusätzliche Erklärungen verwendet werden.
+  
+  \item \textbf{Validierung}: Schema-Validierung der Regel-Dateien, um sicherzustellen, dass sie korrekt strukturiert sind. Ein JSON Schema oder ein ähnliches Validierungsschema wird bereitgestellt, um die Konsistenz der Regel-Dateien zu gewährleisten.
+  
+  \item \textbf{Versionierung}: Versionskontrolle der Regel-Dateien, um Änderungen nachverfolgen zu können und um verschiedene Versionen der Regeln zu unterstützen.
+\end{itemize}
+
+\begin{verbatim}
+# Beispiel: YAML-Regel-Definition
+rule_id: RULE_ECU_TO_NODE_001
+name: "Transform ECU to OMNeT++ Node"
+description: "Transforms a PREEvision ECU node to an OMNeT++ network node"
+
+source:
+  type: "ECU"
+  attributes:
+    - name: "cpu_cores"
+      required: true
+    - name: "cpu_freq"
+      required: true
+    - name: "ram_size"
+      required: false
+      default: 4096
+
+target:
+  type: "OMNeT++ Node"
+  attributes:
+    - name: "numCpus"
+      mapping: "cpu_cores"
+    - name: "cpuClockFrequency"
+      mapping: "cpu_freq * 1e9"  # Convert GHz to Hz
+    - name: "memorySize"
+      mapping: "ram_size * 1024 * 1024"  # Convert GB to bytes
+
+conditions:
+  - "cpu_cores > 0"
+  - "cpu_freq > 0"
+
+examples:
+  - input:
+      cpu_cores: 4
+      cpu_freq: 2.0
+      ram_size: 8
+    output:
+      numCpus: 4
+      cpuClockFrequency: 2000000000
+      memorySize: 8589934592
+\end{verbatim}
+
+Die YAML-Konfiguration ermöglicht es, die Transformationsregeln deklarativ zu definieren, was die Wartung und Erweiterung erleichtert.
+
+\section{Generator-Implementierung}
+
+Die Generator-Implementierung ist der ausführbare Code, der die Transformation von PREEvision-Modellen in Simulationsmodelle durchführt. Eine vollständige und gut dokumentierte Implementierung ist essentiell für die Wartbarkeit und Erweiterbarkeit des Frameworks.
+
+\subsection{Code-Generator}
+
+Der Code-Generator ist die Kernkomponente, die die Transformationsregeln anwendet und Simulationscode generiert. Die Implementierung sollte modular, erweiterbar und gut getestet sein.
+
+\subsubsection{Quellcode}
+
+Die vollständige Implementierung des Generators umfasst:
+
+\begin{itemize}
+  \item \textbf{Quellcode}: Eine vollständige Implementierung in einer geeigneten Programmiersprache (Python, Java oder C++). Python wird oft bevorzugt, da es eine gute Balance zwischen Produktivität und Performance bietet und eine umfangreiche Bibliotheksunterstützung für Datenverarbeitung und Code-Generierung bietet.
+  
+  \item \textbf{Architektur}: Eine modulare Architektur, die verschiedene Komponenten trennt:
+    \begin{itemize}
+      \item Parser-Modul: Liest und parst PREEvision-Exporte
+      \item IM-Generator: Erzeugt das Intermediate Model
+      \item Transformations-Engine: Wendet Mapping-Regeln an
+      \item Code-Generator: Generiert Simulationscode aus Templates
+      \item Validator: Validiert die generierten Modelle
+    \end{itemize}
+  
+  \item \textbf{Versionierung}: Ein Git-Repository mit vollständiger Versionshistorie, Tags für Releases und strukturierten Commit-Messages. Das Repository sollte auch Issue-Tracking und Pull-Request-Workflows unterstützen.
+  
+  \item \textbf{Dokumentation}: Umfassende Code-Dokumentation, einschließlich:
+    \begin{itemize}
+      \item Inline-Kommentare für komplexe Logik
+      \item Docstrings/DocComments für alle öffentlichen Funktionen und Klassen
+      \item API-Dokumentation (z.\,B. Sphinx für Python, Javadoc für Java)
+      \item Architektur-Dokumentation (Übersichtsdiagramme, Design-Entscheidungen)
+      \item README mit Installations- und Verwendungsanleitung
+    \end{itemize}
+  
+  \item \textbf{Tests}: Umfassende Test-Suite, einschließlich:
+    \begin{itemize}
+      \item Unit-Tests für einzelne Funktionen und Klassen
+      \item Integration-Tests für End-to-End-Transformationen
+      \item Regression-Tests für bekannte Architekturen
+      \item Performance-Tests für große Modelle
+      \item Test-Coverage-Metriken (Ziel: > 80\%)
+    \end{itemize}
+  
+  \item \textbf{CI/CD}: Continuous Integration/Continuous Deployment Pipeline für automatische Tests und Releases.
+\end{itemize}
+
+\subsubsection{Templates}
+
+Template-Dateien definieren die Struktur des generierten Simulationscodes. Templates verwenden typischerweise eine Template-Engine (z.\,B. Jinja2 für Python, Velocity für Java), die Platzhalter durch tatsächliche Werte ersetzt:
+
+\begin{itemize}
+  \item \textbf{OMNeT++ Templates}: Templates für OMNeT++ Netzwerk-Definitionen (.ned-Dateien) und Simulations-Konfigurationen (.ini-Dateien). Die Templates definieren die Struktur von Nodes, Channels, Applications und Parametern.
+  
+  \item \textbf{Simulink Templates}: Templates für Simulink-Modelle, die die Struktur von Blocks, Connections und Parametern definieren. Diese können als MATLAB-Skripte oder als XML-basierte Modelldefinitionen vorliegen.
+  
+  \item \textbf{NS-3 Templates}: C++ Code Templates für NS-3 Simulationen, die die Implementierung von Nodes, Channels und Applications definieren.
+  
+  \item \textbf{Modelica Templates}: Templates für Modelica-Modelle, die die Struktur von Komponenten, Verbindungen und Parametern definieren.
+  
+  \item \textbf{Template-Variablen}: Definiert, welche Variablen in den Templates verfügbar sind und wie sie aus dem IM extrahiert werden.
+  
+  \item \textbf{Template-Validierung}: Validierung der Templates, um sicherzustellen, dass sie syntaktisch korrekt sind und alle erforderlichen Variablen verwenden.
+\end{itemize}
+
+\begin{table}[h]
+  \centering
+  \caption{Übersicht der Template-Dateien}
+  \begin{tabular}{llll}
+    \toprule
+    Zielplattform & Template-Dateien & Format & Beschreibung \\
+    \midrule
+    OMNeT++ & network.ned.j2 & Jinja2 & Netzwerk-Definition \\
+    OMNeT++ & config.ini.j2 & Jinja2 & Simulations-Konfiguration \\
+    Simulink & model.m.j2 & Jinja2 & MATLAB-Skript \\
+    NS-3 & node.cc.j2 & Jinja2 & C++ Node-Implementierung \\
+    Modelica & model.mo.j2 & Jinja2 & Modelica-Modell \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:templates}
+\end{table}
+
+Die Templates sollten gut dokumentiert sein, mit Kommentaren, die erklären, welche Variablen verfügbar sind und wie sie verwendet werden.
+
+\section{Beispiel-Architekturen}
+
+\subsection{Referenz-Architekturen}
+
+\subsubsection{Minimal-Architektur}
+
+Eine minimale Beispiel-Architektur:
+
+\begin{itemize}
+  \item \textbf{Komponenten}: Kamera, ECU, Aktor
+  \item \textbf{Kommunikation}: Ethernet, CAN
+  \item \textbf{Software}: Einfache Perzeptions-Pipeline
+  \item \textbf{Dokumentation}: Vollständige Beschreibung
+\end{itemize}
+
+\subsubsection{Typische Architektur}
+
+Eine repräsentative Architektur:
+
+\begin{itemize}
+  \item \textbf{Komponenten}: Mehrere Sensoren, ECUs, Aktoren
+  \item \textbf{Kommunikation}: TSN-Ethernet, CAN, LIN
+  \item \textbf{Software}: Komplexe Funktionsketten
+  \item \textbf{Dokumentation}: Detaillierte Beschreibung
+\end{itemize}
+
+\subsection{Beispiel-Simulationen}
+
+\subsubsection{Konfigurierte Simulationen}
+
+Vorkonfigurierte Simulations-Setups:
+
+\begin{itemize}
+  \item \textbf{Nominal-Szenarien}: Standard-Betrieb
+  \item \textbf{Stress-Szenarien}: Hohe Last
+  \item \textbf{Fehler-Szenarien}: Ausfälle
+  \item \textbf{Varianten}: Verschiedene Design-Varianten
+\end{itemize}
+
+\subsubsection{Ergebnisse}
+
+Beispiel-Ergebnisse für Referenz-Architekturen:
+
+\begin{itemize}
+  \item \textbf{Simulations-Outputs}: Ergebnis-Dateien
+  \item \textbf{Auswertungen}: Analysierte Ergebnisse
+  \item \textbf{Visualisierungen}: Dashboards, Diagramme
+\end{itemize}
+
+\section{Szenarienkatalog}
+
+\subsection{Szenario-Definitionen}
+
+\subsubsection{Strukturierte Beschreibung}
+
+Jedes Szenario wird strukturiert beschrieben:
+
+\begin{itemize}
+  \item \textbf{Szenario-ID}: Eindeutige Identifikation
+  \item \textbf{Beschreibung}: Detaillierte Beschreibung
+  \item \textbf{Parameter}: Konfigurations-Parameter
+  \item \textbf{Erwartete Ergebnisse}: Erwartete Metriken
+\end{itemize}
+
+\subsubsection{Kategorisierung}
+
+Szenarien werden kategorisiert:
+
+\begin{itemize}
+  \item \textbf{Nominal}: Standard-Betrieb
+  \item \textbf{Stress}: Hohe Last
+  \item \textbf{Fehler}: Ausfälle
+  \item \textbf{Varianten}: Design-Varianten
+\end{itemize}
+
+\section{KPI-Definitionen}
+
+\subsection{Messgrößen-Definition}
+
+\subsubsection{Metriken-Katalog}
+
+Ein umfassender Katalog aller Messgrößen:
+
+\begin{itemize}
+  \item \textbf{Metrik-ID}: Eindeutige Identifikation
+  \item \textbf{Beschreibung}: Detaillierte Beschreibung
+  \item \textbf{Formel}: Mathematische Definition
+  \item \textbf{Einheit}: Physikalische Einheit
+  \item \textbf{Akzeptanzkriterien}: Grenzwerte
+\end{itemize}
+
+\subsubsection{Kategorisierung}
+
+Metriken werden kategorisiert:
+
+\begin{itemize}
+  \item \textbf{Timing}: Latenz, Jitter, Deadline-Misses
+  \item \textbf{Kommunikation}: Busauslastung, Paketverluste
+  \item \textbf{Ressourcen}: CPU/GPU-Last, Speicher
+  \item \textbf{Verfügbarkeit}: MTBF, Verfügbarkeit
+  \item \textbf{Energie}: Energieverbrauch, Power-States
+\end{itemize}
+
+\section{Evaluationsbericht}
+
+\subsection{Methodik}
+
+\subsubsection{Vorgehensweise}
+
+Beschreibung der Evaluations-Methodik:
+
+\begin{itemize}
+  \item \textbf{Test-Architekturen}: Verwendete Architekturen
+  \item \textbf{Szenarien}: Durchgeführte Szenarien
+  \item \textbf{Messgrößen}: Verwendete Metriken
+  \item \textbf{Validierung}: Validierungs-Ansätze
+\end{itemize}
+
+\subsection{Ergebnisse}
+
+\subsubsection{Performance-Analyse}
+
+Analyse der Simulations-Performance:
+
+\begin{itemize}
+  \item \textbf{Simulations-Zeit}: Dauer der Simulationen
+  \item \textbf{Skalierbarkeit}: Performance bei verschiedenen Architektur-Größen
+  \item \textbf{Genauigkeit}: Vergleich mit analytischen Modellen
+\end{itemize}
+
+\subsubsection{Architektur-Bewertung}
+
+Bewertung der Architekturen:
+
+\begin{itemize}
+  \item \textbf{Timing-Analyse}: E2E-Latenzen, Jitter
+  \item \textbf{Ressourcen-Analyse}: CPU/Netzwerk-Auslastung
+  \item \textbf{Verfügbarkeits-Analyse}: MTBF, Verfügbarkeit
+  \item \textbf{Energie-Analyse}: Energieverbrauch
+\end{itemize}
+
+\subsection{Fazit und Ausblick}
+
+\subsubsection{Zusammenfassung}
+
+Zusammenfassung der wichtigsten Erkenntnisse:
+
+\begin{itemize}
+  \item \textbf{Erfolge}: Erreichte Ziele
+  \item \textbf{Herausforderungen}: Identifizierte Probleme
+  \item \textbf{Lösungen}: Implementierte Lösungen
+\end{itemize}
+
+\subsubsection{Ausblick}
+
+Zukünftige Entwicklungen:
+
+\begin{itemize}
+  \item \textbf{Erweiterungen}: Geplante Erweiterungen
+  \item \textbf{Verbesserungen}: Mögliche Verbesserungen
+  \item \textbf{Anwendungen}: Weitere Anwendungsgebiete
+\end{itemize}
+
+\section{Deliverables-Übersicht}
+
+\subsection{Artefakte}
+
+\begin{table}[h]
+  \centering
+  \caption{Übersicht der Deliverables}
+  \begin{tabular}{lll}
+    \toprule
+    Deliverable & Format & Beschreibung \\
+    \midrule
+    IM-Spezifikation & PDF/Markdown & Metamodell-Definition \\
+    Transformationsregeln & YAML/PDF & Mapping-Regel-Katalog \\
+    Generator & Python/Java & Code-Generator \\
+    Beispiel-Architekturen & PREEvision/IM & Referenz-Modelle \\
+    Beispiel-Simulationen & OMNeT++/Simulink & Simulations-Setups \\
+    Szenarienkatalog & PDF/Markdown & Szenario-Definitionen \\
+    KPI-Definitionen & PDF/Markdown & Metriken-Katalog \\
+    Evaluationsbericht & PDF & Ergebnisse und Analyse \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:deliverables}
+\end{table}
+
+\section{Erweiterte Deliverables}
+
+Dieser Abschnitt beschreibt zusätzliche Deliverables, die über die grundlegenden Artefakte hinausgehen und den Wert des Projekts erhöhen.
+
+\subsection{Online-Dokumentation}
+
+Eine umfassende Online-Dokumentation ermöglicht es Benutzern, das Framework schnell zu verstehen und effektiv zu nutzen.
+
+\subsubsection{Struktur}
+
+Die Online-Dokumentation umfasst:
+
+\begin{itemize}
+  \item \textbf{Getting Started Guide}: Schritt-für-Schritt-Anleitung für erste Schritte
+  \item \textbf{Tutorials}: Detaillierte Tutorials für häufige Anwendungsfälle
+  \item \textbf{API-Referenz}: Vollständige API-Dokumentation mit Beispielen
+  \item \textbf{FAQ}: Häufig gestellte Fragen und Antworten
+  \item \textbf{Best Practices}: Empfehlungen für effektive Nutzung
+  \item \textbf{Troubleshooting}: Lösungen für häufige Probleme
+\end{itemize}
+
+\subsubsection{Technologie}
+
+Die Online-Dokumentation wird mit modernen Tools erstellt:
+
+\begin{itemize}
+  \item \textbf{Sphinx} (für Python): Automatische API-Dokumentation aus Docstrings
+  \item \textbf{MkDocs} oder \textbf{Docusaurus}: Moderne, responsive Dokumentations-Frameworks
+  \item \textbf{Read the Docs}: Hosting-Plattform für automatische Builds
+  \item \textbf{Search-Funktionalität}: Volltext-Suche für schnelle Navigation
+\end{itemize}
+
+\subsection{Video-Tutorials}
+
+Video-Tutorials ergänzen die schriftliche Dokumentation und ermöglichen visuelles Lernen.
+
+\subsubsection{Inhalte}
+
+Die Video-Tutorials umfassen:
+
+\begin{itemize}
+  \item \textbf{Installation und Setup}: Schritt-für-Schritt-Installation
+  \item \textbf{Erste Transformation}: Komplettes Beispiel von PREEvision zu Simulation
+  \item \textbf{Erweiterte Features}: Komplexe Anwendungsfälle
+  \item \textbf{Debugging}: Fehlersuche und -behebung
+  \item \textbf{Best Practices}: Empfehlungen von Experten
+\end{itemize}
+
+\subsubsection{Format}
+
+Die Videos werden in verschiedenen Formaten bereitgestellt:
+
+\begin{itemize}
+  \item \textbf{Kurze Tutorials}: 5-10 Minuten für spezifische Themen
+  \item \textbf{Lange Tutorials}: 30-60 Minuten für umfassende Themen
+  \item \textbf{Interaktive Videos}: Mit Quizzen und Übungen
+  \item \textbf{Transkripte}: Schriftliche Transkripte für Barrierefreiheit
+\end{itemize}
+
+\subsection{Community-Ressourcen}
+
+Community-Ressourcen fördern die Zusammenarbeit und den Wissensaustausch.
+
+\subsubsection{Foreum}
+
+Ein Diskussionsforum ermöglicht:
+
+\begin{itemize}
+  \item \textbf{Fragen und Antworten}: Community-basierte Unterstützung
+  \item \textbf{Feature-Requests}: Vorschläge für neue Features
+  \item \textbf{Bug-Reports}: Meldung von Fehlern
+  \item \textbf{Erfahrungsaustausch}: Diskussion von Best Practices
+\end{itemize}
+
+\subsubsection{Beispiel-Sammlung}
+
+Eine Sammlung von Beispielen hilft Benutzern, schnell loszulegen:
+
+\begin{itemize}
+  \item \textbf{Minimal-Beispiele}: Einfache Beispiele für erste Schritte
+  \item \textbf{Erweiterte Beispiele}: Komplexe Anwendungsfälle
+  \item \textbf{Best-Practice-Beispiele}: Beispiele, die Best Practices demonstrieren
+  \item \textbf{Fehlerbeispiele}: Beispiele für häufige Fehler und deren Lösung
+\end{itemize}
+
+\section{Erweiterte Dokumentations-Formate}
+
+Dieser Abschnitt beschreibt erweiterte Dokumentations-Formate, die für verschiedene Zielgruppen verwendet werden können.
+
+\subsection{Interactive Documentation}
+
+Interaktive Dokumentation ermöglicht exploratives Lernen:
+
+\begin{itemize}
+  \item \textbf{Jupyter Notebooks}: Interaktive Beispiele mit Code und Erklärungen
+  \item \textbf{Interactive Dashboards}: Interaktive Visualisierungen von Ergebnissen
+  \item \textbf{Web-basierte Tutorials}: Schritt-für-Schritt-Tutorials im Browser
+  \item \textbf{Code-Playgrounds}: Online-Editoren für Experimente
+\end{itemize}
+
+\subsection{API-Dokumentation}
+
+Umfassende API-Dokumentation für Entwickler:
+
+\begin{itemize}
+  \item \textbf{OpenAPI/Swagger}: REST-API-Dokumentation
+  \item \textbf{GraphQL Schema}: GraphQL-API-Dokumentation
+  \item \textbf{Code-Beispiele}: Praktische Code-Beispiele für alle APIs
+  \item \textbf{SDK-Dokumentation}: Dokumentation für Software Development Kits
+\end{itemize}
+
+\section{Erweiterte Dokumentations-Beispiele}
+
+Dieser Abschnitt präsentiert detaillierte Beispiele für verschiedene Dokumentations-Artefakte.
+
+\subsection{Beispiel: API-Dokumentation}
+
+\subsubsection{REST-API-Dokumentation}
+
+\begin{verbatim}
+# Transformation API
+
+## POST /api/v1/transform
+
+Transformiert ein PREEvision-Modell in ein Simulationsmodell.
+
+### Request Body
+
+```json
+{
+  "source_format": "preevision",
+  "target_format": "omnetpp",
+  "architecture_id": "arch_001",
+  "options": {
+    "validate": true,
+    "optimize": true
+  }
+}
+```
+
+### Response
+
+```json
+{
+  "transformation_id": "trans_001",
+  "status": "completed",
+  "output_files": [
+    "omnet_config.ini",
+    "network.ned",
+    "simulation.ini"
+  ],
+  "metrics": {
+    "transformation_time": 120.5,
+    "nodes_created": 150,
+    "links_created": 500
+  }
+}
+```
+\end{verbatim}
+
+\subsection{Beispiel: User-Guide}
+
+\subsubsection{Quick-Start-Guide}
+
+\begin{enumerate}
+  \item \textbf{Installation}:
+    \begin{verbatim}
+    pip install ee-arch-transformer
+    \end{verbatim}
+  
+  \item \textbf{Export aus PREEvision}:
+    \begin{itemize}
+      \item Öffne PREEvision-Projekt
+      \item Export $\rightarrow$ JSON
+      \item Wähle alle relevanten Elemente
+      \item Export durchführen
+    \end{itemize}
+  
+  \item \textbf{Transformation}:
+    \begin{verbatim}
+    eetransform --input architecture.json \
+                --output simulation/ \
+                --format omnetpp \
+                --validate
+    \end{verbatim}
+  
+  \item \textbf{Simulation}:
+    \begin{verbatim}
+    cd simulation/
+    opp_run -c Nominal omnet_config.ini
+    \end{verbatim}
+\end{enumerate}
+
+\section{Zusammenfassung}
+
+Dieses Kapitel hat die Dokumentation und Deliverables als essentielle Komponenten des Projekts beschrieben. Eine umfassende und gut strukturierte Dokumentation ist entscheidend für die Wiederverwendung, Wartung und Weiterentwicklung des Transformations-Frameworks. Die Deliverables ermöglichen es anderen Entwicklern und Forschern, das Framework zu verstehen, zu verwenden und zu erweitern.
+
+Die wichtigsten Aspekte dieses Kapitels sind:
+
+\begin{itemize}
+  \item \textbf{Metamodell-Spezifikation}: Vollständige Spezifikation des Intermediate Models (IM) mit Schema-Definitionen, Klassen-Diagrammen, Attribut-Definitionen und Beziehungen. Die Spezifikation wird in verschiedenen Formaten bereitgestellt (Markdown/LaTeX, JSON Schema, XML Schema, API-Dokumentation), um unterschiedliche Anwendungsfälle zu unterstützen.
+  
+  \item \textbf{Transformationsregeln}: Umfassender Katalog aller Mapping-Regeln mit detaillierter Dokumentation der Quell- und Zielelemente, Mapping-Logik, Beispielen und Abhängigkeiten. Die Regeln werden als strukturierte YAML-Dateien dokumentiert, die sowohl maschinenlesbar als auch menschenlesbar sind.
+  
+  \item \textbf{Generator-Implementierung}: Vollständige Implementierung des Code-Generators mit modularem Design, umfassender Dokumentation, Test-Suite und CI/CD-Pipeline. Die Implementierung umfasst auch Template-Dateien für verschiedene Zielplattformen (OMNeT++, Simulink, NS-3, Modelica).
+  
+  \item \textbf{Beispiel-Architekturen}: Referenz-Modelle in verschiedenen Komplexitätsgraden (Minimal-, Typische-, Maximale-Architektur) mit vollständiger Dokumentation und vorkonfigurierten Simulations-Setups für verschiedene Szenarien (Nominal, Stress, Fehler, Varianten).
+  
+  \item \textbf{Szenarienkatalog}: Strukturierte Definitionen aller verwendeten Szenarien mit eindeutigen IDs, detaillierten Beschreibungen, Konfigurations-Parametern und erwarteten Ergebnissen. Die Szenarien werden kategorisiert (Nominal, Stress, Fehler, Varianten) für einfache Navigation.
+  
+  \item \textbf{KPI-Definitionen}: Umfassender Katalog aller Messgrößen mit eindeutigen IDs, detaillierten Beschreibungen, mathematischen Formeln, Einheiten und Akzeptanzkriterien. Die Metriken werden kategorisiert (Timing, Kommunikation, Ressourcen, Verfügbarkeit, Energie) für strukturierte Auswertung.
+  
+  \item \textbf{Evaluationsbericht}: Vollständiger Bericht über die Evaluierung des Frameworks, einschließlich Methodik, Performance-Analyse, Architektur-Bewertung, Erkenntnissen und Ausblick auf zukünftige Entwicklungen.
+\end{itemize}
+
+Diese Deliverables bilden zusammen eine vollständige Dokumentation des Transformations-Frameworks, die es ermöglicht, das Framework zu verstehen, zu verwenden, zu warten und zu erweitern. Die strukturierte Dokumentation und die bereitgestellten Beispiele erleichtern den Einstieg für neue Benutzer und ermöglichen es, das Framework in verschiedenen Kontexten anzuwenden.

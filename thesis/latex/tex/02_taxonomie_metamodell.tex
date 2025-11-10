@@ -4,16 +4,144 @@
 Dieses Kapitel entwickelt eine erweiterbare Komponententaxonomie und ein präzises Metamodell für eine moderne, dienstorientierte E/E-Architektur im Sinne von MB.OS (Fokus: Vans). Es adressiert eine zonale Topologie mit zentralen Rechenknoten, Ethernet-Backbone (TSN), serviceorientierter Kommunikation, sicherheitskritischen Funktionsketten und domänenspezifischer Sensorik/Aktorik für Nutzfahrzeug-typische Use-Cases (z.\,B. Lieferlogistik, leichte Nutzfahrzeuge, Flottenbetrieb).
 
 \section{Grundprinzipien und Struktur}
+
+Moderne E/E-Architekturen für Nutzfahrzeuge, insbesondere Vans, erfordern eine sorgfältige Balance zwischen Performance, Sicherheit, Skalierbarkeit und Kosten. Die zonale Architektur stellt einen Paradigmenwechsel dar, der weg von der traditionellen Domain-basierten Architektur hin zu einer geografisch organisierten Struktur führt. Diese Architektur ermöglicht es, die wachsende Komplexität moderner Fahrzeuge zu bewältigen, während gleichzeitig die Kosten durch Konsolidierung von ECUs reduziert werden \cite{reif_ee_architektur, embedded_systems_automotive}.
+
 \subsection{Zonale Architektur und zentrale Rechenplattform}
+
+Die zonale Architektur teilt das Fahrzeug in physische Zonen ein, wobei jede Zone von einem Zonen-Controller (ZC) verwaltet wird. Diese Controller sind über einen zentralen Ethernet-Backbone mit einer leistungsfähigen zentralen Rechenplattform verbunden. Dieser Ansatz bietet mehrere Vorteile:
+
 \begin{itemize}
-  \item \textbf{Zonen-Controller (ZC)}: Versorgungs- und IO-Nähe, Aggregation lokaler Sensorik/Aktorik, Vorverarbeitung.
-  \item \textbf{Zentrale Rechenplattform (Central Compute, CC)}: Hochperformant (CPU/GPU/NPU), Safety-Partitionen (ASIL) und Virtualisierung.
-  \item \textbf{Ethernet-Backbone mit TSN}: Deterministische Latenzen, Priorisierungen, Redundanzen.
-  \item \textbf{Serviceorientierung}: DDS/SOME\-IP für verteilte Dienste, Versionierung, QoS.
+  \item \textbf{Zonen-Controller (ZC)}: Versorgungs- und IO-Nähe, Aggregation lokaler Sensorik/Aktorik, Vorverarbeitung. Zonen-Controller sind strategisch im Fahrzeug positioniert (typischerweise Front, Links, Rechts, Heck), um die physische Nähe zu Sensoren und Aktoren zu gewährleisten. Dies reduziert die Kabel-Längen, verbessert die Signalqualität und reduziert die Kosten. Ein typischer Zonen-Controller verfügt über:
+    \begin{itemize}
+      \item Mehrere CAN/LIN-Gateways für Legacy-Kommunikation
+      \item Ethernet-Ports für Anbindung an den Backbone
+      \item Lokale Verarbeitungsfähigkeit für einfache Funktionen (z.\,B. Türsteuerung, Beleuchtung)
+      \item Power-Management für die Zone
+      \item Diagnose-Funktionalität
+    \end{itemize}
+  
+  \item \textbf{Zentrale Rechenplattform (Central Compute, CC)}: Hochperformant (CPU/GPU/NPU), Safety-Partitionen (ASIL) und Virtualisierung. Die zentrale Rechenplattform ist das Herzstück der Architektur und führt komplexe Funktionen aus, die hohe Rechenleistung erfordern:
+    \begin{itemize}
+      \item \textbf{CPU}: Multi-Core-Prozessoren (typischerweise 8-16 Kerne) mit big.LITTLE-Architektur für optimale Balance zwischen Performance und Energieeffizienz
+      \item \textbf{GPU}: Dedizierte Grafikprozessoren für visuelle Perzeption und Rendering (typischerweise 5-20 TFLOPS)
+      \item \textbf{NPU}: Neural Processing Units für KI/ML-Workloads (typischerweise 50-200 TOPS)
+      \item \textbf{Virtualisierung}: Hypervisor-basierte Partitionierung für Isolation zwischen verschiedenen ASIL-Leveln
+      \item \textbf{Safety-Partitionen}: Separate Partitionen für sicherheitskritische Funktionen (ASIL D) und nicht-kritische Funktionen (QM)
+    \end{itemize}
+  
+  \item \textbf{Ethernet-Backbone mit TSN}: Deterministische Latenzen, Priorisierungen, Redundanzen. Der Ethernet-Backbone ersetzt traditionelle Bussysteme und bietet:
+    \begin{itemize}
+      \item \textbf{Bandbreite}: 1 Gbps, 2.5 Gbps oder 10 Gbps Links für hohe Datenraten
+      \item \textbf{TSN-Features}: Time-Sensitive Networking für deterministische Kommunikation
+        \begin{itemize}
+          \item \textbf{Time Synchronization (gPTP)}: Präzise Zeitsynchronisation für deterministische Kommunikation
+          \item \textbf{Traffic Shaping}: Credit-Based Shaping (CBS) und Time-Aware Shaping (TAS) für Bandbreiten-Management
+          \item \textbf{Frame Preemption}: Unterbrechung von nicht-kritischen Frames durch kritische Frames
+          \item \textbf{Redundancy}: Parallel Redundancy Protocol (PRP) für hochverfügbare Kommunikation
+        \end{itemize}
+      \item \textbf{Switches}: Intelligente TSN-Switches mit Gate-Scheduling für deterministische Weiterleitung
+    \end{itemize}
+  
+  \item \textbf{Serviceorientierung}: DDS/SOME\-IP für verteilte Dienste, Versionierung, QoS. Die serviceorientierte Architektur ermöglicht flexible, lose gekoppelte Kommunikation:
+    \begin{itemize}
+      \item \textbf{DDS (Data Distribution Service)}: Publish-Subscribe-Middleware für Echtzeit-Kommunikation mit Quality-of-Service-Garantien
+      \item \textbf{SOME/IP}: Scalable service-Oriented MiddlewarE over IP für servicebasierte Kommunikation
+      \item \textbf{Versionierung}: Unterstützung für verschiedene Service-Versionen für Backward-Kompatibilität
+      \item \textbf{QoS}: Quality-of-Service-Parameter (Reliability, Deadline, Latency) für verschiedene Service-Typen
+    \end{itemize}
 \end{itemize}
 
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    node distance=1.5cm and 2cm,
+    zone/.style={rectangle, draw, fill=blue!20, minimum width=2.5cm, minimum height=1.5cm, text centered},
+    central/.style={rectangle, draw, fill=red!20, minimum width=3cm, minimum height=2cm, text centered, font=\small},
+    switch/.style={rectangle, draw, fill=green!20, minimum width=1.5cm, minimum height=1cm, text centered},
+    link/.style={thick, -stealth}
+  ]
+    % Central Compute
+    \node[central] (cc) {Central Compute\\CPU/GPU/NPU\\ASIL D};
+    
+    % TSN Switch
+    \node[switch, below=of cc] (switch) {TSN\\Switch};
+    
+    % Zones
+    \node[zone, left=of switch] (zc_front) {ZC Front\\CAN/LIN\\Ethernet};
+    \node[zone, right=of switch] (zc_rear) {ZC Rear\\CAN/LIN\\Ethernet};
+    \node[zone, above left=of switch] (zc_left) {ZC Left\\CAN/LIN\\Ethernet};
+    \node[zone, above right=of switch] (zc_right) {ZC Right\\CAN/LIN\\Ethernet};
+    
+    % Connections
+    \draw[link] (cc) -- (switch) node[midway, right, font=\tiny] {TSN\\Backbone};
+    \draw[link] (switch) -- (zc_front);
+    \draw[link] (switch) -- (zc_rear);
+    \draw[link] (switch) -- (zc_left);
+    \draw[link] (switch) -- (zc_right);
+    
+    % Sensors/Actuators
+    \node[below=0.5cm of zc_front, font=\tiny] {Sensoren:\\Kamera, Radar};
+    \node[below=0.5cm of zc_rear, font=\tiny] {Aktoren:\\Laderaum, Heckklappe};
+  \end{tikzpicture}
+  \caption{Zonale E/E-Architektur mit zentraler Rechenplattform}
+  \label{fig:zonale_architektur}
+\end{figure}
+
 \subsection{Domänen und Use-Cases (Vans)}
-Karosserie/Body, Antrieb/Powertrain, Fahrerassistenz/AD, Infotainment/HMI, Fracht-/Laderaumdomäne (z.\,B. Kühlung, Zustelllogik), Flotten-/Telematikdienste (OTA, Diagnose, Fleet Operations).
+
+Nutzfahrzeuge, insbesondere Vans, haben spezifische Anforderungen, die sich von Personenkraftwagen unterscheiden. Die Domänen und Use-Cases müssen diese spezifischen Anforderungen berücksichtigen:
+
+\begin{itemize}
+  \item \textbf{Karosserie/Body}: Türsteuerung, Heckklappensteuerung, Beleuchtung, Klimatisierung. Vans haben typischerweise mehrere Türen (Seitentüren, Heckklappe) und erfordern zuverlässige Steuerungssysteme. Beispiel-Use-Cases:
+    \begin{itemize}
+      \item Automatische Heckklappenöffnung bei Annäherung (Hands-Free)
+      \item Intelligente Beleuchtung für Zustellfahrten (automatische Aktivierung bei Türöffnung)
+      \item Klimatisierung des Laderaums für temperaturgeführte Transporte
+    \end{itemize}
+  
+  \item \textbf{Antrieb/Powertrain}: Elektrischer Antrieb, Batteriemanagement, Ladeinfrastruktur. Moderne Vans sind zunehmend elektrifiziert:
+    \begin{itemize}
+      \item E-Achsen mit integriertem Antrieb
+      \item 800V-Batteriesysteme für schnelles Laden
+      \item Intelligentes Batteriemanagement für optimale Reichweite
+      \item V2G (Vehicle-to-Grid) für Energie-Rückeinspeisung
+    \end{itemize}
+  
+  \item \textbf{Fahrerassistenz/AD}: Perzeption, Sensorfusion, Planung, Regelung. Für Vans sind spezifische ADAS-Funktionen wichtig:
+    \begin{itemize}
+      \item \textbf{Urban Delivery Assist}: Unterstützung bei engen Gassen und Parkplätzen
+      \item \textbf{Blind-Spot-Monitoring}: Erweiterte Überwachung aufgrund der Größe
+      \item \textbf{Load-Aware Functions}: Funktionen, die die Ladung berücksichtigen (z.\,B. Bremsassistenz bei voller Ladung)
+      \item \textbf{L2/L3 Automation}: Teilautomatisierung für Autobahnfahrten
+    \end{itemize}
+  
+  \item \textbf{Infotainment/HMI}: Anzeige, Bedienung, Navigation, Konnektivität. Moderne Vans benötigen leistungsfähige HMI-Systeme:
+    \begin{itemize}
+      \item Große Touchscreens für Navigation und Fahrzeuginformationen
+      \item Sprachsteuerung für Hands-Free-Bedienung
+      \item Smartphone-Integration (Apple CarPlay, Android Auto)
+      \item Fahrerassistenz-Visualisierung
+    \end{itemize}
+  
+  \item \textbf{Fracht-/Laderaumdomäne}: Kühlung, Zustelllogik, Sicherheit, Monitoring. Diese Domäne ist spezifisch für Nutzfahrzeuge:
+    \begin{itemize}
+      \item \textbf{Temperaturregelung}: Präzise Temperaturregelung für Kühltransporte ($\pm 0.5°C$ Genauigkeit)
+      \item \textbf{Zustelllogik}: Intelligente Organisation der Ladung für optimale Zustellreihenfolge
+      \item \textbf{Sicherheit}: Überwachung des Laderaums (Kameras, Sensoren)
+      \item \textbf{Monitoring}: Echtzeit-Überwachung von Ladung, Temperatur, Türstatus
+      \item \textbf{Lastverteilung}: Monitoring der Gewichtsverteilung für optimale Fahrstabilität
+    \end{itemize}
+  
+  \item \textbf{Flotten-/Telematikdienste}: OTA, Diagnose, Fleet Operations. Für gewerbliche Nutzung essentiell:
+    \begin{itemize}
+      \item \textbf{OTA-Updates}: Over-the-Air-Updates für Software und Konfiguration
+      \item \textbf{Diagnose}: Fern-Diagnose und Predictive Maintenance
+      \item \textbf{Fleet Management}: Integration in Flottenmanagementsysteme
+      \item \textbf{Telemetrie}: Echtzeit-Datenübertragung (Position, Zustand, Verbrauch)
+      \item \textbf{Route-Optimierung}: Cloud-basierte Routenoptimierung für Zustellfahrzeuge
+    \end{itemize}
+\end{itemize}
 
 \section{Komponententypen (Taxonomie)}
 \subsection{Rechenknoten}
@@ -105,6 +233,63 @@ Stereotypen erweitern Basisklassen um domänenspezifische Felder (z.\,B. \emph{C
   \item \textbf{TSNBackboneLink}: gate\_schedule, guard\_bands, prio\_map
 \end{itemize}
 
+\subsection{Neueste Bosch-Sensorik}
+
+Bosch entwickelt fortschrittliche Sensoren für automatisiertes Fahren. Die neuesten Entwicklungen umfassen:
+
+\subsubsection{Bosch Multifunktionskamera (8-Megapixel)}
+
+Die neue Bosch Multifunktionskamera bietet folgende Spezifikationen:
+
+\begin{itemize}
+  \item \textbf{Auflösung}: 8 Megapixel (3840x2160)
+  \item \textbf{Horizontales Sichtfeld}: 120 Grad
+  \item \textbf{Erkennungsreichweite}: Bis zu 300 Meter
+  \item \textbf{Funktionen}: 
+    \begin{itemize}
+      \item Adaptive Geschwindigkeits- und Abstandsregelung
+      \item Notbremsungen innerhalb der eigenen Spur
+      \item Spurhalten in städtischen Gebieten
+      \item Erkennung und Anhalten an roten Ampeln
+    \end{itemize}
+  \item \textbf{Serienproduktion}: Geplant für 2026
+  \item \textbf{Interface}: Ethernet (1G/2.5G)
+  \item \textbf{ASIL}: B-D (abhängig von Anwendung)
+\end{itemize}
+
+\subsubsection{Bosch Radar-Sensoren}
+
+Bosch bietet ein umfassendes Portfolio an Radar-Sensoren:
+
+\begin{itemize}
+  \item \textbf{Long-Range-Radar}: Reichweite bis 250 m, hohe Auflösung
+  \item \textbf{Mid-Range-Radar}: Reichweite bis 160 m, mittlere Auflösung
+  \item \textbf{Short-Range-Radar}: Reichweite bis 80 m, hohe Winkelauflösung
+  \item \textbf{4D-Imaging-Radar}: 3D-Position + Geschwindigkeit, hohe Auflösung
+\end{itemize}
+
+\subsubsection{Bosch LiDAR-Sensoren}
+
+Bosch entwickelt LiDAR-Sensoren für hochautomatisiertes Fahren:
+
+\begin{itemize}
+  \item \textbf{High-Resolution-LiDAR}: Bis zu 64 Layer, 360° Abdeckung
+  \item \textbf{Reichweite}: Bis zu 200 m
+  \item \textbf{Punktdichte}: Hohe Punktdichte für präzise Objekterkennung
+  \item \textbf{Interface}: Ethernet (1G/10G)
+\end{itemize}
+
+\subsubsection{Sensorfusion}
+
+Bosch kombiniert verschiedene Sensoren für 360°-Umfelderfassung:
+
+\begin{itemize}
+  \item \textbf{Kameras}: Front, Rear, Side-Kameras für visuelle Erkennung
+  \item \textbf{Radar}: Mehrere Radar-Sensoren für Geschwindigkeits- und Abstandsmessung
+  \item \textbf{LiDAR}: Für präzise 3D-Umgebungserfassung
+  \item \textbf{Ultraschall}: Für Nahbereichserkennung (Parken)
+\end{itemize}
+
 \section{Zonen-Topologie (Diagramm)}
 \begin{figure}[h]
   \centering
@@ -173,8 +358,417 @@ ASIL-gerechte Partitionierung, Freedom-from-Interference, Diagnose- und Health-M
   \item \emph{PowerStateModel} ist konsistent mit Latenzanforderungen (Aufwachzeiten \(\leq\) Budget).
 \end{itemize}
 
+\section{Erweiterte Taxonomie-Beispiele}
+
+Dieser Abschnitt präsentiert erweiterte Beispiele für die Anwendung der Taxonomie und des Metamodells auf komplexe Architekturen.
+
+\subsection{Beispiel: Vollständige Van-Architektur}
+
+Dieses Beispiel zeigt die vollständige Taxonomie für eine moderne Van-Architektur mit allen Domänen.
+
+\subsubsection{AD-Domain}
+
+Die AD-Domain umfasst alle Komponenten für automatisiertes Fahren:
+
+\begin{itemize}
+  \item \textbf{Rechenknoten}:
+    \begin{itemize}
+      \item 1x AD-DC (Central Compute): 16 CPU-Kerne, GPU 20 TFLOPS, NPU 200 TOPS
+      \item 4x Zonen-Controller: Front, Left, Right, Rear
+    \end{itemize}
+  
+  \item \textbf{Sensoren}:
+    \begin{itemize}
+      \item 6x Kameras: Front (Stereo), Rear, Left, Right, Innenraum
+      \item 4x Radar: Front (Kurz/Lang), Rear (Kurz/Lang)
+      \item 1x LiDAR: 64-Layer, Front
+      \item 12x Ultraschall: Rundum-Überwachung
+      \item 1x GNSS/IMU: Position und Orientierung
+    \end{itemize}
+  
+  \item \textbf{Aktoren}:
+    \begin{itemize}
+      \item 1x EPS: Elektrische Servolenkung
+      \item 1x EHB: Elektro-Hydraulische Bremse
+      \item 1x E-Motor: Elektrischer Antrieb
+    \end{itemize}
+  
+  \item \textbf{Kommunikation}:
+    \begin{itemize}
+      \item TSN-Ethernet-Backbone: 2.5 Gbps
+      \item CAN-FD: Für Aktoren
+      \item DDS: Für serviceorientierte Kommunikation
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Body-Domain}
+
+Die Body-Domain umfasst alle Komponenten für Karosserie-Funktionen:
+
+\begin{itemize}
+  \item \textbf{Rechenknoten}:
+    \begin{itemize}
+      \item 4x Zonen-Controller: Front, Left, Right, Rear
+    \end{itemize}
+  
+  \item \textbf{Sensoren}:
+    \begin{itemize}
+      \item 8x Türkontakte: Für alle Türen
+      \item 4x Temperatursensoren: Innenraum, Laderaum
+      \item 2x Gewichtssensoren: Laderaum
+      \item 1x Laderaum-Kamera: Überwachung
+    \end{itemize}
+  
+  \item \textbf{Aktoren}:
+    \begin{itemize}
+      \item 8x Tür-Aktoren: Öffnen/Schließen
+      \item 1x Heckklappen-Aktor: Öffnen/Schließen
+      \item 4x Beleuchtungsgruppen: Front, Rear, Left, Right
+      \item 1x Klimaanlage: Laderaum-Klimatisierung
+    \end{itemize}
+  
+  \item \textbf{Kommunikation}:
+    \begin{itemize}
+      \item CAN-FD: Für Aktoren
+      \item LIN: Für einfache Sensoren
+      \item Ethernet: Für Zonen-Controller
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Infotainment-Domain}
+
+Die Infotainment-Domain umfasst alle Komponenten für HMI und Unterhaltung:
+
+\begin{itemize}
+  \item \textbf{Rechenknoten}:
+    \begin{itemize}
+      \item 1x HMI-ECU: Hochleistungs-Prozessor für Displays
+    \end{itemize}
+  
+  \item \textbf{Displays}:
+    \begin{itemize}
+      \item 1x Hauptdisplay: 12.3" Touchscreen
+      \item 1x Instrumenten-Display: 10.25" Digital
+      \item 1x Head-Up-Display: Projektion
+    \end{itemize}
+  
+  \item \textbf{Audio}:
+    \begin{itemize}
+      \item 1x Audio-System: 8-Kanal-Sound
+      \item 1x Mikrofon-Array: Sprachsteuerung
+    \end{itemize}
+  
+  \item \textbf{Kommunikation}:
+    \begin{itemize}
+      \item Ethernet: Für Display-Daten
+      \item USB: Für externe Geräte
+      \item Bluetooth: Für Smartphone-Integration
+      \item WLAN: Für Hotspot-Funktionalität
+    \end{itemize}
+\end{itemize}
+
+\subsection{Beispiel: Metamodell-Instanziierung}
+
+Dieses Beispiel zeigt, wie das Metamodell für eine konkrete Architektur instanziiert wird.
+
+\subsubsection{ECU-Instanziierung}
+
+Eine ECU wird als Instanz des Metamodells erstellt:
+
+\begin{verbatim}
+{
+  "type": "ECU",
+  "id": "AD_DC_001",
+  "name": "AD Domain Controller",
+  "attributes": {
+    "cpu_cores": 16,
+    "cpu_freq_max": 2.5,
+    "gpu_tflops": 20.0,
+    "npu_tops": 200.0,
+    "ram_size": 16,
+    "storage_size": 256,
+    "virtualization": "hypervisor",
+    "asil_level": "D",
+    "power_idle": 15.0,
+    "power_max": 25.0,
+    "thermal_max": 100.0
+  },
+  "ports": [
+    {
+      "id": "eth_port_1",
+      "type": "Ethernet",
+      "speed": "2.5G",
+      "tsn_enabled": true
+    }
+  ]
+}
+\end{verbatim}
+
+\subsubsection{Chain-Instanziierung}
+
+Eine Funktionskette wird als Instanz des Metamodells erstellt:
+
+\begin{verbatim}
+{
+  "type": "Chain",
+  "id": "Perception_to_Steering",
+  "source": "Camera_Front",
+  "sink": "EPS",
+  "path": [
+    "Camera_Front",
+    "ZC_Front",
+    "AD_DC",
+    "EPS"
+  ],
+  "attributes": {
+    "e2e_deadline": 100.0,
+    "e2e_latency_budget": 100.0,
+    "e2e_jitter_budget": 10.0,
+    "asil_level": "D"
+  }
+}
+\end{verbatim}
+
+\section{Stateflow-Diagramme für Architektur-Zustände}
+
+Stateflow-Diagramme ermöglichen die Modellierung komplexer Zustandsübergänge in E/E-Architekturen. Diese Diagramme sind besonders wertvoll für die Modellierung von Power-States, Fehlerzuständen und Betriebsmodi.
+
+\subsection{Power-State-Maschine}
+
+Die Power-State-Maschine beschreibt die verschiedenen Energiezustände eines Rechenknotens:
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    node distance=2cm,
+    state/.style={circle, draw, fill=blue!20, minimum size=1.5cm, text centered, font=\small},
+    transition/.style={thick, -stealth}
+  ]
+    % States
+    \node[state] (off) {OFF};
+    \node[state, right=of off] (sleep) {SLEEP};
+    \node[state, right=of sleep] (idle) {IDLE};
+    \node[state, above=of idle] (active) {ACTIVE};
+    \node[state, right=of idle] (overload) {OVERLOAD};
+    
+    % Transitions
+    \draw[transition] (off) -- node[above, font=\tiny] {Power On} (sleep);
+    \draw[transition] (sleep) -- node[above, font=\tiny] {Wake Up} (idle);
+    \draw[transition] (idle) -- node[left, font=\tiny] {Task Ready} (active);
+    \draw[transition] (active) -- node[right, font=\tiny] {No Tasks} (idle);
+    \draw[transition] (active) -- node[above, font=\tiny] {Load > 90\%} (overload);
+    \draw[transition] (overload) -- node[below, font=\tiny] {Load < 80\%} (active);
+    \draw[transition] (idle) -- node[above, font=\tiny] {Timeout} (sleep);
+    \draw[transition] (sleep) -- node[below, font=\tiny] {Power Off} (off);
+  \end{tikzpicture}
+  \caption{Power-State-Maschine für einen Rechenknoten}
+  \label{fig:power_state_machine}
+\end{figure}
+
+Die Power-State-Maschine umfasst folgende Zustände:
+
+\begin{itemize}
+  \item \textbf{OFF}: Komplett ausgeschaltet, keine Energieversorgung
+  \item \textbf{SLEEP}: Niedrigster Energiezustand, minimale Funktionen aktiv (z.\,B. Wake-up-Detection)
+  \item \textbf{IDLE}: Bereit, aber keine aktiven Tasks, niedrige Energie
+  \item \textbf{ACTIVE}: Normale Betriebsphase mit aktiven Tasks
+  \item \textbf{OVERLOAD}: Überlastung, erfordert Maßnahmen (z.\,B. Throttling, Task-Migration)
+\end{itemize}
+
+\subsection{Fehlerzustands-Maschine}
+
+Die Fehlerzustands-Maschine beschreibt die Reaktion auf Fehler:
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    node distance=2cm,
+    state/.style={circle, draw, fill=green!20, minimum size=1.5cm, text centered, font=\small},
+    error/.style={circle, draw, fill=red!20, minimum size=1.5cm, text centered, font=\small},
+    transition/.style={thick, -stealth}
+  ]
+    % States
+    \node[state] (normal) {NORMAL};
+    \node[error, right=of normal] (degraded) {DEGRADED};
+    \node[error, below=of degraded] (failed) {FAILED};
+    \node[state, left=of failed] (recovery) {RECOVERY};
+    
+    % Transitions
+    \draw[transition] (normal) -- node[above, font=\tiny] {Minor Error} (degraded);
+    \draw[transition] (degraded) -- node[right, font=\tiny] {Critical Error} (failed);
+    \draw[transition] (degraded) -- node[above, font=\tiny] {Error Cleared} (normal);
+    \draw[transition] (failed) -- node[below, font=\tiny] {Recovery Start} (recovery);
+    \draw[transition] (recovery) -- node[left, font=\tiny] {Recovery Complete} (normal);
+  \end{tikzpicture}
+  \caption{Fehlerzustands-Maschine für Fehlerbehandlung}
+  \label{fig:error_state_machine}
+\end{figure}
+
+\subsection{Betriebsmodus-Maschine}
+
+Die Betriebsmodus-Maschine beschreibt verschiedene Betriebsmodi:
+
+\begin{itemize}
+  \item \textbf{Normal Mode}: Standard-Betrieb
+  \item \textbf{Eco Mode}: Energieoptimierter Betrieb
+  \item \textbf{Performance Mode}: Leistungsoptimierter Betrieb
+  \item \textbf{Diagnostic Mode}: Diagnose-Modus
+  \item \textbf{Maintenance Mode}: Wartungsmodus
+\end{itemize}
+
 \section{Zusammenfassung}
-Die vorgestellte Taxonomie und das Metamodell bilden eine MB.OS-nahe, zonale E/E-Architektur für Vans ab. Sie sind erweiterbar, quantitativ auswertbar und dienen als Grundlage für die Synthese-Metrik und die Transformation in Simulationsmodelle.
+Die vorgestellte Taxonomie und das Metamodell bilden eine MB.OS-nahe, zonale E/E-Architektur für Vans ab. Sie sind erweiterbar, quantitativ auswertbar und dienen als Grundlage für die Synthese-Metrik und die Transformation in Simulationsmodelle. Die Stateflow-Diagramme ermöglichen eine präzise Modellierung von Zustandsübergängen und Betriebsmodi.
+
+\section{Erweiterte Taxonomie-Anwendungen}
+
+Dieser Abschnitt beschreibt erweiterte Anwendungen der Taxonomie und des Metamodells.
+
+\subsection{Taxonomie für verschiedene Fahrzeugtypen}
+
+Die Taxonomie kann für verschiedene Fahrzeugtypen angepasst werden:
+
+\subsubsection{Personenkraftwagen (Pkw)}
+
+\begin{itemize}
+  \item \textbf{Spezifische Komponenten}: Komfort-Funktionen, Infotainment, Assistenzsysteme
+  \item \textbf{Anforderungen}: Hohe Komfort-Anforderungen, moderate Sicherheitsanforderungen
+  \item \textbf{Architektur}: Kompaktere Architektur, weniger Zonen
+\end{itemize}
+
+\subsubsection{Nutzfahrzeuge (Lkw)}
+
+\begin{itemize}
+  \item \textbf{Spezifische Komponenten}: Flotten-Management, Telematik, Laderaum-Management
+  \item \textbf{Anforderungen}: Hohe Zuverlässigkeit, Energieeffizienz
+  \item \textbf{Architektur}: Erweiterte Architektur, mehr Zonen, robustere Komponenten
+\end{itemize}
+
+\subsubsection{Elektrofahrzeuge}
+
+\begin{itemize}
+  \item \textbf{Spezifische Komponenten}: Batterie-Management, Lade-Management, Energiemanagement
+  \item \textbf{Anforderungen}: Hohe Energieeffizienz, optimale Reichweite
+  \item \textbf{Architektur}: Energie-optimierte Architektur, intelligentes Energiemanagement
+\end{itemize}
+
+\subsection{Metamodell-Erweiterungen}
+
+Das Metamodell kann für spezifische Anforderungen erweitert werden:
+
+\subsubsection{KI-Modell-Integration}
+
+\begin{itemize}
+  \item \textbf{KI-Modell-Komponenten}: Neue Komponenten für KI-Modelle
+  \item \textbf{Inferenz-Pipeline}: Modellierung von Inferenz-Pipelines
+  \item \textbf{Training-Pipeline}: Modellierung von Training-Pipelines
+  \item \textbf{Deployment}: Modellierung von Deployment-Prozessen
+\end{itemize}
+
+\subsubsection{Cybersecurity-Integration}
+
+\begin{itemize}
+  \item \textbf{Sicherheitszonen}: Modellierung von Sicherheitszonen
+  \item \textbf{Sicherheitsmechanismen}: Modellierung von Sicherheitsmechanismen
+  \item \textbf{Threat-Modell}: Modellierung von Bedrohungen
+  \item \textbf{Risk-Assessment}: Modellierung von Risikobewertungen
+\end{itemize}
+
+\section{Erweiterte Metamodell-Details}
+
+Dieser Abschnitt beschreibt erweiterte Details des Metamodells.
+
+\subsection{Attribut-Definitionen}
+
+\subsubsection{ECU-Attribute}
+
+\begin{table}[h]
+  \centering
+  \caption{ECU-Attribute im Metamodell}
+  \begin{tabular}{llll}
+    \toprule
+    Attribut & Typ & Beschreibung & Beispiel \\
+    \midrule
+    name & String & Eindeutiger Name & "AD-DC-01" \\
+    type & Enum & ECU-Typ & CentralCompute, ZoneController \\
+    cpu\_cores & Integer & Anzahl CPU-Kerne & 8 \\
+    cpu\_frequency & Float & CPU-Frequenz (GHz) & 2.5 \\
+    gpu\_performance & Float & GPU-Performance (TFLOPS) & 20.0 \\
+    npu\_performance & Float & NPU-Performance (TOPS) & 200.0 \\
+    memory\_size & Integer & RAM-Größe (GB) & 16 \\
+    power\_consumption & Float & Leistung (W) & 50.0 \\
+    asil\_level & Enum & ASIL-Level & ASIL\_D \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:ecu_attribute}
+\end{table}
+
+\subsubsection{Interface-Attribute}
+
+\begin{table}[h]
+  \centering
+  \caption{Interface-Attribute im Metamodell}
+  \begin{tabular}{llll}
+    \toprule
+    Attribut & Typ & Beschreibung & Beispiel \\
+    \midrule
+    name & String & Interface-Name & "eth0" \\
+    type & Enum & Interface-Typ & Ethernet, CAN, LIN \\
+    bandwidth & Float & Bandbreite (Mbps) & 1000.0 \\
+    latency & Float & Latenz (ms) & 0.1 \\
+    jitter & Float & Jitter (ms) & 0.01 \\
+    tsn\_enabled & Boolean & TSN aktiviert & true \\
+    tsn\_config & Object & TSN-Konfiguration & \{...\} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:interface_attribute}
+\end{table}
+
+\subsubsection{Task-Attribute}
+
+\begin{table}[h]
+  \centering
+  \caption{Task-Attribute im Metamodell}
+  \begin{tabular}{llll}
+    \toprule
+    Attribut & Typ & Beschreibung & Beispiel \\
+    \midrule
+    name & String & Task-Name & "perception\_task" \\
+    period & Float & Periode (ms) & 33.0 \\
+    wcet & Float & WCET (ms) & 15.0 \\
+    bcet & Float & BCET (ms) & 10.0 \\
+    priority & Integer & Priorität & 10 \\
+    cpu\_core & Integer & CPU-Core & 0 \\
+    asil\_level & Enum & ASIL-Level & ASIL\_C \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:task_attribute}
+\end{table}
+
+\subsection{Beziehungen im Metamodell}
+
+\subsubsection{ECU-zu-Interface}
+
+\begin{itemize}
+  \item \textbf{Kardinalität}: 1:N (eine ECU hat mehrere Interfaces)
+  \item \textbf{Richtung}: Uni-direktional (ECU $\rightarrow$ Interface)
+  \item \textbf{Constraints}: Jede ECU muss mindestens ein Interface haben
+\end{itemize}
+
+\subsubsection{Task-zu-ECU}
+
+\begin{itemize}
+  \item \textbf{Kardinalität}: N:1 (mehrere Tasks auf einer ECU)
+  \item \textbf{Richtung}: Uni-direktional (Task $\rightarrow$ ECU)
+  \item \textbf{Constraints}: Task muss auf genau einer ECU deployed sein
+\end{itemize}
+
+\subsubsection{Frame-zu-Route}
+
+\begin{itemize}
+  \item \textbf{Kardinalität}: 1:N (ein Frame kann mehrere Routen haben)
+  \item \textbf{Richtung}: Uni-direktional (Frame $\rightarrow$ Route)
+  \item \textbf{Constraints}: Route muss aus mindestens 2 Hops bestehen
+\end{itemize}
 
 \newpage
 \section{Fallstudie A: Zustell-Van mit Kühlkette (Urban Last Mile)}
